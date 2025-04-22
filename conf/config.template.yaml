@@ -173,7 +173,7 @@ templates:
   path: "WILL BE REPLACED BY build_conf.sh"
 
   # Path to the frontend assets manifest file
-  # assets_manifest: "/Users/mca/Documents/work/projets/betagouv/repo/matrix-authentication-service-tchap/frontend2/dist/manifest.json"
+  # assets_manifest: "/to/manifest.json"
 
   # # From where to load the translation files
   # # Default in Docker distribution: `/usr/local/share/mas-cli/translations/`
