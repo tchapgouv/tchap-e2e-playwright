@@ -10,3 +10,4 @@
 
 
 export $MAS_HOME : path of /matrix-authentication-service, fork léger https://github.com/tchapgouv/matrix-authentication-service
+export $MAS_TCHAP_HOME : path of /matrix-authentication-service-tchap
