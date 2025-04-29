@@ -21,7 +21,6 @@
 #docker rm -f keycloak
 #docker run -d --name keycloak -p 8082:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin -v $(pwd)/tchap/keycloak/proconnect-mock-realm.json:/opt/keycloak/data/import/proconnect-mock-realm.json quay.io/keycloak/keycloak:latest start-dev --import-realm --hostname=https://sso.tchapgouv.com
 
-# docker compose stop
-
+mkdir tmp
 docker compose up -d
 docker compose logs -f

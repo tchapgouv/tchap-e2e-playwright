@@ -10,8 +10,16 @@ else
   exit 1
 fi
 
-MAS_CONF=$PWD/conf
-cd $MAS_HOME
+# Check if MAS_HOME is defined
+if [ -z "$MAS_HOME" ]; then
+    echo "Error: MAS_HOME environment variable is not defined"
+    echo "Please set MAS_HOME to the path of your matrix-authentication-service directory"
+    exit 1
+fi
 
-export TCHAP_IDENTITY_SERVER_URL="http://localhost::${IDENTITY_MOCK_PORT}"
-cargo run -- server -c $MAS_CONF/config.local.dev.yaml
+export MAS_TCHAP_HOME=$PWD
+cd $MAS_HOME
+# Build conf from conf.template.yaml
+$MAS_TCHAP_HOME/tools/build_conf.sh
+
+cargo run -- server -c $MAS_TCHAP_HOME/tmp/config.local.dev.yaml
