@@ -4,3 +4,4 @@ playwright/playwright-report/
 playwright/playwright-results/
 playwright/test-results/
 playwright/.env
+.env
