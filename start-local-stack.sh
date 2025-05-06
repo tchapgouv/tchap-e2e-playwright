@@ -22,5 +22,12 @@
 #docker run -d --name keycloak -p 8082:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin -v $(pwd)/tchap/keycloak/proconnect-mock-realm.json:/opt/keycloak/data/import/proconnect-mock-realm.json quay.io/keycloak/keycloak:latest start-dev --import-realm --hostname=https://sso.tchapgouv.com
 
 mkdir tmp
+
+# Stops containers and removes containers, networks, volumes, and images
+docker compose down
+
+# (re)creates, starts, and attaches to containers in the background and leaves them running.
 docker compose up -d
+
+# View output from containers
 docker compose logs -f

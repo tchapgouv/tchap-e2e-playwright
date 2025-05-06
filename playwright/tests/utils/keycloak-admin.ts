@@ -11,7 +11,7 @@ let apiContext: APIRequestContext | null = null;
 
 async function getApiContext(): Promise<APIRequestContext> {
   if (!apiContext) {
-    console.log(`[Keycloak API] Creating new API context with baseURL: ${KEYCLOAK_URL}`);
+    //console.log(`[Keycloak API] Creating new API context with baseURL: ${KEYCLOAK_URL}`);
     apiContext = await request.newContext({
       baseURL: KEYCLOAK_URL,
       ignoreHTTPSErrors: true
@@ -44,7 +44,7 @@ export async function getKeycloakAdminToken(): Promise<string> {
   }
 
   const data = await response.json() as { access_token: string };
-  console.log(`[Keycloak API] Successfully obtained admin token`);
+  //console.log(`[Keycloak API] Successfully obtained admin token`);
   return data.access_token;
 }
 
@@ -195,10 +195,10 @@ export async function checkKeycloakUserExists(username: string): Promise<boolean
  */
 export async function disposeApiContext(): Promise<void> {
   if (apiContext) {
-    console.log(`[Keycloak API] Disposing API context`);
+    //console.log(`[Keycloak API] Disposing API context`);
     await apiContext.dispose();
     apiContext = null;
-    console.log(`[Keycloak API] API context disposed`);
+    //console.log(`[Keycloak API] API context disposed`);
   } else {
     console.log(`[Keycloak API] No API context to dispose`);
   }

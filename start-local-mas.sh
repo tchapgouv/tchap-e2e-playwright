@@ -2,6 +2,14 @@
 
 set -e
 
+# Source the .env file to load environment variables
+if [ -f .env ]; then
+  source .env
+else
+  echo "Error: .env file not found. Please create a .env file with the required environment variables."
+  exit 1
+fi
+
 # Check if MAS_HOME is defined
 if [ -z "$MAS_HOME" ]; then
     echo "Error: MAS_HOME environment variable is not defined"

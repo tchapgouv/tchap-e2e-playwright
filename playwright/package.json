@@ -7,7 +7,12 @@
     "test": "playwright test",
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
-    "test:ui": "playwright test --ui"
+    "test:ui": "playwright test --ui",
+    "test:local": "TEST_ENV=local playwright test",
+    "test:mas01": "TEST_ENV=mas01 playwright test",
+    "test:mas02": "TEST_ENV=mas02 playwright test",
+    "test:mas03": "TEST_ENV=mas03 playwright test",
+    "test:pr1226": "TEST_ENV=pr1226 playwright test"
   },
   "keywords": [
     "playwright",

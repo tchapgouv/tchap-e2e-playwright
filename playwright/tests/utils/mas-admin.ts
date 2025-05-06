@@ -10,7 +10,7 @@ let apiContext: APIRequestContext | null = null;
 
 async function getApiContext(): Promise<APIRequestContext> {
   if (!apiContext) {
-    console.log(`[MAS API] Creating new API context with baseURL: ${MAS_URL}`);
+    //console.log(`[MAS API] Creating new API context with baseURL: ${MAS_URL}`);
     apiContext = await request.newContext({
       baseURL: MAS_URL,
       ignoreHTTPSErrors: true
@@ -23,7 +23,7 @@ async function getApiContext(): Promise<APIRequestContext> {
  * Get an admin access token for MAS
  */
 export async function getMasAdminToken(): Promise<string> {
-  console.log(`[MAS API] Requesting admin token with client ID: ${MAS_ADMIN_CLIENT_ID}`);
+  //console.log(`[MAS API] Requesting admin token with client ID: ${MAS_ADMIN_CLIENT_ID}`);
   const apiRequestContext = await getApiContext();
   const authHeader = Buffer.from(`${MAS_ADMIN_CLIENT_ID}:${MAS_ADMIN_CLIENT_SECRET}`).toString('base64');
   
@@ -45,37 +45,8 @@ export async function getMasAdminToken(): Promise<string> {
   }
 
   const data = await response.json() as { access_token: string };
-  console.log(`[MAS API] Successfully obtained admin token`);
+  console.log(`[MAS API] Successfully obtained admin token ${data.access_token}`);
   return data.access_token;
-}
-
-/**
- * Check if a user exists in MAS by email
- */
-export async function checkMasUserExistsByEmail(email: string): Promise<boolean> {
-  console.log(`[MAS API] Checking if user exists with email: ${email}`);
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-  
-  const response = await apiRequestContext.get(
-    `/api/admin/v1/user-emails?filter[email]=${encodeURIComponent(email)}`,
-    {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    }
-  );
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to check user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to check MAS user: ${response.status()} - ${errorText}`);
-  }
-
-  const result = await response.json() as { data: Array<{ id: string }> };
-  const exists = result.data.length > 0;
-  console.log(`[MAS API] User with email ${email} exists: ${exists}`);
-  return exists;
 }
 
 /**
@@ -86,7 +57,8 @@ export async function getMasUserByEmail(email: string): Promise<any | null> {
   const token = await getMasAdminToken();
   const apiRequestContext = await getApiContext();
   
-  const response = await apiRequestContext.get(
+  // Step 1: Get user ID from email
+  const emailResponse = await apiRequestContext.get(
     `/api/admin/v1/user-emails?filter[email]=${encodeURIComponent(email)}`,
     {
       headers: {
@@ -95,19 +67,61 @@ export async function getMasUserByEmail(email: string): Promise<any | null> {
     }
   );
 
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to get user details: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to get MAS user: ${response.status()} - ${errorText}`);
+  if (!emailResponse.ok()) {
+    const errorText = await emailResponse.text();
+    console.error(`[MAS API] Failed to get user email: ${emailResponse.status()} - ${errorText}`);
+    throw new Error(`Failed to get MAS user email: ${emailResponse.status()} - ${errorText}`);
   }
 
-  const result = await response.json() as { data: Array<any> };
-  const user = result.data.length > 0 ? result.data[0] : null;
-  console.log(`[MAS API] User found: ${user !== null ? 'Yes' : 'No'}`);
-  if (user) {
-    console.log(`[MAS API] User ID: ${user.id}, Username: ${user.attributes?.username || 'N/A'}`);
+  const emailResult = await emailResponse.json();
+  if (emailResult.data.length === 0) {
+    console.log(`[MAS API] No user found with email: ${email}`);
+    return null;
   }
+
+  // Extract user_id from the attributes
+  const userId = emailResult.data[0].attributes.user_id;
+  console.log(`[MAS API] Found user ID: ${userId} for email: ${email}`);
+
+  // Step 2: Get complete user details using the user ID
+  const userResponse = await apiRequestContext.get(
+    `/api/admin/v1/users/${userId}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+  );
+
+  if (!userResponse.ok()) {
+    const errorText = await userResponse.text();
+    console.error(`[MAS API] Failed to get user details: ${userResponse.status()} - ${errorText}`);
+    throw new Error(`Failed to get MAS user details: ${userResponse.status()} - ${errorText}`);
+  }
+
+  const userResult = await userResponse.json();
+  const user = userResult.data;
+  
+  console.log(`[MAS API] User found: Yes`);
+  console.log(`[MAS API] User ID: ${user.id}, Username: ${user.attributes.username || 'N/A'}`);
+  
   return user;
+}
+
+/**
+ * Check if a user exists in MAS by email
+ */
+export async function checkMasUserExistsByEmail(email: string): Promise<boolean> {
+  console.log(`[MAS API] Checking if user exists with email: ${email}`);
+  try {
+    const user = await getMasUserByEmail(email);
+    const exists = user !== null;
+    console.log(`[MAS API] User with email ${email} exists: ${exists}`);
+    return exists;
+  } catch (error) {
+    console.error(`[MAS API] Error checking user existence: ${error}`);
+    return false;
+  }
 }
 
 /**
@@ -184,6 +198,24 @@ export async function createMasUserWithPassword(username: string, email: string,
     console.error(`[MAS API] Failed to set password for user: ${responsePwd.status()} - ${errorText}`);
     throw new Error(`Failed to set password for user: ${responsePwd.status()} - ${errorText}`);
   }
+
+  const responseEmail = await apiRequestContext.post(`/api/admin/v1/user-emails`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    data: {
+      "user_id": userId,
+      "email": email
+    }
+  });
+
+  if (!responseEmail.ok()) {
+    const errorText = await responseEmail.text();
+    console.error(`[MAS API] Failed to set email for user: ${responseEmail.status()} - ${errorText}`);
+    throw new Error(`Failed to set email for user: ${responseEmail.status()} - ${errorText}`);
+  }
+
   
   console.log(`[MAS API] User created successfully with ID: ${userId}`);
   return userId;
@@ -217,10 +249,10 @@ export async function deactivateMasUser(userId: string): Promise<void> {
  */
 export async function disposeApiContext(): Promise<void> {
   if (apiContext) {
-    console.log(`[MAS API] Disposing API context`);
+    //console.log(`[MAS API] Disposing API context`);
     await apiContext.dispose();
     apiContext = null;
-    console.log(`[MAS API] API context disposed`);
+    //console.log(`[MAS API] API context disposed`);
   } else {
     console.log(`[MAS API] No API context to dispose`);
   }

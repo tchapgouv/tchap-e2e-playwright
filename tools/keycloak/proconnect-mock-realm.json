@@ -68,7 +68,7 @@
   },
   "clients": [
     {
-      "clientId": "mas",
+      "clientId": "matrix-authentication-service",
       "name": "matrix authentication service",
       "description": "matrix authentication service",
       "rootUrl": "http://localhost:8080",

@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
+import { BROWSER_LOCALE } from './tests/utils/config';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -10,9 +11,9 @@ dotenv.config();
 export default defineConfig({
   testDir: './tests',
   /* Maximum time one test can run for */
-  timeout: 60 * 1000,
+  timeout: 15 * 1000,
   /* Run tests in files in parallel */
-  fullyParallel: true,
+  fullyParallel: false,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -23,6 +24,9 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
     baseURL: process.env.MAS_URL || 'https://auth.tchapgouv.com',
+    
+    /* Set locale to French */
+    locale: BROWSER_LOCALE,
     
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
