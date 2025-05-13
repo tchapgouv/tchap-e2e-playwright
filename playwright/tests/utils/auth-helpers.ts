@@ -7,9 +7,9 @@ import { ELEMENT_URL, generateTestUser, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR }
  * Test user type
  */
 export interface TestUser {
-  username: string;
-  email: string;
-  password: string;
+  kc_username: string;
+  kc_email: string;
+  kc_password: string;
   keycloakId?: string;
   masId?: string;
 }
@@ -18,7 +18,7 @@ export interface TestUser {
  * Create a test user in Keycloak
  */
 export async function createKeycloakTestUser(user:TestUser): Promise<TestUser> {
-  const keycloakId = await createKeycloakUser(user.username, user.email, user.password);
+  const keycloakId = await createKeycloakUser(user.kc_username, user.kc_email, user.kc_password);
   return { ...user, keycloakId };
 }
 
@@ -58,13 +58,12 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-keycloak-login.png` });
   
   // Fill in the username and password
-  await page.locator('#username').fill(user.username);
-  await page.locator('#password').fill(user.password);
+  await page.locator('#username').fill(user.kc_username);
+  await page.locator('#password').fill(user.kc_password);
   
   // Click the login button
   await page.locator('button[type="submit"]').click();
   
-
   // Wait for redirect back to MAS
   await page.waitForURL(url => url.toString().includes(MAS_URL));
   
@@ -112,8 +111,8 @@ export async function performOidcLoginFromElement(page: Page, user: TestUser, sc
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-keycloak-login.png` });
   
   // Fill in the username and password
-  await page.locator('#username').fill(user.username);
-  await page.locator('#password').fill(user.password);
+  await page.locator('#username').fill(user.kc_username);
+  await page.locator('#password').fill(user.kc_password);
   
   // Click the login button
   await page.locator('button[type="submit"]').click();
@@ -130,7 +129,7 @@ export async function performOidcLoginFromElement(page: Page, user: TestUser, sc
  * Verify that a user was created in MAS after OIDC authentication
  */
 export async function verifyUserInMas(user: TestUser): Promise<void> {
-  const masUser = await waitForMasUser(user.email);
+  const masUser = await waitForMasUser(user.kc_email);
   user.masId = masUser.id;
 }
 
@@ -139,7 +138,7 @@ export async function verifyUserInMas(user: TestUser): Promise<void> {
  */
 export async function createMasTestUser(domain:string): Promise<TestUser> {
   const user = generateTestUser(domain);
-  const masId = await createMasUserWithPassword(user.username, user.email, user.password);
+  const masId = await createMasUserWithPassword(user.kc_username, user.kc_email, user.kc_password);
   return { ...user, masId };
 }
 
@@ -161,7 +160,7 @@ export async function cleanupMasTestUser(user: TestUser): Promise<void> {
  * 4. Wait for successful authentication
  */
 export async function performPasswordLogin(page: Page, user: TestUser, screenshot_path:string): Promise<void> {
-  console.log(`[Auth] Performing password login for user: ${user.username}`);
+  console.log(`[Auth] Performing password login for user: ${user.kc_username}`);
   
   // Navigate to the login page
   await page.goto('/login');
@@ -170,8 +169,8 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-password-login-page.png` });
   
   // Fill in the username and password
-  await page.locator('input[name="username"]').fill(user.username);
-  await page.locator('input[name="password"]').fill(user.password);
+  await page.locator('input[name="username"]').fill(user.kc_username);
+  await page.locator('input[name="password"]').fill(user.kc_password);
   
   // Take a screenshot before submitting
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-password-login-filled.png` });
@@ -185,5 +184,5 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
   // Take a screenshot after successful login
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-password-login-success.png` });
   
-  console.log(`[Auth] Password login successful for user: ${user.username}`);
+  console.log(`[Auth] Password login successful for user: ${user.kc_username}`);
 }

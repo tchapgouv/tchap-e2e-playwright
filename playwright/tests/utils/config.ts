@@ -37,6 +37,7 @@ export const STANDARD_EMAIL_DOMAIN = process.env.STANDARD_EMAIL_DOMAIN || 'tchap
 export const INVITED_EMAIL_DOMAIN = process.env.INVITED_EMAIL_DOMAIN || 'invited.externe.com';
 export const NOT_INVITED_EMAIL_DOMAIN = process.env.NOT_INVITED_EMAIL_DOMAIN || 'not.invited.externe.com';
 export const WRONG_SERVER_EMAIL_DOMAIN = process.env.WRONG_SERVER_EMAIL_DOMAIN || 'wrong.server.com';
+export const NUMERIQUE_EMAIL_DOMAIN = process.env.NUMERIQUE_EMAIL_DOMAIN || 'numerique.gouv.fr';
 
 // Screenshots directory
 export const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || 'playwright-results';
@@ -48,13 +49,13 @@ export const BROWSER_LOCALE = process.env.BROWSER_LOCALE || 'fr-FR';
 export function generateTestUser(domain:string) {
   const timestamp = new Date().getTime();
   const randomSuffix = Math.floor(Math.random() * 10000);
-  const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const email = `${username}@${domain}`;
+  const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
+  const kc_email = `${kc_username}@${domain}`;
   
   return {
-    username,
-    email,
-    password: TEST_USER_PASSWORD
+    kc_username: kc_username,
+    kc_email: kc_email,
+    kc_password: TEST_USER_PASSWORD
   };
 }
 
