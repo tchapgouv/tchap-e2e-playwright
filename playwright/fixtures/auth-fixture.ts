@@ -40,6 +40,8 @@ function createTestUserFixture(domain: string) {
   };
 }
 
+//legacy users have a username derived from email :
+//email : username@domain.com -> username : username-domain.com
 function createLegacyUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
@@ -80,7 +82,7 @@ export const test = base.extend<{
   testExternalUserWitoutInvit: TestUser;
   testUserOnWrongServer: TestUser;
   userLegacy:TestUser;
-  testLinkByFallbackRules: TestUser;
+  userLegacyWithFallbackRules: TestUser;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
@@ -90,7 +92,7 @@ export const test = base.extend<{
   testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   testUserOnWrongServer: createTestUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
   userLegacy:createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
-  testLinkByFallbackRules:createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN)
+  userLegacyWithFallbackRules:createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN)
 });
 
 export { expect } from '@playwright/test';

@@ -92,7 +92,7 @@ test.describe('Oidc login flows', () => {
   });
 
 
-  test('should link existing MAS account when logging in via OIDC by email using fallback rules', async ({ page, testLinkByFallbackRules: userLegacy }) => {
+  test('should link existing MAS account when logging in via OIDC by email using fallback rules', async ({ page, userLegacyWithFallbackRules: userLegacy }) => {
     const screenshot_path = 'link_oidc_account_by_email_with_fallback_rules';
 
     const old_email_domain = "@beta.gouv.fr";
