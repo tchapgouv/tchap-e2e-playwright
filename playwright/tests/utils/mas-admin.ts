@@ -45,7 +45,7 @@ export async function getMasAdminToken(): Promise<string> {
   }
 
   const data = await response.json() as { access_token: string };
-  console.log(`[MAS API] Successfully obtained admin token ${data.access_token}`);
+  //console.log(`[MAS API] Successfully obtained admin token ${data.access_token}`);
   return data.access_token;
 }
 
@@ -53,7 +53,7 @@ export async function getMasAdminToken(): Promise<string> {
  * Get user details from MAS by email
  */
 export async function getMasUserByEmail(email: string): Promise<any | null> {
-  console.log(`[MAS API] Getting user details for email: ${email}`);
+  //console.log(`[MAS API] Getting user details for email: ${email}`);
   const token = await getMasAdminToken();
   const apiRequestContext = await getApiContext();
   
@@ -81,7 +81,7 @@ export async function getMasUserByEmail(email: string): Promise<any | null> {
 
   // Extract user_id from the attributes
   const userId = emailResult.data[0].attributes.user_id;
-  console.log(`[MAS API] Found user ID: ${userId} for email: ${email}`);
+  //console.log(`[MAS API] Found user ID: ${userId} for email: ${email}`);
 
   // Step 2: Get complete user details using the user ID
   const userResponse = await apiRequestContext.get(
@@ -102,8 +102,8 @@ export async function getMasUserByEmail(email: string): Promise<any | null> {
   const userResult = await userResponse.json();
   const user = userResult.data;
   
-  console.log(`[MAS API] User found: Yes`);
-  console.log(`[MAS API] User ID: ${user.id}, Username: ${user.attributes.username || 'N/A'}`);
+  //console.log(`[MAS API] User found: Yes`);
+  console.log(`[MAS API] User found : ID: ${user.id}, Username: ${user.attributes.username || 'N/A'}`);
   
   return user;
 }
@@ -116,7 +116,7 @@ export async function checkMasUserExistsByEmail(email: string): Promise<boolean>
   try {
     const user = await getMasUserByEmail(email);
     const exists = user !== null;
-    console.log(`[MAS API] User with email ${email} exists: ${exists}`);
+    //console.log(`[MAS API] User with email ${email} exists: ${exists}`);
     return exists;
   } catch (error) {
     console.error(`[MAS API] Error checking user existence: ${error}`);
@@ -157,7 +157,7 @@ export async function waitForMasUser(email: string, maxAttempts = 10, delayMs = 
  * Create a user in MAS with a password
  */
 export async function createMasUserWithPassword(username: string, email: string, password: string): Promise<string> {
-  console.log(`[MAS API] Creating user with password: ${username} (${email})`);
+  console.log(`[MAS API] Creating user with username:${username}, email:${email}, password:${password}`);
   const token = await getMasAdminToken();
   const apiRequestContext = await getApiContext();
   
@@ -179,7 +179,7 @@ export async function createMasUserWithPassword(username: string, email: string,
   }
 
   const data = await response.json();
-  console.log(data.data)
+  //console.log(data.data)
   const userId = data.data.id;
 
   const responsePwd = await apiRequestContext.post(`/api/admin/v1/users/${userId}/set-password`, {
@@ -216,9 +216,11 @@ export async function createMasUserWithPassword(username: string, email: string,
     throw new Error(`Failed to set email for user: ${responseEmail.status()} - ${errorText}`);
   }
 
+  // Verify the user exists in MAS
+  const existsBeforeLogin = await checkMasUserExistsByEmail(email);
   
   console.log(`[MAS API] User created successfully with ID: ${userId}`);
-  return userId;
+  return existsBeforeLogin ? userId : "error";
 }
 
 /**
@@ -242,6 +244,56 @@ export async function deactivateMasUser(userId: string): Promise<void> {
   }
   
   console.log(`[MAS API] User deleted successfully`);
+}
+
+/**
+ * Check if a oauth link exists
+ */
+export async function oauthLinkExistsByUserId(userId: string): Promise<boolean> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.get(`/api/admin/v1/upstream-oauth-links?filter[user]=${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+  }
+  const data = await response.json();
+  //console.log(data.data)
+  const links = data.data;
+  console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
+  return links.length == 1
+}
+
+/**
+ * Check if a oauth link exists
+ */
+export async function oauthLinkExistsBySubject(subject: string): Promise<boolean> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.get(`/api/admin/v1/upstream-oauth-links?filter[subject]=${subject}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+  }
+  const data = await response.json();
+  //console.log(data.data)
+  const links = data.data;
+  console.log(`[MAS API] Oauth links for user ${subject} : ${JSON.stringify(links)}`);
+  return links.length == 1
 }
 
 /**

@@ -8,7 +8,8 @@ import {
   STANDARD_EMAIL_DOMAIN, 
   INVITED_EMAIL_DOMAIN, 
   NOT_INVITED_EMAIL_DOMAIN, 
-  WRONG_SERVER_EMAIL_DOMAIN 
+  WRONG_SERVER_EMAIL_DOMAIN,
+  NUMERIQUE_EMAIL_DOMAIN
 } from '../tests/utils/config';
 
 /**
@@ -27,7 +28,7 @@ function createTestUserFixture(domain: string) {
       
       // Clean up the test user after the test
       await cleanupKeycloakTestUser(user);
-      console.log(`Cleaned up test user: ${user.username}`);
+      console.log(`Cleaned up test user: ${user.kc_username}`);
     } finally {
       // Dispose API contexts
       await Promise.all([
@@ -39,15 +40,15 @@ function createTestUserFixture(domain: string) {
   };
 }
 
-function createTestLinkUserFixture(domain: string) {
+function createLegacyUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const randomSuffix = Math.floor(Math.random() * 10000);
 
       const testUser:TestUser = {
-        username: `test.user${randomSuffix}-${domain}`,
-        email: `test.user${randomSuffix}@${domain}`,
-        password: '1234!'
+        kc_username: `test.user${randomSuffix}-${domain}`,
+        kc_email: `test.user${randomSuffix}@${domain}`,
+        kc_password: '1234!'
       }
       
       // Create a test user in Keycloak
@@ -58,7 +59,7 @@ function createTestLinkUserFixture(domain: string) {
       
       // Clean up the test user after the test
       await cleanupKeycloakTestUser(user);
-      console.log(`Cleaned up test user: ${user.username}`);
+      console.log(`Cleaned up test user: ${user.kc_username}`);
     } finally {
       // Dispose API contexts
       await Promise.all([
@@ -78,7 +79,8 @@ export const test = base.extend<{
   testExternalUser: TestUser;
   testExternalUserWitoutInvit: TestUser;
   testUserOnWrongServer: TestUser;
-  testLink:TestUser;
+  userLegacy:TestUser;
+  testLinkByFallbackRules: TestUser;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
@@ -87,7 +89,8 @@ export const test = base.extend<{
   testExternalUser: createTestUserFixture(INVITED_EMAIL_DOMAIN),
   testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   testUserOnWrongServer: createTestUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
-  testLink:createTestLinkUserFixture(STANDARD_EMAIL_DOMAIN)
+  userLegacy:createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
+  testLinkByFallbackRules:createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN)
 });
 
 export { expect } from '@playwright/test';

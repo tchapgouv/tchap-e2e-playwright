@@ -16,7 +16,7 @@ test.describe('Element OIDC register flows', () => {
     const screenshot_path = 'element_register_oidc';
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testUser.email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(testUser.kc_email);
     expect(existsBeforeLogin).toBe(false);
     
     // Perform the OIDC login flow
@@ -42,9 +42,9 @@ test.describe('Element OIDC register flows', () => {
     await verifyUserInMas(testUser);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testUser.email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(testUser.kc_email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified user ${testUser.username} (${testUser.email})`);
+    console.log(`Successfully authenticated and verified user ${testUser.kc_username} (${testUser.kc_email})`);
   });
 });
