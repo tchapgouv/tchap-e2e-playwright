@@ -34,7 +34,7 @@ test.describe('Oidc login flows', () => {
       await expect(page.locator('text=Mon compte')).toBeVisible();
       
       // Take a screenshot of the authenticated state
-      await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
+      await page.screenshot({fullPage:true,  path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
       
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await getMasUserByEmail(userLegacy.kc_email);

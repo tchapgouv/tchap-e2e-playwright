@@ -2,6 +2,8 @@ import { Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
 import { ELEMENT_URL, generateTestUser, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR } from './config';
+import * as fs from 'fs';
+import * as path from 'path';
 
 /**
  * Test user type
@@ -68,7 +70,7 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   await page.waitForURL(url => url.toString().includes(MAS_URL));
   
   // Take a screenshot after successful login
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-after-login.png` });
+  await page.screenshot({fullPage:true, path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-after-login.png` });
 }
 
 /**
@@ -185,4 +187,19 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-password-login-success.png` });
   
   console.log(`[Auth] Password login successful for user: ${user.kc_username}`);
+}
+
+/**
+ * Clean up screenshots for a specific test
+ * @param screenshot_path The path where screenshots are stored for this test
+ */
+export async function cleanupScreenshots(screenshot_path: string): Promise<void> {
+  const testScreenshotsDir = path.join(SCREENSHOTS_DIR, screenshot_path);
+  
+  if (fs.existsSync(testScreenshotsDir)) {
+    fs.rmSync(testScreenshotsDir, { recursive: true, force: true });
+  }
+  
+  // Create the directory again to ensure it exists for new screenshots
+  fs.mkdirSync(testScreenshotsDir, { recursive: true });
 }

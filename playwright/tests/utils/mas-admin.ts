@@ -265,7 +265,6 @@ export async function oauthLinkExistsByUserId(userId: string): Promise<boolean> 
     throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
   }
   const data = await response.json();
-  //console.log(data.data)
   const links = data.data;
   console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
   return links.length == 1
