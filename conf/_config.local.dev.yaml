@@ -8,6 +8,7 @@ http:
         - name: compat
         - name: graphql
         - name: assets
+          path: "/resources/manifest.json"
       # for api admin calls
         - name: adminapi
       binds:
@@ -175,7 +176,7 @@ templates:
   path: "WILL BE REPLACED BY build_conf.sh"
 
   # Path to the frontend assets manifest file
-  # assets_manifest: "/to/manifest.json"
+  assets_manifest: "/resources/manifest.json"
 
   # # From where to load the translation files
   # # Default in Docker distribution: `/usr/local/share/mas-cli/translations/`
