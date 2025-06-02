@@ -36,3 +36,23 @@ cd ..
 #docker run -d -p 5432:5432 -e 'POSTGRES_USER=keycloak' -e 'POSTGRES_PASSWORD=keycloak' -e 'POSTGRES_DATABASE=keycloak' postgres-keycloak
 # cargo test --package mas-handlers upstream_oauth2::link::tests
 ```
+
+## database 
+
+create the db 
+```
+cd crates/storage-pg 
+cargo sqlx database setup
+```
+
+drop the db
+```
+cd crates/storage-pg 
+cargo sqlx database drop
+```
+
+generate an offline db
+```
+cd crates/storage-pg 
+cargo sqlx database prepare
+```

@@ -1,7 +1,12 @@
 services:
   mailcatcher:
     image: sj26/mailcatcher
-    network_mode: host
+    #network_mode: host
+    ports:
+        - "1025:1025"
+        - "1080:1080"
+    networks:
+      - tchap-network
 
   identity-mock:
     image: wiremock/wiremock:2.35.0
