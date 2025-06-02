@@ -63,6 +63,9 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   await page.locator('#username').fill(user.kc_username);
   await page.locator('#password').fill(user.kc_password);
   
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02b-keycloak-login-credentials.png` });
+
+
   // Click the login button
   await page.locator('button[type="submit"]').click();
   

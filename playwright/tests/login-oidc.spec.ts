@@ -80,8 +80,8 @@ test.describe('Oidc login flows', () => {
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await getMasUserByEmail(userLegacy.kc_email);
       expect(userAfterLogin.id).toBe(userLegacy.masId);
-      //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
-      expect(await oauthLinkExistsBySubject(userLegacy.kc_username)).toBe(true);
+      expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
+      //expect(await oauthLinkExistsBySubject(userLegacy.kc_username)).toBe(true);
 
       console.log(`Successfully verified account linking for user with email: ${userLegacy.kc_email}`);
     } finally {
