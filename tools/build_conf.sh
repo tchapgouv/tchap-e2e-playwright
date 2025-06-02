@@ -1,6 +1,9 @@
 #!/bin/sh
 
 set -e 
+
+echo "Building templates..."
+
 # New template directory
 MAS_TCHAP_DATA="$MAS_TCHAP_HOME/tmp"
 # Create data directory
@@ -13,6 +16,8 @@ cp -r "$MAS_HOME/templates" "$MAS_TCHAP_DATA"
 
 # Override MAS template with custom tchap template
 cp -r "$MAS_TCHAP_HOME/resources/templates" "$MAS_TCHAP_DATA"
+
+echo "Building MAS config..."
 
 # Create MAS conf file
 template_yaml_file="$MAS_TCHAP_HOME/conf/config.template.yaml"
