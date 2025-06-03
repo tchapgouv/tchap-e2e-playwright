@@ -26,3 +26,10 @@ cp $template_yaml_file $yaml_file
 
 MAS_TCHAP_TEMPLATES="$MAS_TCHAP_DATA/templates"
 sed -i '' -E "/^templates:/,/^[^[:space:]]/ s|^[[:space:]]*path:.*|  path: \"$MAS_TCHAP_TEMPLATES\"|" "$yaml_file"
+
+echo "Updating translations..."
+MAS_TCHAP_TRANSLATIONS="$MAS_TCHAP_HOME/resources/translations"
+
+cargo run -p mas-i18n-scan  -- --update "${MAS_TCHAP_TEMPLATES}" "${MAS_TCHAP_TRANSLATIONS}/en.json"
+
+sed -i '' -E "/^templates:/,/^[^[:space:]]/ s|^[[:space:]]*translations_path:.*|  translations_path: \"$MAS_TCHAP_TRANSLATIONS\"|" "$yaml_file"
