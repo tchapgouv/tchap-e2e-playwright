@@ -13,11 +13,10 @@ Please see LICENSE in the repository root for full details.
 {% block content %}
   <form method="POST" class="flex flex-col gap-10">
     <header class="page-heading">
-      <!--
       <div class="icon">
         {{ icon.user_profile_solid() }}
       </div>
-      -->
+
       {% if next and next.kind == "link_upstream" %}
         <div class="header">
           <h1 class="title">{{ _("mas.login.link.headline") }}</h1>
@@ -27,43 +26,10 @@ Please see LICENSE in the repository root for full details.
       {% else %}
         <div class="header">
           <h1 class="title">{{ _("mas.login.headline") }}</h1>
-          <!-- <p class="text">{{ _("mas.login.description") }}</p> -->
+          <p class="text">{{ _("mas.login.description") }}</p>
         </div>
       {% endif %}
     </header>
-
-    {% if providers %}
-    {% set params = next["params"] | default({}) | to_params(prefix="?") %}
-    {% for provider in providers %}
-      {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
-       <div>
-        <button class="proconnect-button" onclick="window.location.href = '{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}';">
-          <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
-        </button>
-        <p>
-          <a
-          href="https://www.proconnect.gouv.fr/"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Qu’est-ce que ProConnect ? - nouvelle fenêtre"
-          >
-          Qu’est-ce que ProConnect ?
-        </a>
-      </p>
-    </div>
-      
-      <!--
-      <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
-        {{ logo(provider.brand_name) }}
-        {{ _("mas.login.continue_with_provider", provider=name) }}
-      </a>
-      --> 
-    {% endfor %}
-  {% endif %}
-
-  
-  {{ field.separator() }}
-
 
     <div class="cpd-form-root">
       {% if form.errors is not empty %}
@@ -102,9 +68,26 @@ Please see LICENSE in the repository root for full details.
         {{ button.button(text=_("action.continue")) }}
       {% endif %}
 
+      {% if features.password_login and providers %}
+        {{ field.separator() }}
+      {% endif %}
 
-
-     
+      {% if providers %}
+        {% set params = next["params"] | default({}) | to_params(prefix="?") %}
+        {% for provider in providers %}
+          {% set name = provider.human_name or (provider.issuer | simplify_url(keep_path=True)) or provider.id %}
+          <!-- <div>
+            <button class="proconnect-button" onclick="window.location.href = '{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}';">
+              <span class="proconnect-sr-only">S'identifier avec ProConnect</span>
+            </button>
+          </div>
+          -->
+          <a class="cpd-button {%- if provider.brand_name %} has-icon {%- endif %}" data-kind="secondary" data-size="lg" href="{{ ('/upstream/authorize/' ~ provider.id ~ params) | prefix_url }}">
+            {{ logo(provider.brand_name) }}
+            {{ _("mas.login.continue_with_provider", provider=name) }}
+          </a> 
+        {% endfor %}
+      {% endif %}
     </div>
 
     {% if (not next or next.kind != "link_upstream") and features.password_registration %}
@@ -112,7 +95,6 @@ Please see LICENSE in the repository root for full details.
         <p class="cpd-text-secondary">
           {{ _("mas.login.call_to_register") }}
         </p>
-
 
         {% set params = next["params"] | default({}) | to_params(prefix="?") %}
         {{ button.link_text(text=_("action.create_account"), href="/register" ~ params) }}
