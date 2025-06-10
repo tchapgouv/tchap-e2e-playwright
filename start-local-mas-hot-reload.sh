@@ -79,5 +79,6 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # Start the server
-echo "Starting server..."
+echo "Checking templates..."
+cargo run -- templates check -c $MAS_TCHAP_HOME/tmp/config.local.dev.yaml 
 cargo run -- server -c $MAS_TCHAP_HOME/tmp/config.local.dev.yaml 
