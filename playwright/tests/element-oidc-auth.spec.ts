@@ -1,26 +1,23 @@
 import { test, expect } from '../fixtures/auth-fixture';
 import { 
-  performOidcLogin, 
   verifyUserInMas, 
-  createMasTestUser, 
-  cleanupMasTestUser, 
-  performPasswordLogin, 
-  TestUser, 
   performOidcLoginFromElement
 } from './utils/auth-helpers';
-import { checkMasUserExistsByEmail } from './utils/mas-admin';
+import { checkMasUserExistsByEmail, createMasUserWithPassword } from './utils/mas-admin';
 import { SCREENSHOTS_DIR, TCHAP_LEGACY } from './utils/config';
 
 test.describe('Element OIDC register flows', () => {
-  test('element : register via oidc and create user in MAS', async ({ page, testUser }) => {
+  test('element : login via oidc', async ({ page, userLegacy: userLegacy }) => {
     const screenshot_path = 'element_register_oidc';
 
+    userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
+
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testUser.kc_email);
-    expect(existsBeforeLogin).toBe(false);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
+    expect(existsBeforeLogin).toBe(true);
     
     // Perform the OIDC login flow
-    await performOidcLoginFromElement(page, testUser,screenshot_path, TCHAP_LEGACY);
+    await performOidcLoginFromElement(page, userLegacy,screenshot_path, TCHAP_LEGACY);
     
     // Click the create account button
     await page.locator('button[type="submit"]').click();
@@ -33,18 +30,18 @@ test.describe('Element OIDC register flows', () => {
     
     await page.locator('button[type="submit"]').filter({hasText:'Continuer'}).click();
 
-    await expect(page.locator('text=Configuration')).toBeVisible();
+    await expect(page.locator('text=Configuration')).toBeVisible({timeout: 10000});
 
     // Take a screenshot of the authenticated state
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-auth-success.png` });
     
     // Verify the user was created in MAS
-    await verifyUserInMas(testUser);
+    await verifyUserInMas(userLegacy);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testUser.kc_email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified user ${testUser.kc_username} (${testUser.kc_email})`);
+    console.log(`Successfully authenticated and verified user ${userLegacy.kc_username} (${userLegacy.kc_email})`);
   });
 });

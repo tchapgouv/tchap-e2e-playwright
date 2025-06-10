@@ -1,11 +1,6 @@
 import { test, expect } from '../fixtures/auth-fixture';
 import { 
-  performOidcLogin, 
-  verifyUserInMas, 
-  createMasTestUser, 
-  cleanupMasTestUser, 
-  performPasswordLogin, 
-  TestUser 
+  performOidcLogin,
 } from './utils/auth-helpers';
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject } from './utils/mas-admin';
 import { SCREENSHOTS_DIR } from './utils/config';
