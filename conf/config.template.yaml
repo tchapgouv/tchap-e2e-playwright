@@ -196,6 +196,7 @@ upstream_oauth2:
         localpart:
           action: force 
           template: "{{ user.preferred_username }}"
+          on_conflict: add
           #action: require
           #template: "{{ user.email | email_to_mxid_localpart }}"
         displayname:
