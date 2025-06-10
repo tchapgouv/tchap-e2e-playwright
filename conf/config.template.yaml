@@ -207,7 +207,6 @@ upstream_oauth2:
           action: require
           template: "{{ user.email }}"
           set_email_verification: always
-      allow_existing_users: true
 
 telemetry:
   tracing:
