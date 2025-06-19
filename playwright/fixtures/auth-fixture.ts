@@ -78,7 +78,7 @@ function createLegacyUserFixture(domain: string) {
  */
 export const test = base.extend<{
   testUser: TestUser;
-  testExternalUser: TestUser;
+  testExternalUserWithInvit: TestUser;
   testExternalUserWitoutInvit: TestUser;
   testUserOnWrongServer: TestUser;
   userLegacy:TestUser;
@@ -88,7 +88,7 @@ export const test = base.extend<{
    * Create a test user in Keycloak before the test and clean it up after
    */
   testUser: createTestUserFixture(STANDARD_EMAIL_DOMAIN),
-  testExternalUser: createTestUserFixture(INVITED_EMAIL_DOMAIN),
+  testExternalUserWithInvit: createTestUserFixture(INVITED_EMAIL_DOMAIN),
   testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   testUserOnWrongServer: createTestUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
   userLegacy:createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),

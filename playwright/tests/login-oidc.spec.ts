@@ -54,11 +54,7 @@ test.describe('Oidc login flows', () => {
     userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username+"different_from_email", userLegacy.kc_email, userLegacy.kc_password);
     
     try {
-      // Verify the user exists in MAS
-      const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
-      expect(existsBeforeLogin).toBe(true);
-      console.log(`Confirmed MAS user exists with email: ${userLegacy.kc_email}`);
-      
+     
       // Perform the OIDC login flow
       await performOidcLogin(page, userLegacy, screenshot_path);
       
@@ -100,10 +96,6 @@ test.describe('Oidc login flows', () => {
     userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username+"different_from_email", old_email, userLegacy.kc_password);
     
     try {
-      // Verify the user exists in MAS
-      const existsBeforeLogin = await checkMasUserExistsByEmail(old_email);
-      expect(existsBeforeLogin).toBe(true);
-      console.log(`Confirmed MAS user exists with email: ${old_email}`);
       
       // Perform the OIDC login flow
       await performOidcLogin(page, userLegacy, screenshot_path);

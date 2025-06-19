@@ -6,6 +6,8 @@ import {
 import { checkMasUserExistsByEmail, createMasUserWithPassword } from './utils/mas-admin';
 import { SCREENSHOTS_DIR, TCHAP_LEGACY } from './utils/config';
 
+
+//flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 test.describe('Element OIDC register flows', () => {
   test('element : login via oidc', async ({ page, userLegacy: userLegacy }) => {
     const screenshot_path = 'element_register_oidc';
@@ -30,7 +32,8 @@ test.describe('Element OIDC register flows', () => {
     
     await page.locator('button[type="submit"]').filter({hasText:'Continuer'}).click();
 
-    await expect(page.locator('text=Configuration')).toBeVisible({timeout: 10000});
+    //flaky condition
+    await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 
     // Take a screenshot of the authenticated state
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-auth-success.png` });

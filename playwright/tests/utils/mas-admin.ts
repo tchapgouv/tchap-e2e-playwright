@@ -76,7 +76,14 @@ export async function getMasUserByEmail(email: string): Promise<any | null> {
   const emailResult = await emailResponse.json();
   if (emailResult.data.length === 0) {
     console.log(`[MAS API] No user found with email: ${email}`);
-    return null;
+    throw new Error(`[MAS API] No user found with email: ${email}`);
+
+  }
+
+  if (emailResult.data.length > 1) {
+    console.log(`[MAS API] Multiple users found with email: ${email}`);
+    throw new Error(`[MAS API] Multiple users found with email: ${email}`);
+
   }
 
   // Extract user_id from the attributes
