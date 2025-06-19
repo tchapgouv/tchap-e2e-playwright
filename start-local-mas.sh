@@ -1,4 +1,9 @@
 #!/bin/bash
+# runs the MAS at the path : $MAS_HOME
+# before running the server :
+# - build the config
+# - build the template
+# - runs sanity check on the templates
 
 set -e
 
@@ -25,4 +30,17 @@ cd $MAS_HOME
 $MAS_TCHAP_HOME/tools/build_conf.sh
 
 export RUST_LOG=info
+# Check if TCHAP_IDENTITY_SERVER_URL is defined
+if [ -z "$TCHAP_IDENTITY_SERVER_URL" ]; then
+    echo "Error: TCHAP_IDENTITY_SERVER_URL environment variable is not defined"
+    exit 1
+fi
+
+export TCHAP_IDENTITY_SERVER_URL=$TCHAP_IDENTITY_SERVER_URL
+
+# Start the server
+echo "Checking templates..."
+cargo run -- templates check -c $MAS_TCHAP_HOME/tmp/config.local.dev.yaml 
+
 cargo run -- server -c $MAS_TCHAP_HOME/tmp/config.local.dev.yaml 
+
