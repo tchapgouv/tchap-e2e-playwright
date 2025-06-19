@@ -10,10 +10,10 @@ import {
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser } from './utils/mas-admin';
 import { SCREENSHOTS_DIR } from './utils/config';
 
-test.describe('OIDC register Flows', () => {
+test.describe('Register', () => {
 
-  test('register via oidc and create user in MAS', async ({ page, testUser }) => {
-    const screenshot_path = 'register_oidc';
+  test('register oidc with allowed account', async ({ page, testUser }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
     const existsBeforeLogin = await checkMasUserExistsByEmail(testUser.kc_email);
@@ -42,8 +42,8 @@ test.describe('OIDC register Flows', () => {
     console.log(`Successfully authenticated and verified user ${testUser.kc_username} (${testUser.kc_email})`);
   });
   
-  test('register via oidc and get error because extern has no invit', async ({ page, testExternalUserWitoutInvit }) => {
-    const screenshot_path = 'register_oidc_no_invit';
+  test('register oidc with extern without invit', async ({ page, testExternalUserWitoutInvit }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
     const existsBeforeLogin = await checkMasUserExistsByEmail(testExternalUserWitoutInvit.kc_email);
@@ -66,15 +66,15 @@ test.describe('OIDC register Flows', () => {
     console.log(`Successfully authenticated and verified user ${testExternalUserWitoutInvit.kc_username} (${testExternalUserWitoutInvit.kc_email})`);
   });
 
-  test('register via oidc and create user external with invitation in MAS', async ({ page, testExternalUser }) => {
-    const screenshot_path = 'register_oidc_invit';
+  test('register oidc with extern with invit', async ({ page, testExternalUserWithInvit: testExternalUserWithInvit }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testExternalUser.kc_email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(testExternalUserWithInvit.kc_email);
     expect(existsBeforeLogin).toBe(false);
     
     // Perform the OIDC login flow
-    await performOidcLogin(page, testExternalUser, screenshot_path);
+    await performOidcLogin(page, testExternalUserWithInvit, screenshot_path);
     
     // Click the create account button
     await page.locator('button[type="submit"]').click();
@@ -86,17 +86,17 @@ test.describe('OIDC register Flows', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-authenticated-external.png` });
     
     // Verify the user was created in MAS
-    await verifyUserInMas(testExternalUser);
+    await verifyUserInMas(testExternalUserWithInvit);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testExternalUser.kc_email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(testExternalUserWithInvit.kc_email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified external user ${testExternalUser.kc_username} (${testExternalUser.kc_email})`);
+    console.log(`Successfully authenticated and verified external user ${testExternalUserWithInvit.kc_username} (${testExternalUserWithInvit.kc_email})`);
   });
 
-  test('should authenticate user via oidc and get error because wrong server', async ({ page, testUserOnWrongServer }) => {
-    const screenshot_path = 'register_oidc_wrong_server';
+  test('register oidc on wrong homeserver', async ({ page, testUserOnWrongServer }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
     const existsBeforeLogin = await checkMasUserExistsByEmail(testUserOnWrongServer.kc_email);

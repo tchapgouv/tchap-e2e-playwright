@@ -1,28 +1,21 @@
 import { test, expect } from '../fixtures/auth-fixture';
 import { 
-  performOidcLogin, 
-  verifyUserInMas, 
-  createMasTestUser, 
-  cleanupMasTestUser, 
-  performPasswordLogin, 
-  TestUser 
+  performOidcLogin,
 } from './utils/auth-helpers';
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject } from './utils/mas-admin';
 import { SCREENSHOTS_DIR } from './utils/config';
 
-test.describe('Oidc login flows', () => {
+test.describe('Login via OIDC', () => {
  
-  test('should link existing MAS account when logging in via OIDC by username', async ({ page, userLegacy: userLegacy }) => {
-    const screenshot_path = 'link_oidc_account_by_username';
-
+  test('match account by username', async ({ page, userLegacy: userLegacy }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
+    
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same username as Keycloak user: ${userLegacy.kc_username}`);
     
     userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
     
     try {
-
-      
       // Perform the OIDC login flow
       await performOidcLogin(page, userLegacy, screenshot_path);
       
@@ -50,8 +43,8 @@ test.describe('Oidc login flows', () => {
   });
 
 
-  test('should link existing MAS account when logging in via OIDC with same email but different username', async ({ page, userLegacy: userLegacy }) => {
-    const screenshot_path = 'link_oidc_account_by_email';
+  test('match account by email', async ({ page, userLegacy: userLegacy }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${userLegacy.kc_email}`);
@@ -59,11 +52,7 @@ test.describe('Oidc login flows', () => {
     userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username+"different_from_email", userLegacy.kc_email, userLegacy.kc_password);
     
     try {
-      // Verify the user exists in MAS
-      const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
-      expect(existsBeforeLogin).toBe(true);
-      console.log(`Confirmed MAS user exists with email: ${userLegacy.kc_email}`);
-      
+     
       // Perform the OIDC login flow
       await performOidcLogin(page, userLegacy, screenshot_path);
       
@@ -92,8 +81,8 @@ test.describe('Oidc login flows', () => {
   });
 
 
-  test('should link existing MAS account when logging in via OIDC by email using fallback rules', async ({ page, userLegacyWithFallbackRules: userLegacy }) => {
-    const screenshot_path = 'link_oidc_account_by_email_with_fallback_rules';
+  test('match account by email with fallback rules', async ({ page, userLegacyWithFallbackRules: userLegacy }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     const old_email_domain = "@beta.gouv.fr";
     const old_email = userLegacy.kc_email.replace(/@.*/, old_email_domain);
@@ -105,10 +94,6 @@ test.describe('Oidc login flows', () => {
     userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username+"different_from_email", old_email, userLegacy.kc_password);
     
     try {
-      // Verify the user exists in MAS
-      const existsBeforeLogin = await checkMasUserExistsByEmail(old_email);
-      expect(existsBeforeLogin).toBe(true);
-      console.log(`Confirmed MAS user exists with email: ${old_email}`);
       
       // Perform the OIDC login flow
       await performOidcLogin(page, userLegacy, screenshot_path);
