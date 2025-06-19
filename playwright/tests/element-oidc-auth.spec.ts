@@ -8,9 +8,9 @@ import { SCREENSHOTS_DIR, TCHAP_LEGACY } from './utils/config';
 
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
-test.describe('Element OIDC register flows', () => {
-  test('element : login via oidc', async ({ page, userLegacy: userLegacy }) => {
-    const screenshot_path = 'element_register_oidc';
+test.describe('Element : Login via OIDC', () => {
+  test('element match account by username', async ({ page, userLegacy: userLegacy }) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
 
     userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
 
