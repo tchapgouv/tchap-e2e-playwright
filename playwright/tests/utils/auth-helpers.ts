@@ -48,7 +48,9 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   
   // Find and click the OIDC provider button (adjust the selector as needed)
   // This is based on the login.html template which shows provider buttons
-  const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  //catch proconnect button with class proconnect-button
+  const oidcButton = page.locator('button.proconnect-button');
   await oidcButton.click();
   
   // Wait for navigation to Keycloak
@@ -81,8 +83,8 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
  */
 export async function performOidcLoginFromElement(page: Page, user: TestUser, screenshot_path: string, tchap_legacy:boolean=false): Promise<void> {
   // Navigate to Element login page
-  await page.goto(`${ELEMENT_URL}/#/login`);
-  
+  await page.goto(`${ELEMENT_URL}/#/login`, { waitUntil: 'networkidle' });
+
   // Take a screenshot of the Element login page
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-element-login-page.png` });
   
@@ -101,7 +103,9 @@ export async function performOidcLoginFromElement(page: Page, user: TestUser, sc
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-mas-login-page.png` });
   
   // Find and click the OIDC provider button
-  const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  const oidcButton = page.locator('button.proconnect-button');
+
   await oidcButton.click();
   
   // Wait for navigation to Keycloak

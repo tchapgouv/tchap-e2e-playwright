@@ -2,7 +2,7 @@
   "name": "User Standard Mapping",
   "request": {
     "method": "GET",
-    "urlPathPattern": "/_matrix/identity/api/v1/info",
+    "urlPathPattern": "/_matrix/identity/api/v1/internal-info",
     "queryParameters": {
       "medium": {
         "equalTo": "email"
@@ -15,7 +15,9 @@
   "response": {
     "status": 200,
     "jsonBody": {
-      "hs": "tchapgouv.com"
+      "hs": "tchapgouv.com",
+      "requires_invite": false,
+      "invited": false
     },
     "headers": {
       "Content-Type": "application/json",

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# runs the MAS with a hot reload when a template is modified
+
+
 set -e
 
 # Source the .env file to load environment variables
@@ -57,10 +60,9 @@ fi
 
 export MAS_HOME=$MAS_HOME
 export MAS_TCHAP_HOME=$PWD
-cd $MAS_HOME
 
 # Build conf from conf.template.yaml
-$MAS_TCHAP_HOME/tools/build_conf.sh
+# $MAS_TCHAP_HOME/tools/build_conf.sh
 
 # Start watching for changes in the background
 watch_templates &
@@ -78,6 +80,6 @@ cleanup() {
 # Set up trap for cleanup
 trap cleanup EXIT INT TERM
 
-# Start the server
-echo "Starting server..."
-cargo run -- server -c $MAS_TCHAP_HOME/tmp/config.local.dev.yaml 
+
+
+./start-local-mas.sh

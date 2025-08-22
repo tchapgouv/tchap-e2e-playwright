@@ -5,7 +5,9 @@
 # and displays the responses
 
 # Set the base URL for the mock server
-MOCK_URL="http://localhost:8083"
+#MOCK_URL="http://localhost:8083"
+MOCK_URL="https://matrix.tchapgouv.com"
+
 
 # Colors for output
 GREEN='\033[0;32m'

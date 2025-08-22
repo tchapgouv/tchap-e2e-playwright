@@ -694,15 +694,15 @@
         }
       },
       "login_link": {
-        "action": "",
+        "action": "Link",
         "@action": {
           "context": "pages/upstream_oauth2/login_link.html:27:28-70"
         },
-        "description": "",
+        "description": "An account exists for the username : %(username)s",
         "@description": {
           "context": "pages/upstream_oauth2/login_link.html:21:7-85"
         },
-        "heading": "",
+        "heading": "Link to your existing account",
         "@heading": {
           "context": "pages/upstream_oauth2/login_link.html:17:27-70"
         }
