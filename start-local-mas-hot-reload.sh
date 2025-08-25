@@ -1,5 +1,7 @@
 #!/bin/bash
+
 # runs the MAS with a hot reload when a template is modified
+
 
 set -e
 
@@ -44,7 +46,6 @@ watch_templates() {
     # Use fswatch to monitor the templates directory
     fswatch -o "$TEMPLATE_SOURCE" | while read; do
         echo "Template change detected..."
-        cd $MAS_HOME
         $MAS_TCHAP_HOME/tools/build_conf.sh
         send_sighup
     done
@@ -59,7 +60,6 @@ fi
 
 export MAS_HOME=$MAS_HOME
 export MAS_TCHAP_HOME=$PWD
-
 
 # Build conf from conf.template.yaml
 # $MAS_TCHAP_HOME/tools/build_conf.sh
