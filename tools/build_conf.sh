@@ -5,11 +5,11 @@ set -e
 echo "Install tchap @vector-im/compound-design-tokens ..."
 
 cd "$MAS_HOME/frontend"
-yarn install 
+npm install 
 
 # uncomment if needed : 
 # echo "Building frontend and static resources with yarn build-tchap ..."
-# yarn build-tchap 
+npm run build-tchap 
 
 
 echo "Building templates..."
