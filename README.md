@@ -4,13 +4,11 @@
 - /.github custom CI (if needed)
 - /conf : configuration du MAS special tchap
 - /playwright : test E2E
-- /ressources : custom html templates, css and manifest.json
 - /tools : for local dev
-- /translations : tchap custom labels
 - /wiremock : mock http response for identity server sydent
 
 
-export $MAS_HOME : path of /matrix-authentication-service, fork léger https://github.com/tchapgouv/matrix-authentication-service
+export $MAS_HOME : path of /matrix-authentication-service, fork  https://github.com/tchapgouv/matrix-authentication-service
 export $MAS_TCHAP_HOME : path of /matrix-authentication-service-tchap
 
 
