@@ -20,10 +20,10 @@ if [ -z "$MAS_HOME" ]; then
     exit 1
 fi
 
-# Check if TEMPLATE_SOURCE is defined
-if [ -z "$TEMPLATE_SOURCE" ]; then
-    echo "Error: TEMPLATE_SOURCE environment variable is not defined"
-    echo "Please set TEMPLATE_SOURCE to the path of your templates directory"
+# Check if TEMPLATE_WATCH is defined
+if [ -z "$TEMPLATE_WATCH" ]; then
+    echo "Error: TEMPLATE_WATCH environment variable is not defined"
+    echo "Please set TEMPLATE_WATCH to the path of your templates directory"
     exit 1
 fi
 
@@ -41,10 +41,10 @@ send_sighup() {
 
 # Function to watch for template changes
 watch_templates() {
-    echo "Watching for changes in $TEMPLATE_SOURCE..."
+    echo "Watching for changes in $TEMPLATE_WATCH..."
     
     # Use fswatch to monitor the templates directory
-    fswatch -o "$TEMPLATE_SOURCE" | while read; do
+    fswatch -o "$TEMPLATE_WATCH" | while read; do
         echo "Template change detected..."
         $MAS_TCHAP_HOME/tools/build_conf.sh
         send_sighup
@@ -79,7 +79,5 @@ cleanup() {
 
 # Set up trap for cleanup
 trap cleanup EXIT INT TERM
-
-
 
 ./start-local-mas.sh

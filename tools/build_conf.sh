@@ -25,7 +25,7 @@ fi
 cp -r "$MAS_HOME/templates" "$MAS_TCHAP_DATA"
 
 # Override MAS template with custom tchap template
-cp -r "$MAS_TCHAP_HOME/resources/templates" "$MAS_TCHAP_DATA"
+cp -r "$MAS_HOME/tchap/resources/templates" "$MAS_TCHAP_DATA"
 
 echo "Building MAS config..."
 
@@ -38,7 +38,7 @@ MAS_TCHAP_TEMPLATES="$MAS_TCHAP_DATA/templates"
 sed -i '' -E "/^templates:/,/^[^[:space:]]/ s|^[[:space:]]*path:.*|  path: \"$MAS_TCHAP_TEMPLATES\"|" "$yaml_file"
 
 echo "Updating translations..."
-MAS_TCHAP_TRANSLATIONS="$MAS_TCHAP_HOME/resources/translations"
+MAS_TCHAP_TRANSLATIONS="$MAS_HOME/tchap/resources/translations"
 
 cargo run -p mas-i18n-scan  -- --update "${MAS_TCHAP_TEMPLATES}" "${MAS_TCHAP_TRANSLATIONS}/en.json"
 
