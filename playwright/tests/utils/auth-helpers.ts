@@ -75,6 +75,57 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
 
 /**
  * Perform OIDC login starting from Element client
+ */
+export async function performOidcLoginFromTchap(page: Page, user: TestUser, screenshot_path: string, tchap_legacy:boolean=false): Promise<void> {
+
+  //we go to the welcome and then to the login page because sometimes the email field disapears
+  await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png` });
+  
+  await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+
+  await page.locator('#mx_Field_1').fill(user.kc_email);
+
+  // Click on "Continuer" button
+  await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+  // Wait for navigation to MAS
+  await page.waitForURL(url => url.toString().includes(MAS_URL));
+  
+  // Take a screenshot of the MAS login page
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-mas-login-page.png` });
+  
+  // Find and click the OIDC provider button
+  //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  const oidcButton = page.locator('button.proconnect-button');
+
+  await oidcButton.click();
+  
+  // Wait for navigation to Keycloak
+  await page.waitForURL(url => url.toString().includes(KEYCLOAK_URL));
+  
+  // Take a screenshot of the Keycloak login page
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-keycloak-login.png` });
+  
+  // Fill in the username and password
+  await page.locator('#username').fill(user.kc_username);
+  await page.locator('#password').fill(user.kc_password);
+  
+  // Click the login button
+  await page.locator('button[type="submit"]').click();
+  
+  // Wait for redirect back to MAS
+  await page.waitForURL(url => url.toString().includes(MAS_URL));
+  
+  // Take a screenshot after successful login
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-after-login.png` });
+}
+
+
+
+/**
+ * Perform OIDC login starting from Element client
  * This function handles the entire authentication flow:
  * 1. Navigate to Element login page
  * 2. Click on "Continuer" button
