@@ -50,7 +50,7 @@ export function generateTestUser(domain:string) {
   const timestamp = new Date().getTime();
   const randomSuffix = Math.floor(Math.random() * 10000);
   const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const kc_email = `${kc_username}@${domain}`;
+  const kc_email = `${kc_username}+1@${domain}`;
   
   return {
     kc_username: kc_username,
