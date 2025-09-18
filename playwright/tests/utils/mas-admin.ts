@@ -316,3 +316,76 @@ export async function disposeApiContext(): Promise<void> {
     console.log(`[MAS API] No API context to dispose`);
   }
 }
+
+
+/**
+ * Check if a oauth link exists
+ */
+export async function getOauthLinkByUserId(userId: string): Promise<any> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.get(`/api/admin/v1/upstream-oauth-links?filter[user]=${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+  }
+  const data = await response.json();
+  //console.log(data.data)
+  const links = data.data;
+  console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
+  return links
+}
+
+
+export async function getOauthLinkBySubject(subject: string): Promise<any> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.get(`/api/admin/v1/upstream-oauth-links?filter[subject]=${subject}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+  }
+  const data = await response.json();
+  //console.log(data.data)
+  const links = data.data;
+  console.log(`[MAS API] Oauth links for user ${subject} : ${JSON.stringify(links)}`);
+  return links
+}
+
+
+export async function deleteOauthLink(id: string): Promise<void> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.delete(`/api/admin/v1/upstream-oauth-links/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+  }
+  console.log(`[MAS API] Oauth links deleted for id:${id}, response : ${JSON.stringify(response)} `);
+
+  //const data = await response.json();
+  //console.log(data.data)
+  //console.log(`[MAS API] delete links for id ${id} : ${JSON.stringify(links)}`);
+  return;
+}
