@@ -122,17 +122,26 @@ test.describe('Login via OIDC', () => {
   });
 
 
-  test('match a deactivated account by email', async ({browser, context, page, userLegacy: userLegacy }) => {
+  test('match account by email when former account is deactivated but another one is valid', async ({browser, context, page, userLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${userLegacy.kc_email}`);
     
-    userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
+    const formerTchapAccountMasId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
+    await deactivateMasUser(formerTchapAccountMasId);
+    
+    const newTchapAccountWithIndex = {
+      kc_username: userLegacy.kc_username + "2",
+      kc_email: userLegacy.kc_email,
+      kc_password: userLegacy.kc_password,
+      masId: "",
+    }
+    newTchapAccountWithIndex.masId = await createMasUserWithPassword(newTchapAccountWithIndex.kc_username, newTchapAccountWithIndex.kc_email, newTchapAccountWithIndex.kc_password);
     
     try {
      
-      // Perform the OIDC login flow
+      // Perform the OIDC login flow with KC Account(=userLegacy)
       await performOidcLogin(page, userLegacy, screenshot_path);
       
        // Click the link account button
@@ -145,69 +154,19 @@ test.describe('Login via OIDC', () => {
       // Take a screenshot of the authenticated state
       await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
       
-      // Verify the user in MAS is still the same (account was linked, not created new)
-      const userAfterLogin = await getMasUserByEmail(userLegacy.kc_email);
-      expect(userAfterLogin.id).toBe(userLegacy.masId);
-      //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
+      // Verify the user in MAS is linked to the indexed account
+      const userAfterLogin = await getMasUserByEmail(newTchapAccountWithIndex.kc_email);
+      expect(userAfterLogin.id).toBe(newTchapAccountWithIndex.masId);
+      expect(userAfterLogin.attributes['username']).toBe(newTchapAccountWithIndex.kc_username);
+      await expect(page.locator(`text=${newTchapAccountWithIndex.kc_username}`)).toBeVisible();
       expect(await oauthLinkExistsBySubject(userLegacy.kc_username)).toBe(true);
 
-      console.log(`Successfully verified account linking for user with email: ${userLegacy.kc_email}`);
+      console.log(`Successfully verified account linking for user with email: ${newTchapAccountWithIndex.kc_email}`);
 
-      //deactvate account
-      await deactivateMasUser(userLegacy.masId);
-
-      const links = await getOauthLinkBySubject(userLegacy.kc_username);
-
-      await deleteOauthLink(links[0]['id'])
-
-      //console.log(`wait 1 seconds`);
-
-      //await page.waitForTimeout(1000);
-
-      // Create a new incognito browser context
-      const context2 = await browser.newContext();
-
-      // Create a page.
-      const page2 = await context2.newPage();
-
-      //RESTART ANOTHER OIDC LOGIN
-      await page2.goto('/login');
-  
-      const screenshot_path_2 = screenshot_path + "_2"
-      // Take a screenshot of the login page
-      await page2.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path_2}/01-login-page.png` });
-     
-      // Perform the OIDC login flow
-      await performOidcLogin(page2, userLegacy, screenshot_path_2);
-
-      // Click the link account button
-      await page2.locator('button[type="submit"]').click();
-
-      await page2.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path_2}/04-linked-account.png` });
-
-      // Since the account already exists, we should be automatically logged in
-      // Verify we're successfully logged in
-      await expect(page2.locator('text=Mon compte')).toBeVisible();
-      
-      // Take a screenshot of the authenticated state
-      await page2.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path_2}/05-connected-account.png` });
-    
-   
-      console.log(`Successfully verified account linking for user with email: ${userLegacy.kc_email}`);
-
-
-      // Verify the user in MAS is still the same (account was linked, not created new)
-      const userAfterLogin2 = await getMasUserByEmail(userLegacy.kc_email);
-      expect(userAfterLogin2.id).toBe(userLegacy.masId);
-      //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
-      expect(await oauthLinkExistsBySubject(userLegacy.kc_username)).toBe(true);
-
-      console.log(`Successfully verified account linking for user with email: ${userLegacy.kc_email}`);
-      
     } finally {
       // Clean up the MAS user
-      //await deactivateMasUser(userLegacy.masId);
-      //console.log(`Cleaned up MAS user: ${userLegacy.kc_username}`);
+      await deactivateMasUser(newTchapAccountWithIndex.masId);
+      console.log(`Cleaned up MAS user: ${newTchapAccountWithIndex.kc_username}`);
     }
   });
 });

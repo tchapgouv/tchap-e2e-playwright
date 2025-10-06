@@ -389,3 +389,53 @@ export async function deleteOauthLink(id: string): Promise<void> {
   //console.log(`[MAS API] delete links for id ${id} : ${JSON.stringify(links)}`);
   return;
 }
+
+export async function addUserEmail(userId: string, email: string): Promise<void> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.post(`/api/admin/v1/user-emails`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    data: {
+      "user_id": userId,
+      "email": email
+    }
+  });
+
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to set email for user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to set email for user: ${response.status()} - ${errorText}`);
+  }
+  console.log(`[MAS API] User email added for user_id:${userId}, response : ${JSON.stringify(response)} `);
+  return;
+}
+
+
+
+/**
+ * Delete a user from MAS
+ */
+export async function reactivateMasUser(userId: string): Promise<void> {
+  console.log(`[MAS API] Deleting user with ID: ${userId}`);
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.post(`/api/admin/v1/users/${userId}/reactivate`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to reactivate user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to reactivate MAS user: ${response.status()} - ${errorText}`);
+  }
+  
+  console.log(`[MAS API] User reactivated successfully`);
+}
+
