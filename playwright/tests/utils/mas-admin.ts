@@ -383,10 +383,6 @@ export async function deleteOauthLink(id: string): Promise<void> {
     throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
   }
   console.log(`[MAS API] Oauth links deleted for id:${id}, response : ${JSON.stringify(response)} `);
-
-  //const data = await response.json();
-  //console.log(data.data)
-  //console.log(`[MAS API] delete links for id ${id} : ${JSON.stringify(links)}`);
   return;
 }
 
@@ -417,7 +413,7 @@ export async function addUserEmail(userId: string, email: string): Promise<void>
 
 
 /**
- * Delete a user from MAS
+ * Reactivate a user from MAS
  */
 export async function reactivateMasUser(userId: string): Promise<void> {
   console.log(`[MAS API] Deleting user with ID: ${userId}`);
