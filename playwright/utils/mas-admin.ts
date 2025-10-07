@@ -4,6 +4,7 @@ import {
   MAS_ADMIN_CLIENT_ID, 
   MAS_ADMIN_CLIENT_SECRET 
 } from './config';
+import { UserCredentials } from './auth-helpers';
 
 // Create a reusable API request context
 let apiContext: APIRequestContext | null = null;

@@ -16,6 +16,7 @@ dotenv.config({ path: path.resolve(__dirname, `../../.env.${env}`) });
 export const MAS_URL = process.env.MAS_URL || 'https://auth.tchapgouv.com';
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || 'https://sso.tchapgouv.com';
 export const ELEMENT_URL = process.env.ELEMENT_URL || 'https://element.tchapgouv.com';
+export const BASSE_URL = process.env.BASE_URL || "https://matrix.tchapgouv.com";
 
 export const TCHAP_LEGACY:boolean = Boolean(process.env.TCHAP_LEGACY);
 
@@ -45,30 +46,10 @@ export const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || 'playwright-result
 // Browser locale
 export const BROWSER_LOCALE = process.env.BROWSER_LOCALE || 'fr-FR';
 
-// Generate a unique username and email for testing
-export function generateTestUser(domain:string) {
-  const timestamp = new Date().getTime();
-  const randomSuffix = Math.floor(Math.random() * 10);
-  const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const kc_email = `${kc_username}+1@${domain}`;
-  
-  return {
-    kc_username: kc_username,
-    kc_email: kc_email,
-    kc_password: TEST_USER_PASSWORD
-  };
-}
 
-// Generate a unique username and email for testing
-export function generateExternTestUser() {
-  const timestamp = new Date().getTime();
-  const randomSuffix = Math.floor(Math.random() * 10000);
-  const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const email = `${username}@tchapgouv.com`;
-  
-  return {
-    username,
-    email,
-    password: TEST_USER_PASSWORD
-  };
-}
+// TODO Move all below to env file
+// Fixed tests data, that can be used across environement
+export const FIX_USER_USERNAME = "Michelle_test";
+export const FIX_USER_PASSWORD = "Michelle1313!";
+export const FIX_USER_EMAIL = "Michelle1313!";
+

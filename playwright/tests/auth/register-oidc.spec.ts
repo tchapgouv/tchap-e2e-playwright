@@ -1,4 +1,4 @@
-import { test, expect } from '../fixtures/auth-fixture';
+import { test, expect } from '../../fixtures/auth-fixture';
 import { 
   performOidcLogin, 
   verifyUserInMas, 
@@ -6,9 +6,9 @@ import {
   cleanupMasTestUser, 
   performPasswordLogin, 
   TestUser 
-} from './utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser } from './utils/mas-admin';
-import { SCREENSHOTS_DIR } from './utils/config';
+} from '../../utils/auth-helpers';
+import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser } from '../../utils/mas-admin';
+import { SCREENSHOTS_DIR } from '../../utils/config';
 
 test.describe('Register', () => {
 

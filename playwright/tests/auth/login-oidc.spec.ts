@@ -1,9 +1,9 @@
-import { test, expect } from '../fixtures/auth-fixture';
+import { test, expect } from '../../fixtures/auth-fixture';
 import { 
   performOidcLogin,
-} from './utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkExistsByUserId, deleteOauthLink, getOauthLinkBySubject, reactivateMasUser, addUserEmail } from './utils/mas-admin';
-import { SCREENSHOTS_DIR } from './utils/config';
+} from '../../utils/auth-helpers';
+import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../utils/mas-admin';
+import { SCREENSHOTS_DIR } from '../../utils/config';
 
 test.describe('Login via OIDC', () => {
  
