@@ -61,6 +61,7 @@ Recharger la page https://element.tchapgouv.com/, le MAS est accessible
 ## launch tests
 
 ```bash
+cd playwright
 playwright % npm test
 ```
 
