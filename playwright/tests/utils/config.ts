@@ -48,7 +48,7 @@ export const BROWSER_LOCALE = process.env.BROWSER_LOCALE || 'fr-FR';
 // Generate a unique username and email for testing
 export function generateTestUser(domain:string) {
   const timestamp = new Date().getTime();
-  const randomSuffix = Math.floor(Math.random() * 10000);
+  const randomSuffix = Math.floor(Math.random() * 10);
   const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
   const kc_email = `${kc_username}+1@${domain}`;
   
