@@ -21,9 +21,10 @@ test.describe('Tchap : register password', () => {
   
     //welcome
     await page.waitForURL(url => url.toString().includes(`#/welcome`));
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png` });
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01--tchap-login-page.png` });
     await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
     await page.waitForURL(url => url.toString().includes(`#/email-precheck-sso`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-precheck-sso.png` });
     await page.locator('input').fill(email);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
   
