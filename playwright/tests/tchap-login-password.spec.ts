@@ -1,10 +1,6 @@
 import { test, expect } from '../fixtures/auth-fixture';
-import { 
-  verifyUserInMas, 
-  performOidcLoginFromTchap
-} from './utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword } from './utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from './utils/config';
+import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../utils/mas-admin';
+import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../utils/config';
 
 
 test.describe('Tchap : Login password', () => {
