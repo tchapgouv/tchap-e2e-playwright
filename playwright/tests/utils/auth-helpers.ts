@@ -85,7 +85,7 @@ export async function performOidcLoginFromTchap(page: Page, user: TestUser, scre
   
   await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
 
-  await page.locator('#mx_Field_1').fill(user.kc_email);
+  await page.locator('input').fill(user.kc_email);
 
   // Click on "Continuer" button
   await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
