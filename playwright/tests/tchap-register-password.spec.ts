@@ -63,15 +63,22 @@ test.describe('Tchap : register password', () => {
     //consent
     await page.waitForURL(url => url.toString().includes(`/consent`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/07-consent.png`, fullPage: true });
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+
+    //tchap
+    await page.waitForURL(url => url.toString().includes(`#/home`), { timeout: 20000 });
+    //TODO this condition is hardcoded
+    await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/08-tchap-home.png`, fullPage: true });
+    
 
     const created_user = await getMasUserByEmail(email);
 
     //check created username fields
     expect(created_user.attributes.username).toContain(user.kc_username);
 
-    //todo : check email?
-    //todo : check displayname?
-
+    //todo : check displayname? -> display name is stored in Synapse, or in the home screen of Tchap
   });
 
 
@@ -90,18 +97,17 @@ test.describe('Tchap : register password', () => {
     const firstIncompingMail = await page.locator('.col-md-5').first();
 
     let codeText = await firstIncompingMail.textContent();
-    /*
-    let codeText = `
-    
-    Votre code de vérification est : 709110
-    
-    `*/
+    if (!codeText) {
+      throw new Error('Unable to extract verification code');
+    }
     console.log(codeText);
     codeText = codeText.trim();
     console.log(codeText);
     const codeMatch = codeText.match(/.*: (\d+)/);
-    console.log(codeMatch);
-    const verificationCode = codeMatch ? codeMatch[1] : '123456';
+    if (!codeMatch) {
+      throw new Error('Unable to extract verification code from text');
+    }
+    const verificationCode = codeMatch[1];
 
     return verificationCode;
   }
