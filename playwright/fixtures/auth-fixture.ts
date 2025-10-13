@@ -12,6 +12,23 @@ import {
   NUMERIQUE_EMAIL_DOMAIN
 } from '../tests/utils/config';
 
+
+function generateSimpleUserFixture(domain: string) {
+  return async ({}, use: (user: TestUser) => Promise<void>) => {
+    try {
+      const user = generateTestUser(domain);
+      
+      // Use the test user in the test
+      await use(user);
+     
+    } finally {
+      // Dispose API contexts
+      await Promise.all([
+      ]);
+    }
+  };
+}
+
 /**
  * Function to create a test user fixture with a specific domain
  */
@@ -77,6 +94,7 @@ function createLegacyUserFixture(domain: string) {
  * Extend the basic test fixtures with our authentication fixtures
  */
 export const test = base.extend<{
+  simpleUser: TestUser,
   testUser: TestUser;
   testExternalUserWithInvit: TestUser;
   testExternalUserWitoutInvit: TestUser;
@@ -87,6 +105,7 @@ export const test = base.extend<{
   /**
    * Create a test user in Keycloak before the test and clean it up after
    */
+  simpleUser: generateSimpleUserFixture(STANDARD_EMAIL_DOMAIN),
   testUser: createTestUserFixture(STANDARD_EMAIL_DOMAIN),
   testExternalUserWithInvit: createTestUserFixture(INVITED_EMAIL_DOMAIN),
   testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
