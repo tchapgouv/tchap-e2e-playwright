@@ -15,7 +15,8 @@ import {
   NOT_INVITED_EMAIL_DOMAIN,
   WRONG_SERVER_EMAIL_DOMAIN,
   NUMERIQUE_EMAIL_DOMAIN,
-  BASSE_URL
+  BASSE_URL,
+  ELEMENT_URL
 } from "../utils/config";
 import { ClientServerApi, Credentials } from "../utils/api";
 
@@ -158,7 +159,7 @@ export const test = base.extend<{
     await waitForMasUser(user.kc_email);
 
     const credentials = (await csAPI.loginUser(
-      userId,
+      user.kc_username,
       user.kc_password
     )) as Credentials;
 
@@ -166,7 +167,7 @@ export const test = base.extend<{
     await populateLocalStorageWithCredentials(page, credentials);
 
     // 3. Load app
-    await page.goto("/");
+    await page.goto(ELEMENT_URL);
     await page.waitForSelector(".mx_MatrixChat", { timeout: 30000 });
 
     // 4. Pass page to test
