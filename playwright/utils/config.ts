@@ -3,7 +3,7 @@ import path from 'path';
 
 
 // Determine which environment to use
-const env = process.env.TEST_ENV || 'local';
+export const env = process.env.TEST_ENV || 'local';
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
@@ -16,7 +16,7 @@ dotenv.config({ path: path.resolve(__dirname, `../../.env.${env}`) });
 export const MAS_URL = process.env.MAS_URL || 'https://auth.tchapgouv.com';
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || 'https://sso.tchapgouv.com';
 export const ELEMENT_URL = process.env.ELEMENT_URL || 'https://element.tchapgouv.com';
-export const BASSE_URL = process.env.BASE_URL || "https://matrix.tchapgouv.com";
+export const BASE_URL = process.env.BASE_URL || "https://matrix.tchapgouv.com";
 
 export const TCHAP_LEGACY:boolean = Boolean(process.env.TCHAP_LEGACY);
 
