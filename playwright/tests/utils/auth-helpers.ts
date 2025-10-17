@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test';
+import { BrowserContext, Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
 import { ELEMENT_URL, generateTestUser, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR } from './config';
@@ -241,3 +241,35 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
   
   console.log(`[Auth] Password login successful for user: ${user.kc_username}`);
 }
+
+
+
+  // Add this function to extract the verification code
+export async function extractVerificationCode(context: BrowserContext, screenshot_path:string): Promise<string> {
+    // Create a new page for mail.tchapgouv.com
+    const page = await context.newPage();
+
+    // Navigate to mail.tchapgouv.com
+    await page.goto('https://mail.tchapgouv.com');
+
+    // Wait for the page to load and click on the first email
+    await page.waitForSelector('.msglist-message');
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/00-verification-code.png`, fullPage: true });
+
+    const firstIncompingMail = await page.locator('.col-md-5').first();
+
+    let codeText = await firstIncompingMail.textContent();
+    if (!codeText) {
+      throw new Error('Unable to extract verification code');
+    }
+    console.log(codeText);
+    codeText = codeText.trim();
+    console.log(codeText);
+    const codeMatch = codeText.match(/.*: (\d+)/);
+    if (!codeMatch) {
+      throw new Error('Unable to extract verification code from text');
+    }
+    const verificationCode = codeMatch[1];
+
+    return verificationCode;
+  }

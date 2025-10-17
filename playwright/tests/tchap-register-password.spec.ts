@@ -1,7 +1,8 @@
 import { test, expect } from '../fixtures/auth-fixture';
 import { 
   verifyUserInMas, 
-  performOidcLoginFromTchap
+  performOidcLoginFromTchap,
+  extractVerificationCode
 } from './utils/auth-helpers';
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail } from './utils/mas-admin';
 import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL, generateTestUser } from './utils/config';
@@ -22,19 +23,13 @@ test.describe('Tchap : register password', () => {
     //welcome
     await page.waitForURL(url => url.toString().includes(`#/welcome`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01--tchap-login-page.png` });
-    await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+    await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
     await page.waitForURL(url => url.toString().includes(`#/email-precheck-sso`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-precheck-sso.png` });
     await page.locator('input').fill(email);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
   
-    //login
-    await page.waitForURL(url => url.toString().includes(`${MAS_URL}/login`));
-    await expect(page.locator('input[name="username"]')).toHaveValue(email);
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-login.png`, fullPage: true });
-
     //register
-    await page.getByRole('link', { name: 'Créer un compte' }).click();
     await page.waitForURL(url => url.toString().includes(`/register`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-register.png`, fullPage: true });
 
@@ -80,36 +75,5 @@ test.describe('Tchap : register password', () => {
 
     //todo : check displayname? -> display name is stored in Synapse, or in the home screen of Tchap
   });
-
-
-  // Add this function to extract the verification code
-  async function extractVerificationCode(context: BrowserContext, screenshot_path:string): Promise<string> {
-    // Create a new page for mail.tchapgouv.com
-    const page = await context.newPage();
-
-    // Navigate to mail.tchapgouv.com
-    await page.goto('https://mail.tchapgouv.com');
-
-    // Wait for the page to load and click on the first email
-    await page.waitForSelector('.msglist-message');
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/00-verification-code.png`, fullPage: true });
-
-    const firstIncompingMail = await page.locator('.col-md-5').first();
-
-    let codeText = await firstIncompingMail.textContent();
-    if (!codeText) {
-      throw new Error('Unable to extract verification code');
-    }
-    console.log(codeText);
-    codeText = codeText.trim();
-    console.log(codeText);
-    const codeMatch = codeText.match(/.*: (\d+)/);
-    if (!codeMatch) {
-      throw new Error('Unable to extract verification code from text');
-    }
-    const verificationCode = codeMatch[1];
-
-    return verificationCode;
-  }
 
 });
