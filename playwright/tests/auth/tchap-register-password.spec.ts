@@ -1,9 +1,9 @@
-import { test, expect } from '../fixtures/auth-fixture';
+import { test, expect } from '../../fixtures/auth-fixture';
 import { 
   extractVerificationCode
-} from '../utils/auth-helpers';
-import { getMasUserByEmail } from '../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL } from '../utils/config';
+} from '../../utils/auth-helpers';
+import { getMasUserByEmail } from '../../utils/mas-admin';
+import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../utils/config';
 
 
 test.describe('Tchap : register password', () => {

@@ -1,13 +1,5 @@
-import { test, expect } from '../fixtures/auth-fixture';
-import { 
-  verifyUserInMas, 
-  performOidcLoginFromTchap,
-  extractVerificationCode
-} from '../utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail } from '../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../utils/config';
-import { BrowserContext } from '@playwright/test';
-import { assert } from 'console';
+import { test, expect } from '../../fixtures/auth-fixture';
+import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
 
 
 test.describe('Register', () => {
