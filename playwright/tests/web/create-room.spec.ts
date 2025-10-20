@@ -67,7 +67,7 @@ test.describe("Create Room", () => {
     // Select public room option
     await dialog
       .locator(".tc_TchapRoomTypeSelector_RadioButton_title")
-      .getByText("Private room")
+      .getByText("Private room", { exact: true })
       .click();
 
     // Submit
