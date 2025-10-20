@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
-import { BROWSER_LOCALE } from './tests/utils/config';
+import { BROWSER_LOCALE } from './utils/config';
 
 // Load environment variables from .env file
 dotenv.config();

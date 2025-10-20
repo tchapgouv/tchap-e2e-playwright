@@ -1,16 +1,25 @@
-import { test as base } from '@playwright/test';
-import { createKeycloakTestUser, cleanupKeycloakTestUser, TestUser } from '../tests/utils/auth-helpers';
-import { disposeApiContext as disposeKeycloakApiContext } from '../tests/utils/keycloak-admin';
-import { disposeApiContext as disposeMasApiContext } from '../tests/utils/mas-admin';
-import { generateTestUser } from '../tests/utils/config';
+import { test as base, Page } from "@playwright/test";
+import {
+  createKeycloakTestUser,
+  cleanupKeycloakTestUser,
+  TestUser,
+  TypeUser,
+  populateLocalStorageWithCredentials,
+} from "../utils/auth-helpers";
+import { disposeApiContext as disposeKeycloakApiContext } from "../utils/keycloak-admin";
+import { createMasUserWithPassword, deactivateMasUser, disposeApiContext as disposeMasApiContext, waitForMasUser } from "../utils/mas-admin";
+import { generateTestUser } from "../utils/auth-helpers";
 
-import { 
-  STANDARD_EMAIL_DOMAIN, 
-  INVITED_EMAIL_DOMAIN, 
-  NOT_INVITED_EMAIL_DOMAIN, 
+import {
+  STANDARD_EMAIL_DOMAIN,
+  INVITED_EMAIL_DOMAIN,
+  NOT_INVITED_EMAIL_DOMAIN,
   WRONG_SERVER_EMAIL_DOMAIN,
-  NUMERIQUE_EMAIL_DOMAIN
-} from '../tests/utils/config';
+  NUMERIQUE_EMAIL_DOMAIN,
+  BASE_URL,
+  ELEMENT_URL
+} from "../utils/config";
+import { ClientServerApi, Credentials } from "../utils/api";
 
 
 function generateSimpleUserFixture(domain: string) {
@@ -36,23 +45,20 @@ function createTestUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const testUser = generateTestUser(domain);
-      
+
       // Create a test user in Keycloak
       const user = await createKeycloakTestUser(testUser);
-      
+
       // Use the test user in the test
       await use(user);
-      
+
       // Clean up the test user after the test
       await cleanupKeycloakTestUser(user);
       console.log(`Cleaned up test user: ${user.kc_username}`);
     } finally {
       // Dispose API contexts
-      await Promise.all([
-        disposeKeycloakApiContext(),
-        disposeMasApiContext()
-      ]);
-      console.log('API contexts disposed');
+      await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
+      console.log("API contexts disposed");
     }
   };
 }
@@ -64,28 +70,25 @@ function createLegacyUserFixture(domain: string) {
     try {
       const randomSuffix = Math.floor(Math.random() * 10000);
 
-      const testUser:TestUser = {
+      const testUser: TestUser = {
         kc_username: `test.user${randomSuffix}-${domain}`,
         kc_email: `test.user${randomSuffix}@${domain}`,
-        kc_password: '1234!'
-      }
-      
+        kc_password: "1234!",
+      };
+
       // Create a test user in Keycloak
       const user = await createKeycloakTestUser(testUser);
-      
+
       // Use the test user in the test
       await use(user);
-      
+
       // Clean up the test user after the test
       await cleanupKeycloakTestUser(user);
       console.log(`Cleaned up test user: ${user.kc_username}`);
     } finally {
       // Dispose API contexts
-      await Promise.all([
-        disposeKeycloakApiContext(),
-        disposeMasApiContext()
-      ]);
-      console.log('API contexts disposed');
+      await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
+      console.log("API contexts disposed");
     }
   };
 }
@@ -99,8 +102,10 @@ export const test = base.extend<{
   testExternalUserWithInvit: TestUser;
   testExternalUserWitoutInvit: TestUser;
   testUserOnWrongServer: TestUser;
-  userLegacy:TestUser;
+  userLegacy: TestUser;
   userLegacyWithFallbackRules: TestUser;
+  authenticatedUser: Credentials;
+  typeUser: TypeUser;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
@@ -110,8 +115,39 @@ export const test = base.extend<{
   testExternalUserWithInvit: createTestUserFixture(INVITED_EMAIL_DOMAIN),
   testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   testUserOnWrongServer: createTestUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
-  userLegacy:createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
-  userLegacyWithFallbackRules:createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN)
+  userLegacy: createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
+  userLegacyWithFallbackRules: createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  typeUser: TypeUser.MAS_PASSWORD_USER,
+  authenticatedUser: async ({ page, testUser: user, request }, use) => {
+    // 1. Register user
+    const userId = await createMasUserWithPassword(
+      user.kc_username,
+      user.kc_email,
+      user.kc_password
+    );
+    const csAPI = new ClientServerApi(BASE_URL, request);
+
+    await waitForMasUser(user.kc_email);
+
+    const credentials = (await csAPI.loginUser(
+      user.kc_username,
+      user.kc_password
+    )) as Credentials;
+
+    // 2. Populate localStorage
+    await populateLocalStorageWithCredentials(page, credentials);
+
+    // 3. Load app
+    await page.goto(ELEMENT_URL);
+    await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
+
+    // 4. Pass page to test
+    await use(credentials);
+
+    // Clean up, deactivate user
+    await deactivateMasUser(userId);
+    console.log(`Cleaned up MAS user: ${user.kc_username}`);
+  },
 });
 
-export { expect } from '@playwright/test';
+export { expect } from "@playwright/test";

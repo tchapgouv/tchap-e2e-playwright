@@ -1,7 +1,8 @@
 import { BrowserContext, Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
-import { ELEMENT_URL, generateTestUser, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR } from './config';
+import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
+import { Credentials } from './api';
 
 /**
  * Test user type
@@ -12,6 +13,16 @@ export interface TestUser {
   kc_password: string;
   keycloakId?: string;
   masId?: string;
+}
+
+/**
+ * Different type of user can be used
+ */
+export enum TypeUser {
+  MAS_PASSWORD_USER,
+  MAS_OIDC_USER,
+  INVITED_USER,
+  OIDC_USER,
 }
 
 /**
@@ -272,4 +283,87 @@ export async function extractVerificationCode(context: BrowserContext, screensho
     const verificationCode = codeMatch[1];
 
     return verificationCode;
-  }
+}
+
+
+/**
+ * Same as performPasswordLogin but without the screenshots
+ */
+export async function performSimplePasswordLogin(
+  page: Page,
+  user: TestUser,
+  screenshot_path: string
+): Promise<void> {
+  console.log(`[Auth] Performing password login for user: ${user.kc_username}`);
+
+  // Navigate to the login page
+  await page.goto("/login");
+
+  // Fill in the username and password
+  await page.locator('input[name="username"]').fill(user.kc_username);
+  await page.locator('input[name="password"]').fill(user.kc_password);
+
+  // Click the login button (submit the form)
+  await page.locator('button[type="submit"]').click();
+
+  // Wait for successful login (redirect to dashboard or home page)
+  await page.waitForURL((url) => !url.toString().includes("/login"));
+
+  console.log(`[Auth] Password login successful for user: ${user.kc_username}`);
+}
+
+// Generate a unique username and email for testing
+export function generateTestUser(domain:string) {
+  const timestamp = new Date().getTime();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
+  const kc_email = `${kc_username}+1@${domain}`;
+  
+  return {
+    kc_username: kc_username,
+    kc_email: kc_email,
+    kc_password: TEST_USER_PASSWORD
+  };
+}
+
+// Generate a unique username and email for testing
+export function generateExternTestUser() {
+  const timestamp = new Date().getTime();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
+  const email = `${username}@tchapgouv.com`;
+  
+  return {
+    username,
+    email,
+    password: TEST_USER_PASSWORD
+  };
+}
+
+
+// Taken from element-mmodules
+/** Adds an initScript to the given page which will populate localStorage appropriately so that Element will use the given credentials. */
+export async function populateLocalStorageWithCredentials(page: Page, credentials: Credentials) {
+  await page.addInitScript(
+      ({ credentials }) => {
+          window.localStorage.setItem("mx_hs_url", credentials.homeserverBaseUrl);
+          window.localStorage.setItem("mx_user_id", credentials.userId);
+          window.localStorage.setItem("mx_access_token", credentials.accessToken);
+          window.localStorage.setItem("mx_device_id", credentials.deviceId);
+          window.localStorage.setItem("mx_is_guest", "false");
+          window.localStorage.setItem("mx_has_pickle_key", "false");
+          window.localStorage.setItem("mx_has_access_token", "true");
+
+          window.localStorage.setItem(
+              "mx_local_settings",
+              JSON.stringify({
+                  // Retain any other settings which may have already been set
+                  ...JSON.parse(window.localStorage.getItem("mx_local_settings") ?? "{}"),
+                  // Ensure the language is set to a consistent value
+                  language: "en",
+              }),
+          );
+      },
+      { credentials },
+  );
+}
