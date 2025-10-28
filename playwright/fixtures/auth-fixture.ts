@@ -1,4 +1,4 @@
-import { test as base, Page } from "@playwright/test";
+import { APIRequestContext, test as base, Page } from "@playwright/test";
 import {
   createKeycloakTestUser,
   cleanupKeycloakTestUser,
@@ -17,11 +17,30 @@ import {
   WRONG_SERVER_EMAIL_DOMAIN,
   NUMERIQUE_EMAIL_DOMAIN,
   BASE_URL,
-  ELEMENT_URL
+  ELEMENT_URL,
+  env,
+  AVAILABLE_ENV,
 } from "../utils/config";
 import { ClientServerApi, Credentials } from "../utils/api";
+import { users } from "../data/users";
+import { AdminApi } from "../utils/api-admin";
 
 
+
+async function loginUserAndPopulateStorage(page: Page, request: APIRequestContext, user: TestUser): Promise<Credentials> {
+  const csAPI = new ClientServerApi(BASE_URL, request);
+
+  const credentials = (await csAPI.loginUser(
+    user.kc_username,
+    user.kc_password
+  )) as Credentials;
+
+  // 2. Populate localStorage
+  await populateLocalStorageWithCredentials(page, credentials);
+
+  return credentials;
+
+}
 function generateSimpleUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
@@ -97,7 +116,7 @@ function createLegacyUserFixture(domain: string) {
  * Extend the basic test fixtures with our authentication fixtures
  */
 export const test = base.extend<{
-  simpleUser: TestUser,
+  simpleUser: TestUser;
   testUser: TestUser;
   testExternalUserWithInvit: TestUser;
   testExternalUserWitoutInvit: TestUser;
@@ -105,7 +124,10 @@ export const test = base.extend<{
   userLegacy: TestUser;
   userLegacyWithFallbackRules: TestUser;
   authenticatedUser: Credentials;
+  adminAPI: AdminApi;
+  chooseUserEnv: TestUser;
   typeUser: TypeUser;
+  env: AVAILABLE_ENV;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
@@ -118,24 +140,46 @@ export const test = base.extend<{
   userLegacy: createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
   userLegacyWithFallbackRules: createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
   typeUser: TypeUser.MAS_PASSWORD_USER,
+  env,
+  adminAPI: async ({ page }, use) => {
+    // initialize adminAPI
+    const adminAPI = AdminApi.getInstance(BASE_URL);
+
+    await adminAPI.init();
+
+    use(adminAPI);
+  },
+  chooseUserEnv: async ({ testUser: user }, use) => {
+    let selectedUser: TestUser;
+    let userId: string | null = null;
+
+    if (env === AVAILABLE_ENV.LOCAL) {
+      // 1. Register user
+      userId = await createMasUserWithPassword(
+        user.kc_username,
+        user.kc_email,
+        user.kc_password
+      );
+
+      await waitForMasUser(user.kc_email);
+
+      selectedUser = user;
+    } else {
+      selectedUser = users[AVAILABLE_ENV.DEV][0];
+    }
+
+    use(selectedUser);
+
+
+    if (env === AVAILABLE_ENV.LOCAL && userId) {
+      // Clean up mas local user, deactivate user
+      await deactivateMasUser(userId);
+      console.log(`Cleaned up MAS user: ${user.kc_username}`);
+    }
+  },
   authenticatedUser: async ({ page, testUser: user, request }, use) => {
-    // 1. Register user
-    const userId = await createMasUserWithPassword(
-      user.kc_username,
-      user.kc_email,
-      user.kc_password
-    );
-    const csAPI = new ClientServerApi(BASE_URL, request);
 
-    await waitForMasUser(user.kc_email);
-
-    const credentials = (await csAPI.loginUser(
-      user.kc_username,
-      user.kc_password
-    )) as Credentials;
-
-    // 2. Populate localStorage
-    await populateLocalStorageWithCredentials(page, credentials);
+    const credentials = await loginUserAndPopulateStorage(page, request, user);
 
     // 3. Load app
     await page.goto(ELEMENT_URL);
@@ -143,10 +187,6 @@ export const test = base.extend<{
 
     // 4. Pass page to test
     await use(credentials);
-
-    // Clean up, deactivate user
-    await deactivateMasUser(userId);
-    console.log(`Cleaned up MAS user: ${user.kc_username}`);
   },
 });
 

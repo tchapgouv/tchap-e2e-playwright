@@ -12,7 +12,8 @@
     "test:mas01": "TEST_ENV=mas01 playwright test",
     "test:mas02": "TEST_ENV=mas02 playwright test",
     "test:mas03": "TEST_ENV=mas03 playwright test",
-    "test:pr1226": "TEST_ENV=pr1226 playwright test"
+    "test:pr1226": "TEST_ENV=pr1226 playwright test",
+    "test:dev": "TEST_ENV=dev playwright test ./tests/web/"
   },
   "keywords": [
     "playwright",

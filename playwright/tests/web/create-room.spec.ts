@@ -1,16 +1,38 @@
+import { createPrivateRoom, createPrivateWithExternalRoom, createPublic } from "../../data/rooms";
 import { test, expect } from "../../fixtures/auth-fixture";
-import { env } from "../../utils/config";
+import { CLEANUP, cleanupList } from "../../utils/cleanup";
+import { AVAILABLE_ENV } from "../../utils/config";
 
 test.describe("Create Room", () => {
 
+  const roomPrivateData = createPrivateRoom[0];
+  const roomPrivateWithExternalData = createPublic[0];
+  const roomPublicData = createPrivateWithExternalRoom[0];
+
+  const roomsCreated = [];
+
+  test.afterEach(({page, env, adminAPI}) => {
+    // clean up the rooms if we are not in local test
+    // local test are contained env that doesnt need data clean up
+    if (env === AVAILABLE_ENV.LOCAL) return;
+
+    // clean up rooms created
+    roomsCreated.forEach(async room => {
+      await cleanupList[CLEANUP.ROOM](adminAPI);
+
+    })
+  })
+
+
   test("should allow us to create a public room with name", async ({
     page,
-    authenticatedUser
+    authenticatedUser,
+    env,
   }) => {
     // Listen for all console logs
     page.on("console", (msg) => console.log(msg.text()));
 
-    const name = "Test room public 1";
+    const name = roomPrivateData.name;
 
     await page.getByRole("button", { name: "Add room", exact: true }).click();
 
@@ -31,7 +53,7 @@ test.describe("Create Room", () => {
 
     // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
-    if (env == "local") {
+    if (env == AVAILABLE_ENV.LOCAL) {
       await page.getByRole("button").getByText("OK").click();
     } else {
       // Takes some time to appear

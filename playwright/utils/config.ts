@@ -1,9 +1,14 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
+export enum AVAILABLE_ENV {
+    LOCAL="local",
+    DEV="DEV",
+    PREPROD="PREPROD"
+}
 
 // Determine which environment to use
-export const env = process.env.TEST_ENV || 'local';
+export const env: AVAILABLE_ENV = process.env.TEST_ENV as AVAILABLE_ENV || AVAILABLE_ENV.LOCAL;
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
@@ -49,7 +54,10 @@ export const BROWSER_LOCALE = process.env.BROWSER_LOCALE || 'fr-FR';
 
 // TODO Move all below to env file
 // Fixed tests data, that can be used across environement
-export const FIX_USER_USERNAME = "Michelle_test";
-export const FIX_USER_PASSWORD = "Michelle1313!";
-export const FIX_USER_EMAIL = "Michelle1313!";
+export const FIX_USER_USERNAME = process.env.FIX_USER_USERNAME || "Michelle_test";
+export const FIX_USER_PASSWORD = process.env.FIX_USER_PASSWORD || "Michelle1313!";
+export const FIX_USER_EMAIL = process.env.FIX_USER_EMAIL || "Michelle1313!";
+
+export const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+export const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin";
 
