@@ -18,19 +18,19 @@ test.describe('Tchap : register password', () => {
   
     //welcome
     await page.waitForURL(url => url.toString().includes(`#/welcome`));
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01--tchap-login-page.png` });
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-welcome.png` });
     await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
     await page.waitForURL(url => url.toString().includes(`#/email-precheck-sso`));
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-precheck-sso.png` });
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-tchap-precheck-sso.png` });
     await page.locator('input').fill(email);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
   
     //register
     await page.waitForURL(url => url.toString().includes(`/register`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-register.png`, fullPage: true });
+    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
 
     //password
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
     await page.waitForURL(url => url.toString().includes(`/register/password`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-password.png`, fullPage: true });
     let password = "sdf78qsd!9090ssss";
@@ -46,16 +46,10 @@ test.describe('Tchap : register password', () => {
     await page.locator('input[name="code"]').fill(verificationCode);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-    //display-name
-    await page.waitForURL(url => url.toString().includes(`/display-name`));
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-display-name.png`, fullPage: true });
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
     //consent
     await page.waitForURL(url => url.toString().includes(`/consent`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/07-consent.png`, fullPage: true });
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
 
     //tchap
     await page.waitForURL(url => url.toString().includes(`#/home`), { timeout: 20000 });
@@ -63,13 +57,59 @@ test.describe('Tchap : register password', () => {
     await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/08-tchap-home.png`, fullPage: true });
     
-
     const created_user = await getMasUserByEmail(email);
 
     //check created username fields
     expect(created_user.attributes.username).toContain(user.kc_username);
 
     //todo : check displayname? -> display name is stored in Synapse, or in the home screen of Tchap
+  });
+
+  test('tchap register with password where login_hint is mistaken', async ({ context, page, simpleUser: user }) => {
+    
+    const email = user.kc_email;
+    const second_email = user.kc_email.replace("@","another_email@");
+
+    const screenshot_path = test.info().title.replace(" ", "_");
+  
+    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+  
+    //input a first email
+    await page.waitForURL(url => url.toString().includes(`#/welcome`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-welcome.png` });
+    await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
+    await page.waitForURL(url => url.toString().includes(`#/email-precheck-sso`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-tchap-precheck-sso.png` });
+    await page.locator('input').fill(email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    await page.waitForURL(url => url.toString().includes(`/register`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-register.png`, fullPage: true });
+    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+
+    //select wrong email
+    await page.waitForURL(url => url.toString().includes(`/register/password`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-password.png`, fullPage: true });
+    await page.getByRole('link').filter({ hasText: 'pas la bonne adresse' }).click();
+
+    //input another email
+    await page.waitForURL(url => url.toString().includes(`#/welcome`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/05-back-to-welcome.png` });
+    await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
+    await page.waitForURL(url => url.toString().includes(`#/email-precheck-sso`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-tchap-precheck-sso.png` });
+    await page.locator('input').fill(second_email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    await page.waitForURL(url => url.toString().includes(`/register`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/07-register.png`, fullPage: true });
+    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    
+    //check second email
+    await page.waitForURL(url => url.toString().includes(`/register/password`));
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/08-password.png`, fullPage: true }); 
+
+
+    
+
   });
 
 });
