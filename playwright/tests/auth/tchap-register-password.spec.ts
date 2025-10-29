@@ -33,6 +33,7 @@ test.describe('Tchap : register password', () => {
     //password
     await page.waitForURL(url => url.toString().includes(`/register/password`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-password.png`, fullPage: true });
+    await expect(page.locator('input[name="email"]')).toHaveValue(email);
     let password = "sdf78qsd!9090ssss";
     await page.locator('input[name="password"]').fill(password);
     await page.locator('input[name="password_confirm"]').fill(password);
@@ -89,6 +90,7 @@ test.describe('Tchap : register password', () => {
     //select wrong email
     await page.waitForURL(url => url.toString().includes(`/register/password`));
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-password.png`, fullPage: true });
+    await expect(page.locator('input[name="email"]')).toHaveValue(email);
     await page.getByRole('link').filter({ hasText: 'pas la bonne adresse' }).click();
 
     //input another email
@@ -105,7 +107,8 @@ test.describe('Tchap : register password', () => {
     
     //check second email
     await page.waitForURL(url => url.toString().includes(`/register/password`));
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/08-password.png`, fullPage: true }); 
+    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/08-password.png`, fullPage: true });
+    await expect(page.locator('input[name="email"]')).toHaveValue(second_email);
 
 
     
