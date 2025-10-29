@@ -1,4 +1,4 @@
-import { test as base, Page } from "@playwright/test";
+import { test as base, Page, TestInfo } from "@playwright/test";
 import {
   createKeycloakTestUser,
   cleanupKeycloakTestUser,
@@ -9,6 +9,9 @@ import {
 import { disposeApiContext as disposeKeycloakApiContext } from "../utils/keycloak-admin";
 import { createMasUserWithPassword, deactivateMasUser, disposeApiContext as disposeMasApiContext, waitForMasUser } from "../utils/mas-admin";
 import { generateTestUser } from "../utils/auth-helpers";
+import fs from 'fs';
+import path from 'path';
+import { SCREENSHOTS_DIR } from '../utils/config';
 
 import {
   STANDARD_EMAIL_DOMAIN,
@@ -93,6 +96,11 @@ function createLegacyUserFixture(domain: string) {
   };
 }
 
+
+export type ScreenCheckerFixture = {
+  waitForScreen: (page: Page, urlFragment: string) => Promise<void>;
+};
+
 /**
  * Extend the basic test fixtures with our authentication fixtures
  */
@@ -106,6 +114,7 @@ export const test = base.extend<{
   userLegacyWithFallbackRules: TestUser;
   authenticatedUser: Credentials;
   typeUser: TypeUser;
+  screenChecker :ScreenCheckerFixture;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
@@ -118,6 +127,27 @@ export const test = base.extend<{
   userLegacy: createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
   userLegacyWithFallbackRules: createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
   typeUser: TypeUser.MAS_PASSWORD_USER,
+   screenChecker: async ({}, use, testInfo: TestInfo) => {
+    //this fixture clean up the screenshot folder before the tests
+    //and exposes a method to capture a screenshot from an waited url
+
+    const screenshotPath = path.join(SCREENSHOTS_DIR, testInfo.title.replace(/\s+/g, '_'));
+    let counter = 1;
+
+    if (fs.existsSync(screenshotPath)) {
+      fs.rmSync(screenshotPath, { recursive: true, force: true });
+    }
+    fs.mkdirSync(screenshotPath, { recursive: true });
+
+    const screenChecker = async (page: Page, urlFragment: string) => {
+      await page.waitForURL((url) => url.toString().includes(urlFragment));
+      const filename = `${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
+      await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
+      counter++;
+    };
+
+    await use(screenChecker);
+  },
   authenticatedUser: async ({ page, testUser: user, request }, use) => {
     // 1. Register user
     const userId = await createMasUserWithPassword(

@@ -3,6 +3,7 @@ import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
 import { Credentials } from './api';
+import { ScreenCheckerFixture } from '../fixtures/auth-fixture';
 
 /**
  * Test user type
@@ -256,7 +257,7 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
 
 
   // Add this function to extract the verification code
-export async function extractVerificationCode(context: BrowserContext, screenshot_path:string): Promise<string> {
+export async function extractVerificationCode(context: BrowserContext, waitForScreen:ScreenCheckerFixture): Promise<string> {
     // Create a new page for mail.tchapgouv.com
     const page = await context.newPage();
 
@@ -265,7 +266,8 @@ export async function extractVerificationCode(context: BrowserContext, screensho
 
     // Wait for the page to load and click on the first email
     await page.waitForSelector('.msglist-message');
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/00-verification-code.png`, fullPage: true });
+    
+    await waitForScreen(page, 'mail.tchapgouv.com');
 
     const firstIncompingMail = await page.locator('.col-md-5').first();
 
@@ -281,6 +283,7 @@ export async function extractVerificationCode(context: BrowserContext, screensho
       throw new Error('Unable to extract verification code from text');
     }
     const verificationCode = codeMatch[1];
+    console.log("verification code extracted : ", verificationCode);
 
     return verificationCode;
 }
