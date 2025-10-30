@@ -3,7 +3,7 @@ import {
   extractVerificationCode
 } from '../../utils/auth-helpers';
 import { getMasUserByEmail } from '../../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../utils/config';
+import {ELEMENT_URL } from '../../utils/config';
 
 
 test.describe('Tchap : register password', () => {
@@ -15,7 +15,6 @@ test.describe('Tchap : register password', () => {
 
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
     
-    //welcome
     await screen(page, '#/welcome');
     await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
 
@@ -23,28 +22,23 @@ test.describe('Tchap : register password', () => {
     await page.locator('input').fill(email);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
   
-    //register
     await screen(page, '/register');
     await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
 
-    //password
     await screen(page, '/register/password');
     await expect(page.locator('input[name="email"]')).toHaveValue(email);
     await page.locator('input[name="password"]').fill(password);
     await page.locator('input[name="password_confirm"]').fill(password);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-    //verify-email
     await screen(page, '/verify-email');
     let verificationCode  = await extractVerificationCode(context, screen);
     await page.locator('input[name="code"]').fill(verificationCode);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-    //consent
     await screen(page, '/consent');
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-    //tchap
     await screen(page, '#/home');
     await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
     const created_user = await getMasUserByEmail(email);
@@ -60,7 +54,6 @@ test.describe('Tchap : register password', () => {
     const email = user.kc_email;
     const second_email = user.kc_email.replace("@","another_email@");
 
-  
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
   
     await screen(page, '#/welcome');
@@ -71,7 +64,7 @@ test.describe('Tchap : register password', () => {
     await screen(page, '/register');
     await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
 
-    //select wrong email
+    //click on link: wrong email
     await screen(page, '/register/password');
     await expect(page.locator('input[name="email"]')).toHaveValue(email);
     await page.getByRole('link').filter({ hasText: 'pas la bonne adresse' }).click();
