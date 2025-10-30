@@ -97,9 +97,7 @@ function createLegacyUserFixture(domain: string) {
 }
 
 
-export type ScreenCheckerFixture = {
-  waitForScreen: (page: Page, urlFragment: string) => Promise<void>;
-};
+export type ScreenCheckerFixture = (page: Page, urlFragment: string) => Promise<void>;
 
 /**
  * Extend the basic test fixtures with our authentication fixtures
