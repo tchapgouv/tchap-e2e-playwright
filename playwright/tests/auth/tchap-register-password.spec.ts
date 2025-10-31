@@ -6,9 +6,9 @@ import { getMasUserByEmail } from '../../utils/mas-admin';
 import {ELEMENT_URL } from '../../utils/config';
 
 
-test.describe('Tchap : register password', () => {
+test.describe('Tchap : register with password', () => {
 
-  test('tchap register with password', async ({ context, page, simpleUser: user, screenChecker: screen }) => {
+  test('tchap register with oidc native', async ({ context, page, simpleUser: user, screenChecker: screen }) => {
     
     const email = user.kc_email;
     let password = "sdf78qsd!9090ssss";
@@ -49,7 +49,7 @@ test.describe('Tchap : register password', () => {
     //todo : check displayname? -> display name is stored in Synapse, or in the home screen of Tchap
   });
 
-  test('tchap register with password where login_hint is mistaken', async ({page, simpleUser: user, screenChecker: screen  }) => {
+  test('tchap register with oidc native when login_hint is mistaken', async ({page, simpleUser: user, screenChecker: screen  }) => {
     
     const email = user.kc_email;
     const second_email = user.kc_email.replace("@","another_email@");

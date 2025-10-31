@@ -125,7 +125,7 @@ export const test = base.extend<{
   userLegacy: createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
   userLegacyWithFallbackRules: createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
   typeUser: TypeUser.MAS_PASSWORD_USER,
-   screenChecker: async ({}, use, testInfo: TestInfo) => {
+  screenChecker: async ({}, use, testInfo: TestInfo) => {
     //this fixture clean up the screenshot folder before the tests
     //and exposes a method to capture a screenshot from an waited url
 
