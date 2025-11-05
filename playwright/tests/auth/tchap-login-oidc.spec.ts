@@ -1,25 +1,25 @@
 import { test, expect } from '../../fixtures/auth-fixture';
 import { 
   verifyUserInMas, 
-  performOidcLoginFromElement
+  performOidcLoginFromTchap
 } from '../../utils/auth-helpers';
 import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../utils/mas-admin';
 import { SCREENSHOTS_DIR, TCHAP_LEGACY } from '../../utils/config';
 
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
-test.describe('Element : Login via OIDC', () => {
-  test('element match account by username', async ({ page, userLegacy: userLegacy }) => {
+test.describe('Tchap : Login via OIDC', () => {
+  test('tchap match account by username', async ({ page, userLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
-    userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
+    userLegacy.masId = await createMasUserWithPassword(userLegacy.username, userLegacy.email, userLegacy.password);
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.email);
     expect(existsBeforeLogin).toBe(true);
     
     // Perform the OIDC login flow
-    await performOidcLoginFromElement(page, userLegacy,screenshot_path, TCHAP_LEGACY);
+    await performOidcLoginFromTchap(page, userLegacy,screenshot_path, TCHAP_LEGACY);
     
     // Click the create account button
     await page.locator('button[type="submit"]').click();
@@ -33,7 +33,7 @@ test.describe('Element : Login via OIDC', () => {
     await page.locator('button[type="submit"]').filter({hasText:'Continuer'}).click();
 
     //flaky condition
-    //await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
+    await expect(page.locator('text=Bienvenue')).toBeVisible({timeout: 20000});
 
     // Take a screenshot of the authenticated state
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-auth-success.png` });
@@ -42,9 +42,9 @@ test.describe('Element : Login via OIDC', () => {
     await verifyUserInMas(userLegacy);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(userLegacy.email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified user ${userLegacy.kc_username} (${userLegacy.kc_email})`);
+    console.log(`Successfully authenticated and verified user ${userLegacy.username} (${userLegacy.email})`);
   });
 });
