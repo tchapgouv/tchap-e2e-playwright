@@ -1,34 +1,25 @@
 import { test, expect } from '../../fixtures/auth-fixture';
 import { 
-  extractVerificationCode
+  extractVerificationCode,
+  generateTestUserData
 } from '../../utils/auth-helpers';
 import { getMasUserByEmail } from '../../utils/mas-admin';
-import {ELEMENT_URL } from '../../utils/config';
+import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../utils/config';
 
 
 test.describe('Tchap : register with password', () => {
 
-  test('tchap register with oidc native', async ({ context, page, simpleUser: user, screenChecker: screen }) => {
-    
-    const email = user.kc_email;
-    let password = "sdf78qsd!9090ssss";
 
-    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
-    
-    await screen(page, '#/welcome');
-    await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
+  const PASSWORd = "sdf78qsd!9090ssss";
 
-    await screen(page, '#/email-precheck-sso');
-    await page.locator('input').fill(email);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-  
-    await screen(page, '/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+  test('tchap register with oidc native', async ({ context, page, simpleUser: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+    
+    await startTchapRegisterWithEmail(page, user.email);
 
     await screen(page, '/register/password');
-    await expect(page.locator('input[name="email"]')).toHaveValue(email);
-    await page.locator('input[name="password"]').fill(password);
-    await page.locator('input[name="password_confirm"]').fill(password);
+    await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/verify-email');
@@ -41,46 +32,54 @@ test.describe('Tchap : register with password', () => {
 
     await screen(page, '#/home');
     await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
-    const created_user = await getMasUserByEmail(email);
+    const created_user = await getMasUserByEmail(user.email);
 
     //check created username fields
-    expect(created_user.attributes.username).toContain(user.kc_username);
-
-    //todo : check displayname? -> display name is stored in Synapse, or in the home screen of Tchap
+    expect(created_user.attributes.username).toContain(user.username);
   });
 
-  test('tchap register with oidc native when login_hint is mistaken', async ({page, simpleUser: user, screenChecker: screen  }) => {
+  test('tchap register with not invited email', async ({ context, page, simpleUser: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
-    const email = user.kc_email;
-    const second_email = user.kc_email.replace("@","another_email@");
+    await startTchapRegisterWithEmail(page, user.email);
 
-    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
-  
-    await screen(page, '#/welcome');
-    await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
-    await screen(page, '#/email-precheck-sso');
-    await page.locator('input').fill(email);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-    await screen(page, '/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    const not_invited_user = generateTestUserData(NOT_INVITED_EMAIL_DOMAIN);
 
-    //click on link: wrong email
     await screen(page, '/register/password');
-    await expect(page.locator('input[name="email"]')).toHaveValue(email);
-    await page.getByRole('link').filter({ hasText: 'pas la bonne adresse' }).click();
+    await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
-    //input second email
-    await screen(page, '#/welcome');
-    await page.getByRole('link').filter({hasText : "Créer un compte"}).click();
-    await screen(page, '#/email-precheck-sso');
-    await page.locator('input').fill(second_email);
+    //change email with not invited email
+    await page.locator('input[name="email"]').fill(not_invited_user.email);
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-    await screen(page, '/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+
+    await screen(page, '/register/password');
+    await expect(page.locator('input[name="email"]')).toHaveValue(not_invited_user.email);
+
+    //check that error message is visible
+    await expect(page.locator('div.cpd-form-message.cpd-form-error-message').filter({ hasText: 'Vous avez besoin d\'une invitation' })).toBeVisible();
+  });
+
+  test('tchap register with email on wrong server', async ({ context, page, simpleUser: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
-    //check second email
+    await startTchapRegisterWithEmail(page, user.email);
+
+    const wrong_server_user = generateTestUserData(WRONG_SERVER_EMAIL_DOMAIN);
+
     await screen(page, '/register/password');
-    await expect(page.locator('input[name="email"]')).toHaveValue(second_email);
+    await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
+
+    //change email with not invited email
+    await page.locator('input[name="email"]').fill(wrong_server_user.email);
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screen(page, '/register/password');
+    await expect(page.locator('input[name="email"]')).toHaveValue(wrong_server_user.email);
+
+    //check that error message is visible
+    await expect(page.locator('div.cpd-form-message.cpd-form-error-message').filter({ hasText: 'Votre adresse mail est associée à un autre serveur' })).toBeVisible();
   });
 
 });

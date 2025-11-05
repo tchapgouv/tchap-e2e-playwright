@@ -8,7 +8,7 @@ import {
 } from "../utils/auth-helpers";
 import { disposeApiContext as disposeKeycloakApiContext } from "../utils/keycloak-admin";
 import { createMasUserWithPassword, deactivateMasUser, disposeApiContext as disposeMasApiContext, waitForMasUser } from "../utils/mas-admin";
-import { generateTestUser } from "../utils/auth-helpers";
+import { generateTestUserData } from "../utils/auth-helpers";
 import fs from 'fs';
 import path from 'path';
 import { SCREENSHOTS_DIR } from '../utils/config';
@@ -28,7 +28,7 @@ import { ClientServerApi, Credentials } from "../utils/api";
 function generateSimpleUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
-      const user = generateTestUser(domain);
+      const user = generateTestUserData(domain);
       
       // Use the test user in the test
       await use(user);
@@ -47,7 +47,7 @@ function generateSimpleUserFixture(domain: string) {
 function createTestUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
-      const testUser = generateTestUser(domain);
+      const testUser = generateTestUserData(domain);
 
       // Create a test user in Keycloak
       const user = await createKeycloakTestUser(testUser);
@@ -57,7 +57,7 @@ function createTestUserFixture(domain: string) {
 
       // Clean up the test user after the test
       await cleanupKeycloakTestUser(user);
-      console.log(`Cleaned up test user: ${user.kc_username}`);
+      console.log(`Cleaned up test user: ${user.username}`);
     } finally {
       // Dispose API contexts
       await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
@@ -74,9 +74,9 @@ function createLegacyUserFixture(domain: string) {
       const randomSuffix = Math.floor(Math.random() * 10000);
 
       const testUser: TestUser = {
-        kc_username: `test.user${randomSuffix}-${domain}`,
-        kc_email: `test.user${randomSuffix}@${domain}`,
-        kc_password: "1234!",
+        username: `test.user${randomSuffix}-${domain}`,
+        email: `test.user${randomSuffix}@${domain}`,
+        password: "1234!",
       };
 
       // Create a test user in Keycloak
@@ -87,7 +87,7 @@ function createLegacyUserFixture(domain: string) {
 
       // Clean up the test user after the test
       await cleanupKeycloakTestUser(user);
-      console.log(`Cleaned up test user: ${user.kc_username}`);
+      console.log(`Cleaned up test user: ${user.username}`);
     } finally {
       // Dispose API contexts
       await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
@@ -98,6 +98,7 @@ function createLegacyUserFixture(domain: string) {
 
 
 export type ScreenCheckerFixture = (page: Page, urlFragment: string) => Promise<void>;
+export type StartTchapRegisterWithEmailFixture = (page: Page, email: string) => Promise<void>;
 
 /**
  * Extend the basic test fixtures with our authentication fixtures
@@ -113,6 +114,7 @@ export const test = base.extend<{
   authenticatedUser: Credentials;
   typeUser: TypeUser;
   screenChecker :ScreenCheckerFixture;
+  startTchapRegisterWithEmail: StartTchapRegisterWithEmailFixture;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
@@ -146,20 +148,35 @@ export const test = base.extend<{
 
     await use(screenChecker);
   },
+  startTchapRegisterWithEmail: async ({ screenChecker }, use) => {
+    const start = async (page: Page, email: string) => {
+      await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+      await screenChecker(page, '#/welcome');
+      await page.getByRole('link').filter({ hasText: 'Créer un compte' }).click();
+
+      await screenChecker(page, '#/email-precheck-sso');
+      await page.locator('input').fill(email);
+      await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+      await screenChecker(page, '/register');
+      await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    };
+    await use(start);
+  },
   authenticatedUser: async ({ page, testUser: user, request }, use) => {
     // 1. Register user
     const userId = await createMasUserWithPassword(
-      user.kc_username,
-      user.kc_email,
-      user.kc_password
+      user.username,
+      user.email,
+      user.password
     );
     const csAPI = new ClientServerApi(BASE_URL, request);
 
-    await waitForMasUser(user.kc_email);
+    await waitForMasUser(user.email);
 
     const credentials = (await csAPI.loginUser(
-      user.kc_username,
-      user.kc_password
+      user.username,
+      user.password
     )) as Credentials;
 
     // 2. Populate localStorage
@@ -174,7 +191,7 @@ export const test = base.extend<{
 
     // Clean up, deactivate user
     await deactivateMasUser(userId);
-    console.log(`Cleaned up MAS user: ${user.kc_username}`);
+    console.log(`Cleaned up MAS user: ${user.username}`);
   },
 });
 

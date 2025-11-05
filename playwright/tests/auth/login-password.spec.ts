@@ -19,7 +19,7 @@ test.describe('Login with password', () => {
     const user = await createMasTestUser("exemple.com");
     
     try {
-      console.log(`Created test user in MAS: ${user.kc_username} (${user.kc_email})`);
+      console.log(`Created test user in MAS: ${user.username} (${user.email})`);
       
       // Perform password login
       await performPasswordLogin(page, user,screenshot_path);
@@ -30,11 +30,11 @@ test.describe('Login with password', () => {
       // Take a screenshot of the authenticated state
       await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-password-auth-success.png` });
       
-      console.log(`Successfully authenticated with password for user: ${user.kc_username}`);
+      console.log(`Successfully authenticated with password for user: ${user.username}`);
     } finally {
       // Clean up the test user
       await cleanupMasTestUser(user);
-      console.log(`Cleaned up test user: ${user.kc_username}`);
+      console.log(`Cleaned up test user: ${user.username}`);
     }
   });
 });
