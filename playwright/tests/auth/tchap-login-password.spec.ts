@@ -8,8 +8,8 @@ test.describe('Tchap : Login password', () => {
   test('tchap login with password and login_hint', async ({ page, userLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
-    userLegacy.masId = await createMasUserWithPassword(userLegacy.kc_username, userLegacy.kc_email, userLegacy.kc_password);
-    const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
+    userLegacy.masId = await createMasUserWithPassword(userLegacy.username, userLegacy.email, userLegacy.password);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.email);
     expect(existsBeforeLogin).toBe(true);
   
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
@@ -19,13 +19,13 @@ test.describe('Tchap : Login password', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png` });
     await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
     await page.waitForURL(url => url.toString().includes(`#/email-precheck-sso`));
-    await page.locator('input').fill(userLegacy.kc_email);
+    await page.locator('input').fill(userLegacy.email);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
   
     //login
     await page.waitForURL(url => url.toString().includes(`${MAS_URL}/login`));
-    await expect(page.locator('input[name="username"]')).toHaveValue(userLegacy.kc_email);
-    await page.locator('input[name="password"]').fill(userLegacy.kc_password);
+    await expect(page.locator('input[name="username"]')).toHaveValue(userLegacy.email);
+    await page.locator('input[name="password"]').fill(userLegacy.password);
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-password-login-filled.png` });
     await page.locator('button[type="submit"]').click();
     
@@ -40,9 +40,9 @@ test.describe('Tchap : Login password', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/05-auth-success.png` });
 
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(userLegacy.kc_email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(userLegacy.email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified user ${userLegacy.kc_username} (${userLegacy.kc_email})`);
+    console.log(`Successfully authenticated and verified user ${userLegacy.username} (${userLegacy.email})`);
   });
 });
