@@ -140,7 +140,7 @@ export const test = base.extend<{
     fs.mkdirSync(screenshotPath, { recursive: true });
 
     const screenChecker = async (page: Page, urlFragment: string) => {
-      await page.waitForURL((url) => url.toString().includes(urlFragment));
+      await page.waitForURL((url) => url.toString().includes(urlFragment), {waitUntil:"networkidle"});
       const filename = `${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
       await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
       counter++;

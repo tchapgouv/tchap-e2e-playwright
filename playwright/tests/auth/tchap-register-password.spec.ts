@@ -18,9 +18,9 @@ test.describe('Tchap : register with password', () => {
 
     await screen(page, '/register/password');
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
-    await page.locator('input[name="new_password"]').fill(PASSWORd);
-    await page.locator('input[name="new_password_again"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `new_password_again` field 
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/verify-email');
@@ -31,7 +31,7 @@ test.describe('Tchap : register with password', () => {
     await screen(page, '/consent');
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-    await screen(page, '#/home');
+    //await screen(page, '#/home'); does not work with waitFor "networkidle"
     await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
     const created_user = await getMasUserByEmail(user.email);
 
@@ -50,9 +50,9 @@ test.describe('Tchap : register with password', () => {
 
     //change email with not invited email
     await page.locator('input[name="email"]').fill(not_invited_user.email);
-    await page.locator('input[name="new_password"]').fill(PASSWORd);
-    await page.locator('input[name="new_password_again"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `new_password_again` field 
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/register/password');
@@ -73,9 +73,9 @@ test.describe('Tchap : register with password', () => {
 
     //change email with not invited email
     await page.locator('input[name="email"]').fill(wrong_server_user.email);
-    await page.locator('input[name="new_password"]').fill(PASSWORd);
-    await page.locator('input[name="new_password_again"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `new_password_again` field 
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/register/password');

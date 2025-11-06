@@ -30,8 +30,8 @@ test.describe('Register', () => {
     
     await screen(page, '/register/password');
     await page.locator('input[name="email"]').fill(user.email);
-    await page.locator('input[name="new_password"]').fill(PASSWORd);
-    await page.locator('input[name="new_password_again"]').fill(PASSWORd);
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     //form is submitted successfully
