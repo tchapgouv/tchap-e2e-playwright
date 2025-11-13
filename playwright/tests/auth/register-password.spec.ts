@@ -3,7 +3,9 @@ import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
 
 
 test.describe('Register', () => {
-  
+
+  const PASSWORd = "sdf78qsd!9090ssss";
+
   test.skip('without oauth2 session', async ({ context, page, simpleUser: user, screenChecker: screen }) => {
     // This test is intentionally ignored.
     //the error page has been deactivated for the moment because the MAS unit tests must be fixed
@@ -17,4 +19,41 @@ test.describe('Register', () => {
     await expect(page.locator("p", {hasText:"Veuillez fermer cette fenêtre et relancer la création de compte depuis votre appareil Tchap"})).toBeVisible();
 
   });
+
+  test('tchap register with JavaScript disabled', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
+    
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const page = await ctx.newPage();
+
+    await page.goto('/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    
+    await screen(page, '/register/password');
+    await page.locator('input[name="email"]').fill(user.email);
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    //form is submitted successfully
+    await screen(page, '/verify-email');
+  });
+
+  test('tchap register when user already exists', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
+    
+    const ctx = await browser.newContext({ javaScriptEnabled: false });
+    const page = await ctx.newPage();
+
+    await page.goto('/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    
+    await screen(page, '/register/password');
+    await page.locator('input[name="email"]').fill(user.email);
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    //form is submitted successfully
+    await screen(page, '/verify-email');
+  });
+
 });

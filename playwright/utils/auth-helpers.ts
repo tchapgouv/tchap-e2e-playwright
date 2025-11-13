@@ -262,8 +262,10 @@ export function generateTestUserData(domain:string) {
   const timestamp = new Date().getTime();
   const randomSuffix = Math.floor(Math.random() * 10000);
   const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const kc_email = `${kc_username}+1@${domain}`;
+  const kc_email = `${kc_username}@${domain}`;
   
+  console.log("Using kc_email: ", kc_email);
+
   return {
     username: kc_username,
     email: kc_email,
@@ -278,6 +280,9 @@ export function generateExternTestUser() {
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
   const email = `${username}@tchapgouv.com`;
   
+  console.log("Using email: ", email);
+
+
   return {
     username,
     email,
