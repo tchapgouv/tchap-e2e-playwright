@@ -17,7 +17,7 @@ export default defineConfig({
 
   /* Define how many workers */
   // Limit the number of workers on CI, use default locally
-  workers: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 2 : 10,
 
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
@@ -48,17 +48,21 @@ export default defineConfig({
   
   /* Configure projects for major browsers */
   projects: [
+   /* e2e tests do not work well on firefox nor webkit (bit flaky)
+     {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
     {
+      name: 'webkit',
+      use: { ...devices['Desktop Edge'] },
+    },
+    */ 
+     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-     },
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+      },
+      
+    
   ],
 });

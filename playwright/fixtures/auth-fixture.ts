@@ -1,4 +1,4 @@
-import { test as base, Page, TestInfo } from "@playwright/test";
+import { test as base, Browser, Page, TestInfo } from "@playwright/test";
 import {
   createKeycloakTestUser,
   cleanupKeycloakTestUser,
@@ -71,7 +71,7 @@ function createTestUserFixture(domain: string) {
 function createLegacyUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
-      const randomSuffix = Math.floor(Math.random() * 10000);
+      const randomSuffix = Math.floor(Math.random() * 10000000);
 
       const testUser: TestUser = {
         username: `test.user${randomSuffix}-${domain}`,
@@ -133,15 +133,17 @@ export const test = base.extend<{
 
     const screenshotPath = path.join(SCREENSHOTS_DIR, testInfo.title.replace(/\s+/g, '_'));
     let counter = 1;
-
+    
     if (fs.existsSync(screenshotPath)) {
       fs.rmSync(screenshotPath, { recursive: true, force: true });
     }
     fs.mkdirSync(screenshotPath, { recursive: true });
-
+    
     const screenChecker = async (page: Page, urlFragment: string) => {
-      await page.waitForURL((url) => url.toString().includes(urlFragment), {waitUntil:"networkidle"});
-      const filename = `${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
+      const browserName = page.context().browser()?.browserType().name();
+      
+      await page.waitForURL((url) => url.toString().includes(urlFragment), {waitUntil:"load"});
+      const filename = `${browserName}_${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
       await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
       counter++;
     };
@@ -150,7 +152,7 @@ export const test = base.extend<{
   },
   startTchapRegisterWithEmail: async ({ screenChecker }, use) => {
     const start = async (page: Page, email: string) => {
-      await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+      await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
       await screenChecker(page, '#/welcome');
       await page.getByRole('link').filter({ hasText: 'Créer un compte' }).click();
 
