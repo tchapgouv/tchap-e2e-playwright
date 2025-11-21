@@ -12,15 +12,15 @@ import { SCREENSHOTS_DIR } from '../../utils/config';
 
 test.describe('MAS register OIDC', () => {
 
-  test('with allowed account', async ({ page, testUser }) => {
+  test('with allowed account', async ({ page, oidcUser: oidcUser }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testUser.email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcUser.email);
     expect(existsBeforeLogin).toBe(false);
     
     // Perform the OIDC login flow
-    await performOidcLogin(page, testUser,screenshot_path);
+    await performOidcLogin(page, oidcUser,screenshot_path);
     
     // Click the create account button
     await page.locator('button[type="submit"]').click();
@@ -33,24 +33,24 @@ test.describe('MAS register OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-authenticated.png` });
     
     // Verify the user was created in MAS
-    await verifyUserInMas(testUser);
+    await verifyUserInMas(oidcUser);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testUser.email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(oidcUser.email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified user ${testUser.username} (${testUser.email})`);
+    console.log(`Successfully authenticated and verified user ${oidcUser.username} (${oidcUser.email})`);
   });
   
-  test('with extern without invit', async ({ page, testExternalUserWitoutInvit }) => {
+  test('with extern without invit', async ({ page, oidcExternalUserWitoutInvit: oidcExternalUserWitoutInvit }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testExternalUserWitoutInvit.email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcExternalUserWitoutInvit.email);
     expect(existsBeforeLogin).toBe(false);
     
     // Perform the OIDC login flow
-    await performOidcLogin(page, testExternalUserWitoutInvit, screenshot_path);
+    await performOidcLogin(page, oidcExternalUserWitoutInvit, screenshot_path);
     
     // Get error
     await page.locator('text=invitation_missing');
@@ -60,21 +60,21 @@ test.describe('MAS register OIDC', () => {
     
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testExternalUserWitoutInvit.email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(oidcExternalUserWitoutInvit.email);
     expect(existsAfterLogin).toBe(false);
     
-    console.log(`Successfully authenticated and verified user ${testExternalUserWitoutInvit.username} (${testExternalUserWitoutInvit.email})`);
+    console.log(`Successfully authenticated and verified user ${oidcExternalUserWitoutInvit.username} (${oidcExternalUserWitoutInvit.email})`);
   });
 
-  test('with extern with invit', async ({ page, testExternalUserWithInvit: testExternalUserWithInvit }) => {
+  test('with extern with invit', async ({ page, oidcExternalUserWithInvit: oidcExternalUserWithInvit }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testExternalUserWithInvit.email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcExternalUserWithInvit.email);
     expect(existsBeforeLogin).toBe(false);
     
     // Perform the OIDC login flow
-    await performOidcLogin(page, testExternalUserWithInvit, screenshot_path);
+    await performOidcLogin(page, oidcExternalUserWithInvit, screenshot_path);
     
     // Click the create account button
     await page.locator('button[type="submit"]').click();
@@ -86,24 +86,24 @@ test.describe('MAS register OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-authenticated-external.png` });
     
     // Verify the user was created in MAS
-    await verifyUserInMas(testExternalUserWithInvit);
+    await verifyUserInMas(oidcExternalUserWithInvit);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testExternalUserWithInvit.email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(oidcExternalUserWithInvit.email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified external user ${testExternalUserWithInvit.username} (${testExternalUserWithInvit.email})`);
+    console.log(`Successfully authenticated and verified external user ${oidcExternalUserWithInvit.username} (${oidcExternalUserWithInvit.email})`);
   });
 
-  test('on wrong homeserver', async ({ page, testUserOnWrongServer }) => {
+  test('on wrong homeserver', async ({ page, oidcUserOnWrongServer: oidcUserOnWrongServer }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(testUserOnWrongServer.email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcUserOnWrongServer.email);
     expect(existsBeforeLogin).toBe(false);
     
     // Perform the OIDC login flow
-    await performOidcLogin(page, testUserOnWrongServer, screenshot_path);
+    await performOidcLogin(page, oidcUserOnWrongServer, screenshot_path);
    
     // Get error
     await page.locator('text=wrong_server');
@@ -112,10 +112,10 @@ test.describe('MAS register OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-error-wrong-server.png` });
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(testUserOnWrongServer.email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(oidcUserOnWrongServer.email);
     expect(existsAfterLogin).toBe(false);
     
-    console.log(`Successfully authenticated and verified user ${testUserOnWrongServer.username} (${testUserOnWrongServer.email})`);
+    console.log(`Successfully authenticated and verified user ${oidcUserOnWrongServer.username} (${oidcUserOnWrongServer.email})`);
   });
 
 });

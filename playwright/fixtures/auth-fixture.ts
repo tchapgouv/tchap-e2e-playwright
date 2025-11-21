@@ -24,7 +24,7 @@ import {
 } from "../utils/config";
 import { ClientServerApi, Credentials } from "../utils/api";
 
-function generateSimpleUserFixture(domain: string) {
+function generateUserData(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const user = generateTestUserData(domain);
@@ -43,7 +43,7 @@ function generateSimpleUserFixture(domain: string) {
 /**
  * Function to create a test user fixture with a specific domain
  */
-function createTestUserFixture(domain: string) {
+function createKeycloakUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const testUser = generateTestUserData(domain);
@@ -67,7 +67,8 @@ function createTestUserFixture(domain: string) {
 
 //legacy users have a username derived from email :
 //email : username@domain.com -> username : username-domain.com
-function createLegacyUserFixture(domain: string) {
+//todo : do we need this and createKeycloakUserFixture?
+function createKeycloakLegacyUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const randomSuffix = Math.floor(Math.random() * 10000000);
@@ -139,7 +140,7 @@ async function startTchapRegisterWithEmailFixture({ screenChecker }: { screenChe
   await use(start);
 }
 
-async function authenticatedUserFixture({ page, testUser: user, request }: { page: Page, testUser: TestUser, request: any }, use: (credentials: Credentials) => Promise<void>) {
+async function authenticatedUserFixture({ page, userData: user, request }: { page: Page, userData: TestUser, request: any }, use: (credentials: Credentials) => Promise<void>) {
   // 1. Register user
   const userId = await createMasUserWithPassword(
     user.username,
@@ -174,13 +175,13 @@ async function authenticatedUserFixture({ page, testUser: user, request }: { pag
  * Extend the basic test fixtures with our authentication fixtures
  */
 export const test = base.extend<{
-  simpleUser: TestUser,
-  testUser: TestUser;
-  testExternalUserWithInvit: TestUser;
-  testExternalUserWitoutInvit: TestUser;
-  testUserOnWrongServer: TestUser;
-  userLegacy: TestUser;
-  userLegacyWithFallbackRules: TestUser;
+  userData: TestUser,
+  oidcUser: TestUser;
+  oidcExternalUserWithInvit: TestUser;
+  oidcExternalUserWitoutInvit: TestUser;
+  oidcUserOnWrongServer: TestUser;
+  oidcUserLegacy: TestUser;//pas clair le oidc***Legacy
+  oidcUserLegacyWithFallbackRules: TestUser;
   authenticatedUser: Credentials;
   typeUser: TypeUser;
   screenChecker: ScreenCheckerFixture;
@@ -189,17 +190,17 @@ export const test = base.extend<{
   /**
    * Create a test user in Keycloak before the test and clean it up after
    */
-  simpleUser: generateSimpleUserFixture(STANDARD_EMAIL_DOMAIN),
-  testUser: createTestUserFixture(STANDARD_EMAIL_DOMAIN),
-  testExternalUserWithInvit: createTestUserFixture(INVITED_EMAIL_DOMAIN),
-  testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
-  testUserOnWrongServer: createTestUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
-  userLegacy: createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
-  userLegacyWithFallbackRules: createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  userData: generateUserData(STANDARD_EMAIL_DOMAIN),
+  oidcUser: createKeycloakUserFixture(STANDARD_EMAIL_DOMAIN),
+  oidcExternalUserWithInvit: createKeycloakUserFixture(INVITED_EMAIL_DOMAIN),
+  oidcExternalUserWitoutInvit: createKeycloakUserFixture(NOT_INVITED_EMAIL_DOMAIN),
+  oidcUserOnWrongServer: createKeycloakUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
+  oidcUserLegacy: createKeycloakLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
+  oidcUserLegacyWithFallbackRules: createKeycloakLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  authenticatedUser: authenticatedUserFixture,
   typeUser: TypeUser.MAS_PASSWORD_USER,
   screenChecker: screenCheckerFixture,
   startTchapRegisterWithEmail: startTchapRegisterWithEmailFixture,
-  authenticatedUser: authenticatedUserFixture,
 });
 
 export { expect } from "@playwright/test";

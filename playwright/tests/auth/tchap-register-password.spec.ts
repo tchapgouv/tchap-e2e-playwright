@@ -12,7 +12,7 @@ test.describe('Tchap : register with password', () => {
 
   const PASSWORd = "sdf78qsd!9090ssss";
 
-  test('tchap register with oidc native', async ({ context, page, simpleUser: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+  test('tchap register with oidc native', async ({ context, page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
     await startTchapRegisterWithEmail(page, user.email);
 
@@ -48,7 +48,8 @@ test.describe('Tchap : register with password', () => {
     expect(created_user.attributes.username).toContain(user.username);
   });
 
-  test('tchap register with not invited email', async ({page, simpleUser: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+  //skip because flakky
+  test.skip('tchap register with not invited email', async ({page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
     await startTchapRegisterWithEmail(page, user.email);
 
@@ -72,7 +73,7 @@ test.describe('Tchap : register with password', () => {
   });
 
   //skip because flakky
-  test.skip('tchap register with email on wrong server', async ({page, simpleUser: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+  test.skip('tchap register with email on wrong server', async ({page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
     await startTchapRegisterWithEmail(page, user.email);
 

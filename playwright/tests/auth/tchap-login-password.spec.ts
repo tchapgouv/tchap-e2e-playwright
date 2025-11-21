@@ -5,7 +5,7 @@ import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
 
 test.describe('Tchap : Login password', () => {
 
-  test('tchap login with password and login_hint', async ({ page, userLegacy: userLegacy }) => {
+  test('tchap login with password and login_hint', async ({ page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     userLegacy.masId = await createMasUserWithPassword(userLegacy.username, userLegacy.email, userLegacy.password);

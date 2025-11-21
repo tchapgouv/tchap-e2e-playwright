@@ -6,7 +6,7 @@ test.describe('MAS Register password', () => {
 
   const PASSWORd = "sdf78qsd!9090ssss";
 
-  test.skip('without oauth2 session', async ({ context, page, simpleUser: user, screenChecker: screen }) => {
+  test.skip('without oauth2 session', async ({ context, page, userData: user, screenChecker: screen }) => {
     // This test is intentionally ignored.
     //the error page has been deactivated for the moment because the MAS unit tests must be fixed
 
@@ -20,7 +20,7 @@ test.describe('MAS Register password', () => {
 
   });
 
-  test('with JavaScript disabled', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
+  test('with JavaScript disabled', async ({ browser,  userData: user, screenChecker: screen }) => {
     
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
@@ -38,7 +38,7 @@ test.describe('MAS Register password', () => {
     await screen(page, '/verify-email');
   });
 
-  test('when user already exists', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
+  test('when user already exists', async ({ browser,  userData: user, screenChecker: screen }) => {
     
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();

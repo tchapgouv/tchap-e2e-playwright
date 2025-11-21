@@ -9,7 +9,7 @@ import { SCREENSHOTS_DIR, TCHAP_LEGACY } from '../../utils/config';
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 test.describe('Tchap : Login via OIDC', () => {
-  test('tchap match account by username', async ({ page, userLegacy: userLegacy }) => {
+  test('tchap match account by username', async ({ page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     userLegacy.masId = await createMasUserWithPassword(userLegacy.username, userLegacy.email, userLegacy.password);
