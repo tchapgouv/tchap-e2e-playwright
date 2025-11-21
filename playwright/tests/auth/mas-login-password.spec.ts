@@ -10,9 +10,9 @@ import {
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser } from '../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../utils/config';
 
-test.describe('Login with password', () => {
+test.describe('MAS login password', () => {
 
-  test('login with allowed account', async ({ page }) => {
+  test('with allowed account', async ({ page }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a test user with a password in MAS

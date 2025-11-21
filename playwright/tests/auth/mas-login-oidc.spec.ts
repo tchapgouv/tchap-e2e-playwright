@@ -5,9 +5,9 @@ import {
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../utils/config';
 
-test.describe('Login via OIDC', () => {
+test.describe('MAS Login OIDC', () => {
  
-  test('match account by username', async ({ page, userLegacy: userLegacy }) => {
+  test('match account by username', async ({ page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
     
     // Create a user in MAS with the same email as the Keycloak user
@@ -43,7 +43,7 @@ test.describe('Login via OIDC', () => {
   });
 
 
-  test('match account by email', async ({ page, userLegacy: userLegacy }) => {
+  test('match account by email', async ({ page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a user in MAS with the same email as the Keycloak user
@@ -81,7 +81,7 @@ test.describe('Login via OIDC', () => {
   });
 
 
-  test('match account by email with fallback rules', async ({ page, userLegacyWithFallbackRules: userLegacy }) => {
+  test('match account by email with fallback rules', async ({ page, oidcUserLegacyWithFallbackRules: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     const old_email_domain = "@beta.gouv.fr";
@@ -122,7 +122,7 @@ test.describe('Login via OIDC', () => {
   });
 
 
-  test('match account by email when former account is deactivated but another one is valid', async ({browser, context, page, userLegacy: userLegacy }) => {
+  test('match account by email when former account is deactivated but another one is valid', async ({browser, context, page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a user in MAS with the same email as the Keycloak user
@@ -171,7 +171,7 @@ test.describe('Login via OIDC', () => {
   });
 
 
-  test('match account by email when account was deactivated but is reactivated by support', async ({browser, context, page, userLegacy: userLegacy }) => {
+  test('match account by email when account was deactivated but is reactivated by support', async ({browser, context, page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a user in MAS with the same email as the Keycloak user

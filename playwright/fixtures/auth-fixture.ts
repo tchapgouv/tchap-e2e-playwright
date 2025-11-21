@@ -24,15 +24,14 @@ import {
 } from "../utils/config";
 import { ClientServerApi, Credentials } from "../utils/api";
 
-
-function generateSimpleUserFixture(domain: string) {
+function generateUserData(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const user = generateTestUserData(domain);
-      
+
       // Use the test user in the test
       await use(user);
-     
+
     } finally {
       // Dispose API contexts
       await Promise.all([
@@ -44,7 +43,7 @@ function generateSimpleUserFixture(domain: string) {
 /**
  * Function to create a test user fixture with a specific domain
  */
-function createTestUserFixture(domain: string) {
+function createKeycloakUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const testUser = generateTestUserData(domain);
@@ -68,7 +67,8 @@ function createTestUserFixture(domain: string) {
 
 //legacy users have a username derived from email :
 //email : username@domain.com -> username : username-domain.com
-function createLegacyUserFixture(domain: string) {
+//todo : do we need this and createKeycloakUserFixture?
+function createKeycloakLegacyUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const randomSuffix = Math.floor(Math.random() * 10000000);
@@ -96,105 +96,111 @@ function createLegacyUserFixture(domain: string) {
   };
 }
 
-
 export type ScreenCheckerFixture = (page: Page, urlFragment: string) => Promise<void>;
 export type StartTchapRegisterWithEmailFixture = (page: Page, email: string) => Promise<void>;
+export type AuthenticatedUserFixture = (page: Page, user: TestUser, request: any) => Promise<Credentials>;
+
+async function screenCheckerFixture({}: {}, use: (screenChecker: ScreenCheckerFixture) => Promise<void>, testInfo: TestInfo) {
+  //this fixture clean up the screenshot folder before the tests
+  //and exposes a method to capture a screenshot from an waited url
+
+  const screenshotPath = path.join(SCREENSHOTS_DIR, testInfo.title.replace(/\s+/g, '_'));
+  let counter = 1;
+
+  if (fs.existsSync(screenshotPath)) {
+    fs.rmSync(screenshotPath, { recursive: true, force: true });
+  }
+  fs.mkdirSync(screenshotPath, { recursive: true });
+
+  const screenChecker = async (page: Page, urlFragment: string) => {
+    const browserName = page.context().browser()?.browserType().name();
+
+    await page.waitForURL((url) => url.toString().includes(urlFragment), {waitUntil:"load"});
+    const filename = `${browserName}_${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
+    await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
+    counter++;
+  };
+
+  await use(screenChecker);
+}
+
+async function startTchapRegisterWithEmailFixture({ screenChecker }: { screenChecker: ScreenCheckerFixture }, use: (start: StartTchapRegisterWithEmailFixture) => Promise<void>) {
+  const start = async (page: Page, email: string) => {
+    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
+    await screenChecker(page, '#/welcome');
+    await page.getByRole('link').filter({ hasText: 'Créer un compte' }).click();
+
+    await screenChecker(page, '#/email-precheck-sso');
+    await page.locator('input').fill(email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screenChecker(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+  };
+  await use(start);
+}
+
+async function authenticatedUserFixture({ page, userData: user, request }: { page: Page, userData: TestUser, request: any }, use: (credentials: Credentials) => Promise<void>) {
+  // 1. Register user
+  const userId = await createMasUserWithPassword(
+    user.username,
+    user.email,
+    user.password
+  );
+  const csAPI = new ClientServerApi(BASE_URL, request);
+
+  await waitForMasUser(user.email);
+
+  const credentials = (await csAPI.loginUser(
+    user.username,
+    user.password
+  )) as Credentials;
+
+  // 2. Populate localStorage
+  await populateLocalStorageWithCredentials(page, credentials);
+
+  // 3. Load app
+  await page.goto(ELEMENT_URL);
+  await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
+
+  // 4. Pass page to test
+  await use(credentials);
+
+  // Clean up, deactivate user
+  await deactivateMasUser(userId);
+  console.log(`Cleaned up MAS user: ${user.username}`);
+}
 
 /**
  * Extend the basic test fixtures with our authentication fixtures
  */
 export const test = base.extend<{
-  simpleUser: TestUser,
-  testUser: TestUser;
-  testExternalUserWithInvit: TestUser;
-  testExternalUserWitoutInvit: TestUser;
-  testUserOnWrongServer: TestUser;
-  userLegacy: TestUser;
-  userLegacyWithFallbackRules: TestUser;
+  userData: TestUser,
+  oidcUser: TestUser;
+  oidcExternalUserWithInvit: TestUser;
+  oidcExternalUserWitoutInvit: TestUser;
+  oidcUserOnWrongServer: TestUser;
+  oidcUserLegacy: TestUser;//pas clair le oidc***Legacy
+  oidcUserLegacyWithFallbackRules: TestUser;
   authenticatedUser: Credentials;
   typeUser: TypeUser;
-  screenChecker :ScreenCheckerFixture;
+  screenChecker: ScreenCheckerFixture;
   startTchapRegisterWithEmail: StartTchapRegisterWithEmailFixture;
 }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
    */
-  simpleUser: generateSimpleUserFixture(STANDARD_EMAIL_DOMAIN),
-  testUser: createTestUserFixture(STANDARD_EMAIL_DOMAIN),
-  testExternalUserWithInvit: createTestUserFixture(INVITED_EMAIL_DOMAIN),
-  testExternalUserWitoutInvit: createTestUserFixture(NOT_INVITED_EMAIL_DOMAIN),
-  testUserOnWrongServer: createTestUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
-  userLegacy: createLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
-  userLegacyWithFallbackRules: createLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  userData: generateUserData(STANDARD_EMAIL_DOMAIN),
+  oidcUser: createKeycloakUserFixture(STANDARD_EMAIL_DOMAIN),
+  oidcExternalUserWithInvit: createKeycloakUserFixture(INVITED_EMAIL_DOMAIN),
+  oidcExternalUserWitoutInvit: createKeycloakUserFixture(NOT_INVITED_EMAIL_DOMAIN),
+  oidcUserOnWrongServer: createKeycloakUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
+  oidcUserLegacy: createKeycloakLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
+  oidcUserLegacyWithFallbackRules: createKeycloakLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  authenticatedUser: authenticatedUserFixture,
   typeUser: TypeUser.MAS_PASSWORD_USER,
-  screenChecker: async ({}, use, testInfo: TestInfo) => {
-    //this fixture clean up the screenshot folder before the tests
-    //and exposes a method to capture a screenshot from an waited url
-
-    const screenshotPath = path.join(SCREENSHOTS_DIR, testInfo.title.replace(/\s+/g, '_'));
-    let counter = 1;
-    
-    if (fs.existsSync(screenshotPath)) {
-      fs.rmSync(screenshotPath, { recursive: true, force: true });
-    }
-    fs.mkdirSync(screenshotPath, { recursive: true });
-    
-    const screenChecker = async (page: Page, urlFragment: string) => {
-      const browserName = page.context().browser()?.browserType().name();
-      
-      await page.waitForURL((url) => url.toString().includes(urlFragment), {waitUntil:"load"});
-      const filename = `${browserName}_${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
-      await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
-      counter++;
-    };
-
-    await use(screenChecker);
-  },
-  startTchapRegisterWithEmail: async ({ screenChecker }, use) => {
-    const start = async (page: Page, email: string) => {
-      await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
-      await screenChecker(page, '#/welcome');
-      await page.getByRole('link').filter({ hasText: 'Créer un compte' }).click();
-
-      await screenChecker(page, '#/email-precheck-sso');
-      await page.locator('input').fill(email);
-      await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-      await screenChecker(page, '/register');
-      await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
-    };
-    await use(start);
-  },
-  authenticatedUser: async ({ page, testUser: user, request }, use) => {
-    // 1. Register user
-    const userId = await createMasUserWithPassword(
-      user.username,
-      user.email,
-      user.password
-    );
-    const csAPI = new ClientServerApi(BASE_URL, request);
-
-    await waitForMasUser(user.email);
-
-    const credentials = (await csAPI.loginUser(
-      user.username,
-      user.password
-    )) as Credentials;
-
-    // 2. Populate localStorage
-    await populateLocalStorageWithCredentials(page, credentials);
-
-    // 3. Load app
-    await page.goto(ELEMENT_URL);
-    await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
-
-    // 4. Pass page to test
-    await use(credentials);
-
-    // Clean up, deactivate user
-    await deactivateMasUser(userId);
-    console.log(`Cleaned up MAS user: ${user.username}`);
-  },
+  screenChecker: screenCheckerFixture,
+  startTchapRegisterWithEmail: startTchapRegisterWithEmailFixture,
 });
 
 export { expect } from "@playwright/test";
