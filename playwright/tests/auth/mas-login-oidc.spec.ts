@@ -5,7 +5,7 @@ import {
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../utils/config';
 
-test.describe('Login via OIDC', () => {
+test.describe('MAS Login OIDC', () => {
  
   test('match account by username', async ({ page, userLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");

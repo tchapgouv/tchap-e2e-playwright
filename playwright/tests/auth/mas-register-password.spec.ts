@@ -2,7 +2,7 @@ import { test, expect } from '../../fixtures/auth-fixture';
 import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
 
 
-test.describe('Register', () => {
+test.describe('MAS Register password', () => {
 
   const PASSWORd = "sdf78qsd!9090ssss";
 
@@ -20,7 +20,7 @@ test.describe('Register', () => {
 
   });
 
-  test('tchap register with JavaScript disabled', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
+  test('with JavaScript disabled', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
     
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();
@@ -38,7 +38,7 @@ test.describe('Register', () => {
     await screen(page, '/verify-email');
   });
 
-  test('tchap register when user already exists', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
+  test('when user already exists', async ({ browser,  simpleUser: user, screenChecker: screen }) => {
     
     const ctx = await browser.newContext({ javaScriptEnabled: false });
     const page = await ctx.newPage();

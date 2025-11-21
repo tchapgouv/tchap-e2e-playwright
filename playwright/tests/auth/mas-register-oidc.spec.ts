@@ -10,9 +10,9 @@ import {
 import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser } from '../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../utils/config';
 
-test.describe('Register', () => {
+test.describe('MAS register OIDC', () => {
 
-  test('register oidc with allowed account', async ({ page, testUser }) => {
+  test('with allowed account', async ({ page, testUser }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -42,7 +42,7 @@ test.describe('Register', () => {
     console.log(`Successfully authenticated and verified user ${testUser.username} (${testUser.email})`);
   });
   
-  test('register oidc with extern without invit', async ({ page, testExternalUserWitoutInvit }) => {
+  test('with extern without invit', async ({ page, testExternalUserWitoutInvit }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -66,7 +66,7 @@ test.describe('Register', () => {
     console.log(`Successfully authenticated and verified user ${testExternalUserWitoutInvit.username} (${testExternalUserWitoutInvit.email})`);
   });
 
-  test('register oidc with extern with invit', async ({ page, testExternalUserWithInvit: testExternalUserWithInvit }) => {
+  test('with extern with invit', async ({ page, testExternalUserWithInvit: testExternalUserWithInvit }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -95,7 +95,7 @@ test.describe('Register', () => {
     console.log(`Successfully authenticated and verified external user ${testExternalUserWithInvit.username} (${testExternalUserWithInvit.email})`);
   });
 
-  test('register oidc on wrong homeserver', async ({ page, testUserOnWrongServer }) => {
+  test('on wrong homeserver', async ({ page, testUserOnWrongServer }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
