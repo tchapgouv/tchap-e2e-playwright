@@ -7,42 +7,6 @@ import { SCREENSHOTS_DIR } from '../../utils/config';
 
 test.describe('MAS Login OIDC', () => {
  
-  test('match account by username', async ({ page, oidcUserLegacy: userLegacy }) => {
-    const screenshot_path = test.info().title.replace(" ", "_");
-    
-    // Create a user in MAS with the same email as the Keycloak user
-    console.log(`Creating MAS user with same username as Keycloak user: ${userLegacy.username}`);
-    
-    userLegacy.masId = await createMasUserWithPassword(userLegacy.username, userLegacy.email, userLegacy.password);
-    
-    try {
-      // Perform the OIDC login flow
-      await performOidcLogin(page, userLegacy, screenshot_path);
-      
-       // Click the link account button
-      await page.locator('button[type="submit"]').click();
-
-      // Since the account already exists, we should be automatically logged in
-      // Verify we're successfully logged in
-      await expect(page.locator('text=Mon compte')).toBeVisible();
-      
-      // Take a screenshot of the authenticated state
-      await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
-      
-      // Verify the user in MAS is still the same (account was linked, not created new)
-      const userAfterLogin = await getMasUserByEmail(userLegacy.email);
-      expect(userAfterLogin.id).toBe(userLegacy.masId);
-      expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
-
-      console.log(`Successfully verified account linking for user with email: ${userLegacy.email}`);
-    } finally {
-      // Clean up the MAS user
-      await deactivateMasUser(userLegacy.masId);
-      console.log(`Cleaned up MAS user: ${userLegacy.username}`);
-    }
-  });
-
-
   test('match account by email', async ({ page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 

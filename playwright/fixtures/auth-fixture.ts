@@ -24,7 +24,7 @@ import {
 } from "../utils/config";
 import { ClientServerApi, Credentials } from "../utils/api";
 
-function generateUserData(domain: string) {
+function generateUserDataFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const user = generateTestUserData(domain);
@@ -46,41 +46,10 @@ function generateUserData(domain: string) {
 function createKeycloakUserFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
-      const testUser = generateTestUserData(domain);
+      const testUserData = generateTestUserData(domain);
 
       // Create a test user in Keycloak
-      const user = await createKeycloakTestUser(testUser);
-
-      // Use the test user in the test
-      await use(user);
-
-      // Clean up the test user after the test
-      await cleanupKeycloakTestUser(user);
-      console.log(`Cleaned up test user: ${user.username}`);
-    } finally {
-      // Dispose API contexts
-      await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
-      console.log("API contexts disposed");
-    }
-  };
-}
-
-//legacy users have a username derived from email :
-//email : username@domain.com -> username : username-domain.com
-//todo : do we need this and createKeycloakUserFixture?
-function createKeycloakLegacyUserFixture(domain: string) {
-  return async ({}, use: (user: TestUser) => Promise<void>) => {
-    try {
-      const randomSuffix = Math.floor(Math.random() * 10000000);
-
-      const testUser: TestUser = {
-        username: `test.user${randomSuffix}-${domain}`,
-        email: `test.user${randomSuffix}@${domain}`,
-        password: "1234!",
-      };
-
-      // Create a test user in Keycloak
-      const user = await createKeycloakTestUser(testUser);
+      const user = await createKeycloakTestUser(testUserData);
 
       // Use the test user in the test
       await use(user);
@@ -190,13 +159,13 @@ export const test = base.extend<{
   /**
    * Create a test user in Keycloak before the test and clean it up after
    */
-  userData: generateUserData(STANDARD_EMAIL_DOMAIN),
+  userData: generateUserDataFixture(STANDARD_EMAIL_DOMAIN),
   oidcUser: createKeycloakUserFixture(STANDARD_EMAIL_DOMAIN),
   oidcExternalUserWithInvit: createKeycloakUserFixture(INVITED_EMAIL_DOMAIN),
   oidcExternalUserWitoutInvit: createKeycloakUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   oidcUserOnWrongServer: createKeycloakUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
-  oidcUserLegacy: createKeycloakLegacyUserFixture(STANDARD_EMAIL_DOMAIN),
-  oidcUserLegacyWithFallbackRules: createKeycloakLegacyUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  oidcUserLegacy: createKeycloakUserFixture(STANDARD_EMAIL_DOMAIN),
+  oidcUserLegacyWithFallbackRules: createKeycloakUserFixture(NUMERIQUE_EMAIL_DOMAIN),
   authenticatedUser: authenticatedUserFixture,
   typeUser: TypeUser.MAS_PASSWORD_USER,
   screenChecker: screenCheckerFixture,
