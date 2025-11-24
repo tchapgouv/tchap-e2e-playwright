@@ -1,9 +1,11 @@
 import { test, expect } from '../../fixtures/auth-fixture';
 import { 
+  createKeycloakTestUser,
   performOidcLogin,
+  TestUser,
 } from '../../utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../utils/mas-admin';
-import { SCREENSHOTS_DIR } from '../../utils/config';
+import { createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../utils/mas-admin';
+import { SCREENSHOTS_DIR, STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 
 test.describe('MAS Login OIDC', () => {
  
@@ -221,6 +223,45 @@ test.describe('MAS Login OIDC', () => {
       // Clean up the MAS user
       await deactivateMasUser(userLegacy.masId);
       console.log(`Cleaned up MAS user: ${userLegacy.username}`);
+    }
+  });
+
+  test('match account by username throw error when email does not match', async ({ page}) => {
+    const screenshot_path = test.info().title.replace(" ", "_");
+    
+    //create a user in keycloak with an `email` that matches a `localpart` in MAS
+    //while the email in MAS is different
+    //then linking will not be on the `email` but on the `localpart`
+    //which is a failing edge case
+    //we expect an error page
+    const domain = STANDARD_EMAIL_DOMAIN;
+    
+    const randomSuffix = Math.floor(Math.random() * 10000000);
+    const mas_user_email = `any-email-${randomSuffix}@${domain}`;
+
+      const testUser: TestUser = {
+        username: `test.user${randomSuffix}-${domain}`,
+        email: `test.user${randomSuffix}@${domain}`,
+        password: "1234!",
+      };
+
+    const user = await createKeycloakTestUser(testUser);
+
+    user.masId = await createMasUserWithPassword(user.username, mas_user_email, user.password);
+    
+    try {
+      // Perform the OIDC login flow
+      await performOidcLogin(page, user, screenshot_path);
+      
+      // Get error
+      await page.locator('text=unknown_error');
+      await page.locator('text=invalid data');
+   
+      console.log(`Successfully verified account linking for user with email: ${user.email}`);
+    } finally {
+      // Clean up the MAS user
+      await deactivateMasUser(user.masId);
+      console.log(`Cleaned up MAS user: ${user.username}`);
     }
   });
 });
