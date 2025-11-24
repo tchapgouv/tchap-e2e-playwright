@@ -46,7 +46,6 @@ test.describe('MAS Login OIDC', () => {
     }
   });
 
-
   test('match account by email with fallback rules', async ({ page, oidcUserLegacyWithFallbackRules: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
@@ -135,7 +134,6 @@ test.describe('MAS Login OIDC', () => {
       console.log(`Cleaned up MAS user: ${newTchapAccountWithIndex.username}`);
     }
   });
-
 
   test('match account by email when account was deactivated but is reactivated by support', async ({browser, context, page, oidcUserLegacy: userLegacy }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
@@ -254,8 +252,9 @@ test.describe('MAS Login OIDC', () => {
       await performOidcLogin(page, user, screenshot_path);
       
       // Get error
-      await page.locator('text=unknown_error');
-      await page.locator('text=invalid data');
+      //await expect(page.locator('text=unknown_error'));
+      await expect(page.locator('text="Invalid Data"')).toBeVisible();
+;
    
       console.log(`Successfully verified account linking for user with email: ${user.email}`);
     } finally {
