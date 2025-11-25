@@ -149,8 +149,7 @@ export const test = base.extend<{
   oidcExternalUserWithInvit: TestUser;
   oidcExternalUserWitoutInvit: TestUser;
   oidcUserOnWrongServer: TestUser;
-  oidcUserLegacy: TestUser;//pas clair le oidc***Legacy
-  oidcUserLegacyWithFallbackRules: TestUser;
+  oidcUserWithFallbackRules: TestUser;
   authenticatedUser: Credentials;
   typeUser: TypeUser;
   screenChecker: ScreenCheckerFixture;
@@ -164,8 +163,7 @@ export const test = base.extend<{
   oidcExternalUserWithInvit: createKeycloakUserFixture(INVITED_EMAIL_DOMAIN),
   oidcExternalUserWitoutInvit: createKeycloakUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   oidcUserOnWrongServer: createKeycloakUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
-  oidcUserLegacy: createKeycloakUserFixture(STANDARD_EMAIL_DOMAIN),
-  oidcUserLegacyWithFallbackRules: createKeycloakUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  oidcUserWithFallbackRules: createKeycloakUserFixture(NUMERIQUE_EMAIL_DOMAIN),
   authenticatedUser: authenticatedUserFixture,
   typeUser: TypeUser.MAS_PASSWORD_USER,
   screenChecker: screenCheckerFixture,

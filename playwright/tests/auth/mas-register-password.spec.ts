@@ -6,7 +6,7 @@ test.describe('MAS Register password', () => {
 
   const PASSWORd = "sdf78qsd!9090ssss";
 
-  test.skip('without oauth2 session', async ({ context, page, userData: user, screenChecker: screen }) => {
+  test.skip('without oauth2 session', async ({page, screenChecker: screen }) => {
     // This test is intentionally ignored.
     //the error page has been deactivated for the moment because the MAS unit tests must be fixed
 

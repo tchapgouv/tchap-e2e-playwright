@@ -9,17 +9,17 @@ import { SCREENSHOTS_DIR, TCHAP_LEGACY } from '../../utils/config';
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 test.describe('Tchap : Login via OIDC', () => {
-  test('tchap match account by username', async ({ page, oidcUserLegacy: userLegacy }) => {
+  test('tchap match account by username', async ({ page, oidcUser: existingOidcUser }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
-    userLegacy.masId = await createMasUserWithPassword(userLegacy.username, userLegacy.email, userLegacy.password);
+    existingOidcUser.masId = await createMasUserWithPassword(existingOidcUser.username, existingOidcUser.email, existingOidcUser.password);
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(userLegacy.email);
+    const existsBeforeLogin = await checkMasUserExistsByEmail(existingOidcUser.email);
     expect(existsBeforeLogin).toBe(true);
     
     // Perform the OIDC login flow
-    await performOidcLoginFromTchap(page, userLegacy,screenshot_path, TCHAP_LEGACY);
+    await performOidcLoginFromTchap(page, existingOidcUser,screenshot_path, TCHAP_LEGACY);
     
     // Click the create account button
     await page.locator('button[type="submit"]').click();
@@ -39,12 +39,12 @@ test.describe('Tchap : Login via OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-auth-success.png` });
     
     // Verify the user was created in MAS
-    await verifyUserInMas(userLegacy);
+    await verifyUserInMas(existingOidcUser);
     
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(userLegacy.email);
+    const existsAfterLogin = await checkMasUserExistsByEmail(existingOidcUser.email);
     expect(existsAfterLogin).toBe(true);
     
-    console.log(`Successfully authenticated and verified user ${userLegacy.username} (${userLegacy.email})`);
+    console.log(`Successfully authenticated and verified user ${existingOidcUser.username} (${existingOidcUser.email})`);
   });
 });
