@@ -46,6 +46,45 @@ test.describe('MAS Login OIDC', () => {
     }
   });
 
+  test('match external account by email', async ({ page, oidcExternalUserWitoutInvit: externalUser }) => {
+    // we use the fixture oidcExternalUserWitoutInvit because as long as the account is created, 
+    // there is no invitation pending in the identity server.
+    
+    const screenshot_path = test.info().title.replace(" ", "_");
+
+    // Create a user in MAS with the same email as the Keycloak user
+    console.log(`Creating MAS user with same email as Keycloak user: ${externalUser.email}`);
+    
+    externalUser.masId = await createMasUserWithPassword(externalUser.username, externalUser.email, externalUser.password);
+    
+    try {
+      // Perform the OIDC login flow
+      await performOidcLogin(page, externalUser, screenshot_path);
+      
+       // Click the link account button
+      await page.locator('button[type="submit"]').click();
+
+      // Since the account already exists, we should be automatically logged in
+      // Verify we're successfully logged in
+      await expect(page.locator('text=Mon compte')).toBeVisible();
+      
+      // Take a screenshot of the authenticated state
+      await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
+      
+      // Verify the user in MAS is still the same (account was linked, not created new)
+      const userAfterLogin = await getMasUserByEmail(externalUser.email);
+      expect(userAfterLogin.id).toBe(externalUser.masId);
+      //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
+      expect(await oauthLinkExistsBySubject(externalUser.username)).toBe(true);
+
+      console.log(`Successfully verified account linking for user with email: ${externalUser.email}`);
+    } finally {
+      // Clean up the MAS user
+      await deactivateMasUser(externalUser.masId);
+      console.log(`Cleaned up MAS user: ${externalUser.username}`);
+    }
+  });
+
   test('match account by email with fallback rules', async ({ page, oidcUserWithFallbackRules: oidcUser }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
