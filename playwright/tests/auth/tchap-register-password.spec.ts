@@ -1,10 +1,11 @@
 import { test, expect } from '../../fixtures/auth-fixture';
 import { 
+  createMasTestUser,
   extractVerificationCode,
   generateTestUserData
 } from '../../utils/auth-helpers';
 import { getMasUserByEmail } from '../../utils/mas-admin';
-import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../utils/config';
+import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../utils/config';
 
 
 test.describe('Tchap : register with password', () => {
@@ -21,15 +22,10 @@ test.describe('Tchap : register with password', () => {
     
     await page.locator('input[name="password"]').fill(PASSWORd);
     await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-    await page.locator("body").click({ position: { x: 0, y: 0 } });
-    //await page.getByRole('generic').filter({ hasText: "Les mots de passe correspondent." });
-    //await expect(page.locator('span')).toHaveValue("Les mots de passe correspondent.");
 
-    //await page.keyboard.press('Enter');
-
-
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    //wait for password-confirm matching confirmation
+    await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field    
+    await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/verify-email');
@@ -48,8 +44,7 @@ test.describe('Tchap : register with password', () => {
     expect(created_user.attributes.username).toContain(user.username);
   });
 
-  //skip because flakky
-  test.skip('tchap register with not invited email', async ({page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+  test('with not invited email', async ({page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
     await startTchapRegisterWithEmail(page, user.email);
 
@@ -62,7 +57,10 @@ test.describe('Tchap : register with password', () => {
     await page.locator('input[name="email"]').fill(not_invited_user.email);
     await page.locator('input[name="password"]').fill(PASSWORd);
     await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
+
+    //wait for password-confirm matching confirmation
+    await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field    
+    await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/register/password');
@@ -72,8 +70,7 @@ test.describe('Tchap : register with password', () => {
     await expect(page.locator('div.cpd-form-message.cpd-form-error-message').filter({ hasText: 'Vous avez besoin d\'une invitation' })).toBeVisible();
   });
 
-  //skip because flakky
-  test.skip('tchap register with email on wrong server', async ({page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+  test('with email on wrong server', async ({page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
     await startTchapRegisterWithEmail(page, user.email);
 
@@ -86,13 +83,48 @@ test.describe('Tchap : register with password', () => {
     await page.locator('input[name="email"]').fill(wrong_server_user.email);
     await page.locator('input[name="password"]').fill(PASSWORd);
     await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
+
+    //wait for password-confirm matching confirmation
+    await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field
+    await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page, '/register/password');
-    await expect(page.locator('input[name="email"]')).toHaveValue(wrong_server_user.email);
 
     //check that error message is visible
     await expect(page.locator('div.cpd-form-message.cpd-form-error-message').filter({ hasText: 'Votre adresse mail est associée à un autre serveur' })).toBeVisible();
+  });
+
+  test('when user already exists', async ({page, context, browser, screenChecker: screen, startTchapRegisterWithEmail }) => {
+
+    // Create a test user with a password in MAS
+    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);        
+      
+    await startTchapRegisterWithEmail(page, user.email);
+
+    await screen(page, '/register/password');
+    await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
+    
+    await page.locator('input[name="password"]').fill(PASSWORd);
+    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
+
+  //wait for password-confirm matching confirmation
+    await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field
+    await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
+
+    //form is submitted successfully
+    await screen(page, '/verify-email');
+
+    let verificationCode  = await extractVerificationCode(context, screen);
+    await page.locator('input[name="code"]').fill(verificationCode);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screen(page, '/finish');
+    await expect(page.locator('text=le compte Tchap existe déjà')).toBeVisible();
+    await page.getByRole('link').filter({ hasText: 'Continuer' }).click();
+
+    await screen(page, '/login');
   });
 
 });

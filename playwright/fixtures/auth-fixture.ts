@@ -83,8 +83,8 @@ async function screenCheckerFixture({}: {}, use: (screenChecker: ScreenCheckerFi
 
   const screenChecker = async (page: Page, urlFragment: string) => {
     const browserName = page.context().browser()?.browserType().name();
-
-    await page.waitForURL((url) => url.toString().includes(urlFragment), {waitUntil:"load"});
+    
+    await page.waitForURL((url) => { console.log("current page url : ", url.pathname); return url.toString().includes(urlFragment)}, {waitUntil:"load"});
     const filename = `${browserName}_${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
     await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
     counter++;
@@ -104,7 +104,7 @@ async function startTchapRegisterWithEmailFixture({ screenChecker }: { screenChe
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screenChecker(page, '/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
   };
   await use(start);
 }

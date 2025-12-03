@@ -1,5 +1,6 @@
 import { test, expect } from '../../fixtures/auth-fixture';
-import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
+import { createMasTestUser, extractVerificationCode } from '../../utils/auth-helpers';
+import {STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 
 
 test.describe('MAS Register password', () => {
@@ -11,7 +12,7 @@ test.describe('MAS Register password', () => {
     //the error page has been deactivated for the moment because the MAS unit tests must be fixed
 
     await page.goto('/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     
     //form is not submitted because no oauth2_authorization_grant 
     await screen(page, '/register/password');
@@ -26,7 +27,7 @@ test.describe('MAS Register password', () => {
     const page = await ctx.newPage();
 
     await page.goto('/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     
     await screen(page, '/register/password');
     await page.locator('input[name="email"]').fill(user.email);
@@ -38,22 +39,5 @@ test.describe('MAS Register password', () => {
     await screen(page, '/verify-email');
   });
 
-  test('when user already exists', async ({ browser,  userData: user, screenChecker: screen }) => {
-    
-    const ctx = await browser.newContext({ javaScriptEnabled: false });
-    const page = await ctx.newPage();
-
-    await page.goto('/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec une adresse mail' }).click();
-    
-    await screen(page, '/register/password');
-    await page.locator('input[name="email"]').fill(user.email);
-    await page.locator('input[name="password"]').fill(PASSWORd);
-    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-    //form is submitted successfully
-    await screen(page, '/verify-email');
-  });
 
 });
