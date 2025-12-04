@@ -1,16 +1,7 @@
 
 # folder structure
 
-
-- /conf : configuration du MAS special tchap (deprecated)
 - /playwright : test E2E
-- /tools : for local dev (deprecated)
-- /wiremock : mock http response for identity server sydent (deprecated)
-
-
-export $MAS_HOME : path of /matrix-authentication-service, fork  https://github.com/tchapgouv/matrix-authentication-service
-export $MAS_TCHAP_HOME : path of /matrix-authentication-service-tchap
-
 
 # playwright tests
 
@@ -37,26 +28,6 @@ créer un compte à https://element.tchapgouv.com/
 
 c'est normal le MAS n'est pas démarré
 
-## setup MAS (deprecated)
-
-
-- launch postres services
-
-Create .env and personalize it if needed
-
-```bash
-cp .env.sample .env
-matrix-authentication-service-tchap % ./start-local-stack.sh
-```
-
-keycloak container might take some time to start up (deprecated)
-
-```bash
-export MAS_HOME=/Users/olivier/workspace/beta/Tchap/matrix-authentication-service
-./start-local-mas.sh
-```
-
-Recharger la page https://element.tchapgouv.com/, le MAS est accessible
 
 ## launch tests
 
