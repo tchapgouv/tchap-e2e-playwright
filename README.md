@@ -36,10 +36,4 @@ cd playwright
 playwright % npm test
 ```
 
-to launch a custom config run (see config.json)
-
-```bash
-npm run test:mas01 
-```
-
 
