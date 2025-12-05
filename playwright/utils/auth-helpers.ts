@@ -261,14 +261,14 @@ export async function performSimplePasswordLogin(
 export function generateTestUserData(domain:string) {
   const timestamp = new Date().getTime();
   const randomSuffix = Math.floor(Math.random() * 10000);
-  const kc_username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const kc_email = `${kc_username}@${domain}`;
+  const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
+  const email = `${username}@${domain}`;
   
-  console.log("Using kc_email: ", kc_email);
+  console.log("Using email: ", email);
 
   return {
-    username: kc_username,
-    email: kc_email,
+    username: username,
+    email: email,
     password: TEST_USER_PASSWORD
   };
 }
