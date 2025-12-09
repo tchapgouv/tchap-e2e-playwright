@@ -12,7 +12,7 @@ import { SCREENSHOTS_DIR } from '../../utils/config';
 
 test.describe('MAS register OIDC', () => {
 
-  test('with allowed account', async ({ page, oidcUser: oidcUser }) => {
+  test('mas register oidc - with allowed account', async ({ page, oidcUser: oidcUser }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -21,9 +21,6 @@ test.describe('MAS register OIDC', () => {
     
     // Perform the OIDC login flow
     await performOidcLogin(page, oidcUser,screenshot_path);
-    
-    // Click the create account button
-    await page.locator('button[type="submit"]').click();
 
     // Verify we're successfully logged in
     // This could be checking for a specific element that's only visible when logged in
@@ -42,7 +39,7 @@ test.describe('MAS register OIDC', () => {
     console.log(`Successfully authenticated and verified user ${oidcUser.username} (${oidcUser.email})`);
   });
   
-  test('with extern without invit', async ({ page, oidcExternalUserWitoutInvit: oidcExternalUserWitoutInvit }) => {
+  test('mas register oidc - with extern without invit', async ({ page, oidcExternalUserWitoutInvit: oidcExternalUserWitoutInvit }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -53,7 +50,7 @@ test.describe('MAS register OIDC', () => {
     await performOidcLogin(page, oidcExternalUserWitoutInvit, screenshot_path);
     
     // Get error
-    await page.locator('text=invitation_missing');
+    await expect(page.locator('text=invitation_missing')).toBeVisible();;
     
     // Take a screenshot of the authenticated state
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-error-no-invit.png` });
@@ -66,7 +63,7 @@ test.describe('MAS register OIDC', () => {
     console.log(`Successfully authenticated and verified user ${oidcExternalUserWitoutInvit.username} (${oidcExternalUserWitoutInvit.email})`);
   });
 
-  test('with extern with invit', async ({ page, oidcExternalUserWithInvit: oidcExternalUserWithInvit }) => {
+  test('mas register oidc - with extern with invit', async ({ page, oidcExternalUserWithInvit: oidcExternalUserWithInvit }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -75,9 +72,6 @@ test.describe('MAS register OIDC', () => {
     
     // Perform the OIDC login flow
     await performOidcLogin(page, oidcExternalUserWithInvit, screenshot_path);
-    
-    // Click the create account button
-    await page.locator('button[type="submit"]').click();
   
     // Verify we're successfully logged in
     await expect(page.locator('text=Mon compte')).toBeVisible();
@@ -95,7 +89,7 @@ test.describe('MAS register OIDC', () => {
     console.log(`Successfully authenticated and verified external user ${oidcExternalUserWithInvit.username} (${oidcExternalUserWithInvit.email})`);
   });
 
-  test('on wrong homeserver', async ({ page, oidcUserOnWrongServer: oidcUserOnWrongServer }) => {
+  test('mas register oidc - on wrong homeserver', async ({ page, oidcUserOnWrongServer: oidcUserOnWrongServer }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Verify the test user doesn't exist in MAS yet
@@ -106,7 +100,7 @@ test.describe('MAS register OIDC', () => {
     await performOidcLogin(page, oidcUserOnWrongServer, screenshot_path);
    
     // Get error
-    await page.locator('text=wrong_server');
+    await expect(page.locator('text=wrong_server')).toBeVisible();
     
     // Take a screenshot of the authenticated state
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-error-wrong-server.png` });

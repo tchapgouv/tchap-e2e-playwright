@@ -56,7 +56,7 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   await page.goto('/login');
   
   // Take a screenshot of the login page
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-login-page.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-login-page.png`, fullPage:true  });
   
   // Find and click the OIDC provider button (adjust the selector as needed)
   // This is based on the login.html template which shows provider buttons
@@ -69,7 +69,7 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   await page.waitForURL(url => url.toString().includes(KEYCLOAK_URL));
   
   // Take a screenshot of the Keycloak login page
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-keycloak-login.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-keycloak-login.png`, fullPage:true  });
   
   // Fill in the username and password
   await page.locator('#username').fill(user.username);
@@ -82,7 +82,7 @@ export async function performOidcLogin(page: Page, user: TestUser, screenshot_pa
   await page.waitForURL(url => url.toString().includes(MAS_URL));
   
   // Take a screenshot after successful login
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-after-login.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-after-keycloak-login.png`, fullPage:true  });
 }
 
 /**
@@ -93,7 +93,7 @@ export async function performOidcLoginFromTchap(page: Page, user: TestUser, scre
   //we go to the welcome and then to the login page because sometimes the email field disapears
   await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
 
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png`, fullPage:true  });
   
   await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
 
@@ -106,7 +106,7 @@ export async function performOidcLoginFromTchap(page: Page, user: TestUser, scre
   await page.waitForURL(url => url.toString().includes(MAS_URL));
   
   // Take a screenshot of the MAS login page
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-mas-login-page.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-mas-login-page.png`, fullPage:true  });
   
   // Find and click the OIDC provider button
   //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
@@ -118,7 +118,7 @@ export async function performOidcLoginFromTchap(page: Page, user: TestUser, scre
   await page.waitForURL(url => url.toString().includes(KEYCLOAK_URL));
   
   // Take a screenshot of the Keycloak login page
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-keycloak-login.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-keycloak-login.png`, fullPage:true  });
   
   // Fill in the username and password
   await page.locator('#username').fill(user.username);
@@ -131,7 +131,7 @@ export async function performOidcLoginFromTchap(page: Page, user: TestUser, scre
   await page.waitForURL(url => url.toString().includes(MAS_URL));
   
   // Take a screenshot after successful login
-  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-after-login.png` });
+  await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-after-login.png` , fullPage:true });
 }
 
 /**
