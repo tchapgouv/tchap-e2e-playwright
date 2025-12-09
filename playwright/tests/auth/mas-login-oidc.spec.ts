@@ -15,16 +15,13 @@ test.describe('MAS Login OIDC', () => {
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${oidcUser.email}`);
     
-    oidcUser.masId = await createMasUserWithPassword(oidcUser.username+"different_from_email", oidcUser.email, oidcUser.password);
+    oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, "any");
     
     try {
      
       // Perform the OIDC login flow
       await performOidcLogin(page, oidcUser, screenshot_path);
       
-       // Click the link account button
-      await page.locator('button[type="submit"]').click();
-
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Mon compte')).toBeVisible();
@@ -61,9 +58,6 @@ test.describe('MAS Login OIDC', () => {
       // Perform the OIDC login flow
       await performOidcLogin(page, externalUser, screenshot_path);
       
-       // Click the link account button
-      await page.locator('button[type="submit"]').click();
-
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Mon compte')).toBeVisible();
@@ -102,9 +96,6 @@ test.describe('MAS Login OIDC', () => {
       // Perform the OIDC login flow
       await performOidcLogin(page, oidcUser, screenshot_path);
       
-       // Click the link account button
-      await page.locator('button[type="submit"]').click();
-
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Mon compte')).toBeVisible();
@@ -146,9 +137,6 @@ test.describe('MAS Login OIDC', () => {
      
       // Perform the OIDC login flow with KC Account(=userLegacy)
       await performOidcLogin(page, userLegacy, screenshot_path);
-      
-       // Click the link account button
-      await page.locator('button[type="submit"]').click();
 
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
@@ -185,9 +173,6 @@ test.describe('MAS Login OIDC', () => {
      
       // Perform the OIDC login flow
       await performOidcLogin(page, userLegacy, screenshot_path);
-      
-       // Click the link account button
-      await page.locator('button[type="submit"]').click();
 
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
@@ -206,7 +191,6 @@ test.describe('MAS Login OIDC', () => {
 
       // deactvate account
       await deactivateMasUser(userLegacy.masId);
-
 
       // SUPPORT PROCESS PERFORMED BY BOT ADMIN
       const links = await getOauthLinkBySubject(userLegacy.username);
@@ -230,9 +214,6 @@ test.describe('MAS Login OIDC', () => {
      
       // Perform the OIDC login flow
       await performOidcLogin(page2, userLegacy, screenshot_path_2);
-
-      // Click the link account button
-      await page2.locator('button[type="submit"]').click();
 
       await page2.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path_2}/04-linked-account.png` });
 
