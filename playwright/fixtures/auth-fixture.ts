@@ -23,6 +23,7 @@ import {
   ELEMENT_URL
 } from "../utils/config";
 import { ClientServerApi, Credentials } from "../utils/api";
+import { checkAccessibility } from "../utils/accessibility-helpers";
 
 function generateUserDataFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
@@ -85,6 +86,7 @@ async function screenCheckerFixture({}: {}, use: (screenChecker: ScreenCheckerFi
     const browserName = page.context().browser()?.browserType().name();
     
     await page.waitForURL((url) => { console.log("current page url : ", url.pathname); return url.toString().includes(urlFragment)}, {waitUntil:"load"});
+    await checkAccessibility(page);
     const filename = `${browserName}_${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
     await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
     counter++;
