@@ -6,7 +6,7 @@ import { openResetPasswordEmail } from '../../utils/auth-helpers';
 
 test.describe('Tchap : reset password', () => {
 
-  test('tchap reset login', async ({ page, userData: userData,screenChecker }) => {
+  test('tchap reset password', async ({ page, userData: userData,screenChecker }) => {
 
     userData.masId = await createMasUserWithPassword(userData.username, userData.email, userData.password);
     const existsBeforeLogin = await checkMasUserExistsByEmail(userData.email);
@@ -41,8 +41,8 @@ test.describe('Tchap : reset password', () => {
     await resetPwdPage.getByRole('button').filter({ hasText: 'Sauvegarder et continuer' }).click({clickCount:2});
 
     //new tab is redirected back to welcome page
-    await screenChecker(resetPwdPage, '/')
     await expect(resetPwdPage.getByRole('link').filter({ hasText: 'Continuer dans Tchap Windows' })).toBeVisible();
+    await screenChecker(resetPwdPage, '/')
 
     //first tab is stuck back to recovery page
     await screenChecker(page, '/recover/progress')
