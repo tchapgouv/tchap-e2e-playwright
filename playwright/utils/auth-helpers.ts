@@ -1,4 +1,4 @@
-import { BrowserContext, Frame, Page } from '@playwright/test';
+import { BrowserContext, expect, Frame, Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
@@ -269,6 +269,33 @@ export async function openResetPasswordEmail(context: BrowserContext, screenChec
 }
 
 
+export async function loginWithPassword(
+    page: Page, 
+    userData: { email: string; password: string }, 
+    screenChecker: Function
+  ) {
+    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+
+    // Welcome page
+    await screenChecker(page, `#/welcome`);
+    await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+
+    // Email precheck
+    await screenChecker(page, `#/email-precheck-sso`);
+    await page.locator('input').fill(userData.email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    // Login page
+    await screenChecker(page, `/login`);
+    await expect(page.locator('input[name="username"]')).toHaveValue(userData.email);
+    await page.locator('input[name="password"]').fill(userData.password);
+    await page.locator('button[type="submit"]').click();
+
+    // Consent page
+    await screenChecker(page, `/consent`);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+  }
 
 /**
  * Same as performPasswordLogin but without the screenshots
