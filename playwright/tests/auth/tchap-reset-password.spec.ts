@@ -41,7 +41,7 @@ test.describe('Tchap : reset password', () => {
     await resetPwdPage.getByRole('button').filter({ hasText: 'Sauvegarder et continuer' }).click({clickCount:2});
 
     //new tab is redirected back to welcome page
-    await expect(resetPwdPage.getByRole('link').filter({ hasText: 'Continuer dans Tchap Windows' })).toBeVisible();
+    await expect(resetPwdPage.getByRole('link').filter({ hasText: 'Continuer dans Tchap' })).toBeVisible();
     await screenChecker(resetPwdPage, '/')
 
     //first tab is stuck back to recovery page
