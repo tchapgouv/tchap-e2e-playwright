@@ -26,7 +26,7 @@ test.describe('Tchap : register with password', () => {
     //wait for password-confirm matching confirmation
     await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field    
     await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2}); //2 clicks works better than one
 
     await screen(page, '/verify-email');
     let verificationCode  = await extractVerificationCode(context, screen);
@@ -61,7 +61,7 @@ test.describe('Tchap : register with password', () => {
     //wait for password-confirm matching confirmation
     await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field    
     await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2});
 
     await screen(page, '/register/password');
     await expect(page.locator('input[name="email"]')).toHaveValue(not_invited_user.email);
@@ -87,7 +87,7 @@ test.describe('Tchap : register with password', () => {
     //wait for password-confirm matching confirmation
     await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field
     await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2});
 
     await screen(page, '/register/password');
 
@@ -111,7 +111,7 @@ test.describe('Tchap : register with password', () => {
   //wait for password-confirm matching confirmation
     await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field
     await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();//needs to focus out from the `password_confirm` field 
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2});
 
     //form is submitted successfully
     await screen(page, '/verify-email');

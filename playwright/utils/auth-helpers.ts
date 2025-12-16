@@ -1,4 +1,4 @@
-import { BrowserContext, Page } from '@playwright/test';
+import { BrowserContext, Frame, Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
@@ -198,7 +198,7 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
 
 
 
-  // Add this function to extract the verification code
+// Add this function to extract the verification code
 export async function extractVerificationCode(context: BrowserContext, waitForScreen:ScreenCheckerFixture): Promise<string> {
     // Create a new page for mail.tchapgouv.com
     const page = await context.newPage();
@@ -229,6 +229,45 @@ export async function extractVerificationCode(context: BrowserContext, waitForSc
 
     return verificationCode;
 }
+
+// open reset password screen from email
+export async function openResetPasswordEmail(context: BrowserContext, screenChecker:ScreenCheckerFixture): Promise<Page> {
+    // Create a new page for mail.tchapgouv.com
+    const page = await context.newPage();
+
+    // Navigate to mail.tchapgouv.com
+    await page.goto('https://mail.tchapgouv.com');
+
+    // Wait for the page to load and click on the first email
+    await page.waitForSelector('.msglist-message');
+    
+    await screenChecker(page, 'mail.tchapgouv.com');
+
+    //open first email
+    await page.locator('.col-md-5').first().click();
+
+    dumpFrameTree(page.mainFrame(), '');
+  
+
+    function dumpFrameTree(frame:Frame, indent:string) {
+      console.log(indent + frame.url());
+      for (const child of frame.childFrames())
+        dumpFrameTree(child, indent + '  ');
+    }
+
+    
+    
+    const [resetPasswordPage] = await Promise.all([
+      context.waitForEvent('page'),
+      await page.frameLocator('#preview-html').getByRole('link').filter({ hasText: "Réinitialiser mon mot de passe" }).click()
+      //await page.getByRole('link').filter({ hasText: "Réinitialiser mon mot de passe" }).click()
+    ])
+
+    await screenChecker(resetPasswordPage, 'account/password/recovery');
+
+    return resetPasswordPage;
+}
+
 
 
 /**

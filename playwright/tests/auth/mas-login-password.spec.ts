@@ -22,7 +22,7 @@ test.describe('MAS login password', () => {
       await performPasswordLogin(page, user,screenshot_path);
       
       // Verify we're successfully logged in
-      await expect(page.locator('text=Mon compte')).toBeVisible();
+      await expect(page.locator('text=Connecté')).toBeVisible();
       
       // Take a screenshot of the authenticated state
       await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-password-auth-success.png` });
