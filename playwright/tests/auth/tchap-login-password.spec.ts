@@ -2,6 +2,7 @@ import { test, expect } from '../../fixtures/auth-fixture';
 import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../utils/mas-admin';
 import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
 import { Page } from '@playwright/test';
+import { loginWithPassword } from '../../utils/auth-helpers';
 
 
 test.describe('Tchap : Login password', () => {
@@ -43,67 +44,4 @@ test.describe('Tchap : Login password', () => {
     
     console.log(`Successfully authenticated and verified user ${userData.username} (${userData.email})`);
   });
-
-  test('tchap login twice', async ({ page, userData: userData, screenChecker }) => {
-    //const screenshot_path = test.info().title.replace(" ", "_");
-
-    userData.masId = await createMasUserWithPassword(userData.username, userData.email, userData.password);
-    const existsBeforeLogin = await checkMasUserExistsByEmail(userData.email);
-    expect(existsBeforeLogin).toBe(true);
-  
-    // First login
-    await loginWithPassword(page, userData, screenChecker);
-
-    // Success - Tchap home
-    await expect(page.locator('text=Bienvenue')).toBeVisible({timeout: 20000});
-
-    //logout
-    await page.getByRole('button', { name: 'Menu utilisateur' }).click();
-    await page.getByRole('menuitem', { name: 'Se déconnecter' }).click();
-    await screenChecker(page, `/`)
-
-    // Second login
-    await loginWithPassword(page, userData, screenChecker);
- 
-    // Success - Confirm identity
-    await expect(page.locator('text=Confirmez votre identité')).toBeVisible({timeout: 20000});
-
-    // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(userData.email);
-    expect(existsAfterLogin).toBe(true);
-    
-    console.log(`Successfully authenticated and verified user ${userData.username} (${userData.email})`);
-  });
-
-
-  async function loginWithPassword(
-    page: Page, 
-    userData: { email: string; password: string }, 
-    screenChecker: Function
-  ) {
-    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
-
-    // Welcome page
-    await screenChecker(page, `#/welcome`);
-    await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
-
-    // Email precheck
-    await screenChecker(page, `#/email-precheck-sso`);
-    await page.locator('input').fill(userData.email);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-    // Login page
-    await screenChecker(page, `/login`);
-    await expect(page.locator('input[name="username"]')).toHaveValue(userData.email);
-    await page.locator('input[name="password"]').fill(userData.password);
-    await page.locator('button[type="submit"]').click();
-
-    // Consent page
-    await screenChecker(page, `/consent`);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-  }
-
-
-
 });
