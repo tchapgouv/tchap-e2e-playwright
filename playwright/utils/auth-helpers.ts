@@ -95,7 +95,7 @@ export async function performOidcLoginFromTchap(page: Page, user: TestUser, scre
 
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png`, fullPage:true  });
   
-  await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+  await page.getByRole('link').filter({hasText : "Se connecter"}).click();
 
   await page.locator('input').fill(user.email);
 
@@ -278,7 +278,7 @@ export async function loginWithPassword(
 
     // Welcome page
     await screenChecker(page, `#/welcome`);
-    await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+    await page.getByRole('link').filter({hasText : "Se connecter"}).click();
 
     // Email precheck
     await screenChecker(page, `#/email-precheck-sso`);

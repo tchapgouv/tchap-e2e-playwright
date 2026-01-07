@@ -17,7 +17,7 @@ test.describe('Tchap : Login password', () => {
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
   
     await screenChecker(page, `#/welcome`)
-    await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+    await page.getByRole('link').filter({hasText : "Se connecter"}).click();
   
     await screenChecker(page, `#/email-precheck-sso`)
     await page.locator('input').fill(userData.email);

@@ -23,7 +23,7 @@ test.describe('Tchap : logout', () => {
     await screenChecker(page, `/welcome`)
 
     // Second login
-    await page.getByRole('link').filter({hasText : "Se connecter par email"}).click();
+    await page.getByRole('link').filter({hasText : "Se connecter"}).click();
 
     // Email precheck
     await screenChecker(page, `#/email-precheck-sso`);
