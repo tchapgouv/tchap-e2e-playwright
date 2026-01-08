@@ -4,7 +4,7 @@ import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
 import { Credentials } from './api';
 import { ScreenCheckerFixture } from '../fixtures/auth-fixture';
-import { getLatestVerificationCode } from './mailpit.js';
+import { getPasswordResetLink } from './mailpit.js';
 /**
  * Test user type
  */
@@ -197,37 +197,13 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
 }
 
 // open reset password screen from email
-export async function openResetPasswordEmail(context: BrowserContext, screenChecker:ScreenCheckerFixture): Promise<Page> {
-    // Create a new page for mail.tchapgouv.com
-    const page = await context.newPage();
+export async function openResetPasswordEmail(context: BrowserContext, screenChecker:ScreenCheckerFixture, userEmail: string): Promise<Page> {
+    // Use Mailpit API to get password reset link instead of browser automation
+    const resetLink = await getPasswordResetLink(userEmail);
 
-    // Navigate to mail.tchapgouv.com
-    await page.goto('https://mail.tchapgouv.com');
-
-    // Wait for the page to load and click on the first email
-    await page.waitForSelector('.msglist-message');
-    
-    await screenChecker(page, 'mail.tchapgouv.com');
-
-    //open first email
-    await page.locator('.col-md-5').first().click();
-
-    dumpFrameTree(page.mainFrame(), '');
-  
-
-    function dumpFrameTree(frame:Frame, indent:string) {
-      console.log(indent + frame.url());
-      for (const child of frame.childFrames())
-        dumpFrameTree(child, indent + '  ');
-    }
-
-    
-    
-    const [resetPasswordPage] = await Promise.all([
-      context.waitForEvent('page'),
-      await page.frameLocator('#preview-html').getByRole('link').filter({ hasText: "Réinitialiser mon mot de passe" }).click()
-      //await page.getByRole('link').filter({ hasText: "Réinitialiser mon mot de passe" }).click()
-    ])
+    // Create a new page and navigate directly to the reset link
+    const resetPasswordPage = await context.newPage();
+    await resetPasswordPage.goto(resetLink);
 
     await screenChecker(resetPasswordPage, 'account/password/recovery');
 

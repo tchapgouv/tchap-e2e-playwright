@@ -70,7 +70,9 @@ export async function getLatestVerificationCode(toEmail: string): Promise<string
 function extractResetLinkFromContent(content: string): string {
   // Match URLs that contain password/recovery or similar patterns
   // Look for full URLs in the email
-  const urlMatch = content.match(/(https?:\/\/[^\s<>"]+(?:account\/password\/recovery|password\/reset)[^\s<>"]*)/i);
+  console.log(content);
+
+  const urlMatch = content.match(/(https?:\/\/[^\s<>"]+(?:account\/password\/recovery)[^\s<>"]*)/i);
   if (!urlMatch) {
     throw new Error('Unable to extract password reset link from email content');
   }
@@ -78,29 +80,32 @@ function extractResetLinkFromContent(content: string): string {
 }
 
 /**
- * Get the password reset link from the most recent email
+ * Get the password reset link from the most recent email for a specific recipient
+ * @param toEmail - The recipient email address to filter messages
  * @returns The password reset URL from the most recent email
  */
-export async function getPasswordResetLink(): Promise<string> {
+export async function getPasswordResetLink(toEmail: string): Promise<string> {
   try {
     const mailpit = new MailpitClient(MAIL_URL);
     await mailpit.getInfo();
 
-    // Get the list of messages (most recent first)
-    const messages = await mailpit.listMessages(0, 1); // start=0, limit=1
+    // Search for messages sent to the specific email address (most recent first)
+    const messages = await mailpit.searchMessages({
+      query: `to:${toEmail}`,
+      start: 0,
+      limit: 1,
+    });
 
     if (!messages.messages || messages.messages.length === 0) {
-      throw new Error('No emails found in Mailpit');
+      throw new Error(`No emails found for recipient: ${toEmail}`);
     }
 
     const latestMessage = messages.messages[0];
-    console.log(`[Mailpit] Found password reset email: ${latestMessage.Subject} (ID: ${latestMessage.ID})`);
+    console.log(`[Mailpit] Found password reset email for ${toEmail}: ${latestMessage.Subject} (ID: ${latestMessage.ID})`);
 
     // Get the full message content
     const message = await mailpit.getMessageSummary(latestMessage.ID);
-
-    // Try HTML first as reset links are usually in HTML emails
-    let content = message.HTML || message.Text || '';
+    let content = message.Text;
     
     if (!content) {
       throw new Error('Email content is empty');
