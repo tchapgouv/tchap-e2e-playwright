@@ -4,7 +4,7 @@ import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
 import { Credentials } from './api';
 import { ScreenCheckerFixture } from '../fixtures/auth-fixture';
-
+import { getLatestVerificationCode } from './mailpit.js';
 /**
  * Test user type
  */
@@ -194,40 +194,6 @@ export async function performPasswordLogin(page: Page, user: TestUser, screensho
   await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-password-login-success.png` });
   
   console.log(`[Auth] Password login successful for user: ${user.username}`);
-}
-
-
-
-// Add this function to extract the verification code
-export async function extractVerificationCode(context: BrowserContext, waitForScreen:ScreenCheckerFixture): Promise<string> {
-    // Create a new page for mail.tchapgouv.com
-    const page = await context.newPage();
-
-    // Navigate to mail.tchapgouv.com
-    await page.goto('https://mail.tchapgouv.com');
-
-    // Wait for the page to load and click on the first email
-    await page.waitForSelector('.msglist-message');
-    
-    await waitForScreen(page, 'mail.tchapgouv.com');
-
-    const firstIncompingMail = await page.locator('.col-md-5').first();
-
-    let codeText = await firstIncompingMail.textContent();
-    if (!codeText) {
-      throw new Error('Unable to extract verification code');
-    }
-    console.log(codeText);
-    codeText = codeText.trim();
-    console.log(codeText);
-    const codeMatch = codeText.match(/.*: (\d+)/);
-    if (!codeMatch) {
-      throw new Error('Unable to extract verification code from text');
-    }
-    const verificationCode = codeMatch[1];
-    console.log("verification code extracted : ", verificationCode);
-
-    return verificationCode;
 }
 
 // open reset password screen from email
