@@ -1,6 +1,4 @@
 import { test, expect } from '../../fixtures/auth-fixture';
-import { createMasTestUser, extractVerificationCode } from '../../utils/auth-helpers';
-import {STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 
 
 test.describe('MAS Register password', () => {
