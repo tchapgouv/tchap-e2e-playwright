@@ -31,7 +31,7 @@ test.describe('Tchap : reset password', () => {
     //MAS reset password - verify
     await screenChecker(page, '/recover/progress')
 
-    const resetPwdPage = await openResetPasswordEmail(page.context(), screenChecker);
+    const resetPwdPage = await openResetPasswordEmail(page.context(), screenChecker, userData.email);
 
     const newPassword = "monchienmangemapantoufle"
     await resetPwdPage.locator('input[name="new_password"]').fill(newPassword);

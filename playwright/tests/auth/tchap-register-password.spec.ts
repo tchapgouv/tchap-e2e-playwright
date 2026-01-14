@@ -1,11 +1,11 @@
 import { test, expect } from '../../fixtures/auth-fixture';
 import { 
   createMasTestUser,
-  extractVerificationCode,
   generateTestUserData
 } from '../../utils/auth-helpers';
 import { getMasUserByEmail } from '../../utils/mas-admin';
 import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../utils/config';
+import { getLatestVerificationCode } from '../../utils/mailpit';
 
 
 test.describe('Tchap : register with password', () => {
@@ -29,7 +29,7 @@ test.describe('Tchap : register with password', () => {
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2}); //2 clicks works better than one
 
     await screen(page, '/verify-email');
-    let verificationCode  = await extractVerificationCode(context, screen);
+    let verificationCode  = await getLatestVerificationCode(user.email);
     await page.locator('input[name="code"]').fill(verificationCode);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
@@ -116,7 +116,7 @@ test.describe('Tchap : register with password', () => {
     //form is submitted successfully
     await screen(page, '/verify-email');
 
-    let verificationCode  = await extractVerificationCode(context, screen);
+    let verificationCode  = await getLatestVerificationCode(user.email);
     await page.locator('input[name="code"]').fill(verificationCode);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
