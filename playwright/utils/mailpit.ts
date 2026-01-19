@@ -1,5 +1,6 @@
 import { MailpitClient } from 'mailpit-api';
-import { MAIL_URL } from './config';
+import { expect } from '@playwright/test';
+import { MAILPIT_URL, MAILPIT_USERNAME, MAILPIT_PASSWORD } from './config';
 
 
 /**
@@ -23,21 +24,38 @@ function extractCodeFromContent(content: string): string {
  */
 export async function getLatestVerificationCode(toEmail: string): Promise<string> {
   try {
-    const mailpit = new MailpitClient(MAIL_URL);
-    await mailpit.getInfo();
+    // Initialize Mailpit client with optional BASIC auth
+    const mailpitAuth = MAILPIT_USERNAME && MAILPIT_PASSWORD 
+      ? { username: MAILPIT_USERNAME, password: MAILPIT_PASSWORD }
+      : undefined;
+    const mailpit = new MailpitClient(MAILPIT_URL, mailpitAuth);
+    console.log("mailpit url", MAILPIT_URL);
 
-    // Search for messages sent to the specific email address (most recent first)
+    const info = await mailpit.getInfo();
+    console.log("mailpit info", info);
+
+    // Wait for email to arrive (10 retries with 1 second interval)
+    await expect.poll(async () => {
+      const messages = await mailpit.searchMessages({
+        query: `to:${toEmail}`,
+        start: 0,
+        limit: 1,
+      });
+      return messages.messages?.length ?? 0;
+    }, {
+      message: `No emails found for recipient: ${toEmail} after waiting`,
+      timeout: 20000,      // 10 seconds total
+      intervals: [1000],   // 1 second between each attempt
+    }).toBeGreaterThan(0);
+
+    // Get the messages again after polling confirms they exist
     const messages = await mailpit.searchMessages({
       query: `to:${toEmail}`,
       start: 0,
       limit: 1,
     });
 
-    if (!messages.messages || messages.messages.length === 0) {
-      throw new Error(`No emails found for recipient: ${toEmail}`);
-    }
-
-    const latestMessage = messages.messages[0];
+    const latestMessage = messages.messages![0];
     console.log(`[Mailpit] Found email for ${toEmail}: ${latestMessage.Subject} (ID: ${latestMessage.ID})`);
 
     // Get the full message content
@@ -86,21 +104,35 @@ function extractResetLinkFromContent(content: string): string {
  */
 export async function getPasswordResetLink(toEmail: string): Promise<string> {
   try {
-    const mailpit = new MailpitClient(MAIL_URL);
+    // Initialize Mailpit client with optional BASIC auth
+    const mailpitAuth = MAILPIT_USERNAME && MAILPIT_PASSWORD 
+      ? { username: MAILPIT_USERNAME, password: MAILPIT_PASSWORD }
+      : undefined;
+    const mailpit = new MailpitClient(MAILPIT_URL, mailpitAuth);
     await mailpit.getInfo();
 
-    // Search for messages sent to the specific email address (most recent first)
+    // Wait for email to arrive (10 retries with 1 second interval)
+    await expect.poll(async () => {
+      const messages = await mailpit.searchMessages({
+        query: `to:${toEmail}`,
+        start: 0,
+        limit: 1,
+      });
+      return messages.messages?.length ?? 0;
+    }, {
+      message: `No emails found for recipient: ${toEmail} after waiting`,
+      timeout: 20000,      // 10 seconds total
+      intervals: [1000],   // 1 second between each attempt
+    }).toBeGreaterThan(0);
+
+    // Get the messages again after polling confirms they exist
     const messages = await mailpit.searchMessages({
       query: `to:${toEmail}`,
       start: 0,
       limit: 1,
     });
 
-    if (!messages.messages || messages.messages.length === 0) {
-      throw new Error(`No emails found for recipient: ${toEmail}`);
-    }
-
-    const latestMessage = messages.messages[0];
+    const latestMessage = messages.messages![0];
     console.log(`[Mailpit] Found password reset email for ${toEmail}: ${latestMessage.Subject} (ID: ${latestMessage.ID})`);
 
     // Get the full message content
