@@ -17,7 +17,11 @@ export const MAS_URL = process.env.MAS_URL || 'https://auth.tchapgouv.com';
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || 'https://sso.tchapgouv.com';
 export const ELEMENT_URL = process.env.ELEMENT_URL || 'https://element.tchapgouv.com';
 export const BASE_URL = process.env.BASE_URL || "https://matrix.tchapgouv.com";
-export const MAIL_URL = process.env.MAIL_URL || "https://mail.tchapgouv.com";
+export const MAILPIT_URL = process.env.MAILPIT_URL || "https://mail.tchapgouv.com";
+
+// Mailpit Authentication (optional, for BASIC auth)
+export const MAILPIT_USERNAME = process.env.MAILPIT_USERNAME || "";
+export const MAILPIT_PASSWORD = process.env.MAILPIT_PASSWORD || "";
 
 
 export const TCHAP_LEGACY:boolean = Boolean(process.env.TCHAP_LEGACY);
@@ -54,4 +58,3 @@ export const BROWSER_LOCALE = process.env.BROWSER_LOCALE || 'fr-FR';
 export const FIX_USER_USERNAME = "Michelle_test";
 export const FIX_USER_PASSWORD = "Michelle1313!";
 export const FIX_USER_EMAIL = "Michelle1313!";
-

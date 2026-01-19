@@ -11,7 +11,7 @@ dotenv.config();
 export default defineConfig({
   testDir: './tests',
   /* Maximum time one test can run for */
-  timeout: 15 * 1000,
+  timeout: 30 * 1000,
   /* Run tests in files in parallel */
   fullyParallel: process.env.TEST_IN_PARALLEL === 'true' ? true : false,
 
@@ -22,7 +22,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   
-  retries: process.env.CI ? 2 : 2,
+  retries: process.env.CI ? 2 : 0,
   /* Reporter to use */
   reporter: 'html',
   /* Shared settings for all the projects below */

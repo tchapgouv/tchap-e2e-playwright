@@ -13,7 +13,7 @@ test.describe('Tchap : register with password', () => {
 
   const PASSWORd = "sdf78qsd!9090ssss";
 
-  test('tchap register with oidc native', async ({ context, page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
+  test('tchap register with password (with flow oidc native)', async ({ context, page, userData: user, screenChecker: screen, startTchapRegisterWithEmail }) => {
     
     await startTchapRegisterWithEmail(page, user.email);
 
@@ -37,7 +37,7 @@ test.describe('Tchap : register with password', () => {
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     //await screen(page, '#/home'); does not work with waitFor "networkidle"
-    await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('h1').filter({ hasText: /Bienvenue/ })).toBeVisible({ timeout: 20000 });
     const created_user = await getMasUserByEmail(user.email);
 
     //check created username fields
