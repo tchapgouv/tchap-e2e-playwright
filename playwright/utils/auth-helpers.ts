@@ -270,30 +270,14 @@ export function generateTestUserData(domain:string) {
   const timestamp = new Date().getTime();
   const randomSuffix = Math.floor(Math.random() * 10000);
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
+  const localpart = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}-${domain}`;
   const email = `${username}@${domain}`;
   
   console.log("Using email: ", email);
 
   return {
-    username: username,
+    username: localpart,
     email: email,
-    password: TEST_USER_PASSWORD
-  };
-}
-
-// Generate a unique username and email for testing
-export function generateExternTestUser() {
-  const timestamp = new Date().getTime();
-  const randomSuffix = Math.floor(Math.random() * 10000);
-  const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
-  const email = `${username}@tchapgouv.com`;
-  
-  console.log("Using email: ", email);
-
-
-  return {
-    username,
-    email,
     password: TEST_USER_PASSWORD
   };
 }

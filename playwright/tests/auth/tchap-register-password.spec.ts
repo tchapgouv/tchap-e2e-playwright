@@ -98,9 +98,10 @@ test.describe('Tchap : register with password', () => {
    test('when user already exists', async ({page, context, browser, screenChecker: screen, startTchapRegisterWithEmail }) => {
 
     // Create a test user with a password in MAS with API
-    //const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
+    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
     
     // Create a test user with a password in MAS with web flow
+    /*
     const user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
 
     await startTchapRegisterWithEmail(page, user.email);
@@ -124,6 +125,7 @@ test.describe('Tchap : register with password', () => {
     await screen(page, '/consent');
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
     await expect(page.locator('h1').filter({ hasText: /Bienvenue./ })).toBeVisible({ timeout: 20000 });
+    */
 
     //new browser to start from a clean browser history
     const context2 = await browser.newContext();
