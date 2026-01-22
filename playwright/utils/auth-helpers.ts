@@ -14,6 +14,7 @@ export interface TestUser {
   password: string;
   keycloakId?: string;
   masId?: string;
+  domain: string;
 }
 
 /**
@@ -266,7 +267,7 @@ export async function performSimplePasswordLogin(
 }
 
 // Generate a unique username and email for testing
-export function generateTestUserData(domain:string) {
+export function generateTestUserData(domain:string):TestUser {
   const timestamp = new Date().getTime();
   const randomSuffix = Math.floor(Math.random() * 10000);
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
@@ -278,7 +279,8 @@ export function generateTestUserData(domain:string) {
   return {
     username: localpart,
     email: email,
-    password: TEST_USER_PASSWORD
+    password: TEST_USER_PASSWORD,
+    domain: domain,
   };
 }
 
