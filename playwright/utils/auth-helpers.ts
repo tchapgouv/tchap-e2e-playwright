@@ -304,7 +304,7 @@ export async function populateLocalStorageWithCredentials(page: Page, credential
                   // Retain any other settings which may have already been set
                   ...JSON.parse(window.localStorage.getItem("mx_local_settings") ?? "{}"),
                   // Ensure the language is set to a consistent value
-                  language: "en",
+                  language: "fr",
               }),
           );
       },

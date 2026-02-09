@@ -3,6 +3,8 @@ import { env } from "../../utils/config";
 
 test.describe("Create Room", () => {
 
+  //pourquoi c'est en anglais?
+
   test("should allow us to create a public room with name", async ({
     page,
     authenticatedUser
@@ -12,9 +14,9 @@ test.describe("Create Room", () => {
 
     const name = "Test room public 1";
 
-    await page.getByRole("button", { name: "Add room", exact: true }).click();
+    await page.getByRole("button", { name: "Ajouter", exact:true}).click();
 
-    await page.getByRole("menuitem", { name: "New room", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Nouveau salon", exact: true}).click();
     const dialog = page.locator(".tc_TchapCreateRoomDialog");
 
     // Fill name
@@ -23,11 +25,13 @@ test.describe("Create Room", () => {
     // Select public room option
     await dialog
       .locator(".tc_TchapRoomTypeSelector_RadioButton_title")
-      .getByText("Public room")
+      .getByText('Forum', { exact: true })
       .click();
 
     // Submit
-    await dialog.getByRole("button", { name: "Create New Room" }).click();
+    await dialog
+      .getByRole('button', { name: 'Créer un nouveau salon' })
+      .click();
 
     // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
@@ -56,9 +60,9 @@ test.describe("Create Room", () => {
     console.log("authenticatedUser", authenticatedUser);
     const name = "Test room private 1";
 
-    await page.getByRole("button", { name: "Add room", exact: true }).click();
+    await page.getByRole("button", { name: "Ajouter", exact:true}).click();
 
-    await page.getByRole("menuitem", { name: "New room", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Nouveau salon", exact: true}).click();
     const dialog = page.locator(".tc_TchapCreateRoomDialog");
 
     // Fill name
@@ -67,13 +71,15 @@ test.describe("Create Room", () => {
     // Select public room option
     await dialog
       .locator(".tc_TchapRoomTypeSelector_RadioButton_title")
-      .getByText("Private room", { exact: true })
+      .getByText("Salon", { exact: true })
       .click();
 
     // Submit
-    await dialog.getByRole("button", { name: "Create New Room" }).click();
-
-    // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
+    await dialog
+      .getByRole('button', { name: 'Créer un nouveau salon' })
+      .click();
+    
+      // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
     if (env == "local") {
       await page.getByRole("button").getByText("OK").click();
@@ -100,9 +106,9 @@ test.describe("Create Room", () => {
     console.log("authenticatedUser", authenticatedUser);
     const name = "Test room private external 1";
 
-    await page.getByRole("button", { name: "Add room", exact: true }).click();
+    await page.getByRole("button", { name: "Ajouter", exact:true}).click();
 
-    await page.getByRole("menuitem", { name: "New room", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Nouveau salon", exact: true}).click();
     const dialog = page.locator(".tc_TchapCreateRoomDialog");
 
     // Fill name
@@ -111,13 +117,15 @@ test.describe("Create Room", () => {
     // Select public room option
     await dialog
       .locator(".tc_TchapRoomTypeSelector_RadioButton_title")
-      .getByText("Private room open to external users")
+      .getByText("Salon ouvert aux externes")
       .click();
 
     // Submit
-    await dialog.getByRole("button", { name: "Create New Room" }).click();
-
-    // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
+    await dialog
+      .getByRole('button', { name: 'Créer un nouveau salon' })
+      .click();
+    
+      // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
     if (env == "local") {
       await page.getByRole("button").getByText("OK").click();
