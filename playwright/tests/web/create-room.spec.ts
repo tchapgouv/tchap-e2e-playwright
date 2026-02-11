@@ -3,8 +3,6 @@ import { env } from "../../utils/config";
 
 test.describe("Create Room", () => {
 
-  //pourquoi c'est en anglais?
-
   test("should allow us to create a public room with name", async ({
     page,
     authenticatedUser
