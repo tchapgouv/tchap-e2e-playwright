@@ -1,28 +1,42 @@
-import { time } from "console";
+
 import { test, expect } from "../../fixtures/auth-fixture";
-import { generateTestUserData, openCreateAccountLegacyLink, populateLocalStorageWithCredentials } from "../../utils/auth-helpers";
-import { BASE_URL, ELEMENT_URL, env, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from "../../utils/config";
+import { generateTestUserData, openCreateAccountLegacyLink,  } from "../../utils/auth-helpers";
+import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from "../../utils/config";
 import { getLatestVerificationCode, waitForMessage } from "../../utils/mailpit";
-import { getMasUserByEmail } from "../../utils/mas-admin";
 import path from "path";
-import { ClientServerApi, Credentials } from "../../utils/api";
+
+//this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
+
+
+
+
 
 test.describe.serial("Minimal scenario", () => {
   
-  test.setTimeout(60_000);
+  test.setTimeout(120_000);
 
   const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
   const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
-  const invitee1 = generateTestUserData(STANDARD_EMAIL_DOMAIN);
-  const invitee2 = generateTestUserData(STANDARD_EMAIL_DOMAIN);
-  let verificationCode;
+/*
+ * tested:
+ * account creation
+ * invite external user
+ * send file, compromised file
+ * activate secure backup
+ * external users can not create rooms
+ * 
+ *
+ */
+  
+  
 
-  test.beforeAll(async ({browser, screenChecker }) => { 
-    // Set timeout for this hook.
-    test.setTimeout(60000);
-    
-    const context = await browser.newContext();
-    const page = await context.newPage();
+  test("test all", async ({
+    page,    
+    context,
+    screenChecker,
+    browser
+  }) => {
+
 
     //creer compte agent 
     await page.goto(ELEMENT_URL);
@@ -42,10 +56,10 @@ test.describe.serial("Minimal scenario", () => {
 
     //await expect(page.locator('text=Bienvenue')).toBeVisible({timeout: 20000});
     await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
-    //configurer la sauvegarde
 
+    //configurer la sauvegarde
     // grant access to clipboard (you can also set this in the playwright.config.ts file)
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await context.grantPermissions(['clipboard-read']);
     await screenChecker(page, "#/home")
     
     //configurer la sauvegarde (only possible at first connexion)
@@ -58,9 +72,10 @@ test.describe.serial("Minimal scenario", () => {
     const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
     const clipboardContent = await handle.jsonValue();
     console.log(`verification code : ${clipboardContent}`);
-    verificationCode = clipboardContent;
+    const verificationCode = clipboardContent;
 
-    await page.getByRole('textbox', { name: 'Saisir le code de vérification' }).press('Meta+v');// paste text from clipboard
+    //fill the recupration code from the clipboard content
+    await page.getByRole('textbox', { name: 'Saisir le code de vérification' }).fill(verificationCode);
     await page.getByRole('button', { name: 'Terminer la configuration' }).click();
     await page.getByRole('button', { name: 'Terminé' }).click();
     await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
@@ -70,35 +85,12 @@ test.describe.serial("Minimal scenario", () => {
     await page.getByRole('button', { name: 'OK' }).click();
     await page.getByRole('button', { name: 'OK' }).click();
 
-    await page.close();
-
-
-   });
-
-
-  test("creer salon privé", async ({
-    page,    
-    context,
-    screenChecker,
-    request
-  }) => {
     const invitee1_search_name = "olivier test1";
     const invitee1_display_name = "Olivier Test1";
 
     const invitee2_email = "testeur@agent2.tchap.incubateur.net"; // TODO : ensure that invitee exists in the environment
     const invitee2_display_name = "Testeur [Incubateur]";
 
-    //login with agent_user
-    await page.goto(ELEMENT_URL);
-    await page.getByRole('link', { name: 'Se connecter' }).click();
-    await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
-    await page.getByRole('button', { name: 'Continuer' }).click();
-    await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
-    await page.getByRole('textbox', { name: 'Mot de passe', exact: true }).fill(agent_user.password);
-    await page.getByRole('button', { name: 'Se connecter' }).click();
-    await page.getByRole('button', { name: 'Ignorer la vérification pour' }).click();
-    await page.getByRole('button', { name: 'Je ferai la vérification plus' }).click();
-    await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
 
     const room_name = "Salon privé";
 
@@ -145,28 +137,6 @@ test.describe.serial("Minimal scenario", () => {
     await page.getByRole('button', { name: 'Envoyer' }).click();
     await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ })
 
-    await page.close();
-  })
-
-  test('register external user', async ({context, screenChecker, browser,  startTchapRegisterWithEmail, page }) => {
-    
-
-    //login with agent_user
-    await page.goto(ELEMENT_URL);
-    await page.getByRole('link', { name: 'Se connecter' }).click();
-    await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
-    await page.getByRole('button', { name: 'Continuer' }).click();
-    await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
-    await page.getByRole('textbox', { name: 'Mot de passe', exact: true }).fill(agent_user.password);
-    await page.getByRole('button', { name: 'Se connecter' }).click();
-    await page.getByRole('button', { name: 'Ignorer la vérification pour' }).click();
-    await page.getByRole('button', { name: 'Je ferai la vérification plus' }).click();
-    await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
-
-    await page.getByRole('button', { name: 'OK' }).click();
-    await page.getByRole('button', { name: 'Ignorer' }).click();//notifications
-    await page.getByRole('button', { name: 'OK' }).click();
-   
     //creer salon privé ouvert aux externes
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await page.getByText('Nouveau salon').click();
@@ -182,14 +152,23 @@ test.describe.serial("Minimal scenario", () => {
     await page.getByRole('button', { name: 'Inviter' }).click();
     //await expect(page.getByTestId('virtuoso-item-list').getByText(external_user.username)).toBeVisible();
 
-    const context2  = await browser.newContext();
-    const page_ext = await context2.newPage();
+    const context_ext  = await browser.newContext();
+    const page_ext = await context_ext.newPage();
   
     //invitation takes time to be available
     const {message, content} = await waitForMessage(external_user.email , 20000, "Invitation");
 
     //register user on ext01 (with MAS)
-    await startTchapRegisterWithEmail(page_ext, external_user.email);
+    await page_ext.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
+    await screenChecker(page_ext, '#/welcome');
+    await page_ext.getByRole('link').filter({ hasText: 'Créer un compte' }).click();
+
+    await screenChecker(page_ext, '#/email-precheck-sso');
+    await page_ext.locator('input').fill(external_user.email);
+    await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screenChecker(page_ext, '/register');
+    await page_ext.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
 
     await expect(page_ext.locator('input[name="email"]')).toHaveValue(external_user.email);
     
@@ -201,37 +180,26 @@ test.describe.serial("Minimal scenario", () => {
     await expect(page_ext.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
     await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2}); //2 clicks works better than one
 
-    let verificationCode  = await getLatestVerificationCode(external_user.email);
-    await page_ext.locator('input[name="code"]').fill(verificationCode);
+    const verificationCode2  = await getLatestVerificationCode(external_user.email);
+    await page_ext.locator('input[name="code"]').fill(verificationCode2);
     await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
     await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-    //await screen(page, '#/home'); does not work with waitFor "networkidle"
-    //await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({ timeout: 20000 });
     await page_ext.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
 
     //rejoindre le salon
     await page_ext.locator('div').filter({ hasText: /^Salon ouvert aux externes$/ }).first().click();
     await page_ext.getByRole('button', { name: 'Accepter' }).click();
-    expect(await page_ext.getByText('a créé ce salon. C’est le début de')).toBeVisible();
+    await expect(await page_ext.getByText('a créé ce salon. C’est le début de')).toBeVisible();
 
     //ne peut pas créer de salon
     await page_ext.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await page_ext.getByText('Nouveau salon').click();
     await page_ext.getByRole('textbox', { name: 'Nom' }).fill('test');
+    await screenChecker(page_ext, '#/room')
     await page_ext.getByRole('button', { name: 'Créer un nouveau salon' }).click();
-    expect(await page_ext.getByText('En tant qu\'invité externe,')).toBeVisible();
+    await screenChecker(page_ext, '#/room')
+    await expect(await page_ext.getByText('En tant qu\'invité externe,')).toBeVisible();
     await page_ext.getByRole('button', { name: 'OK' }).click();
-
-    await page_ext.close();
-
-    //TODO : ne peut pas utiliser l'annuaire
-    //TODO : ne peut pas accéder aux salons publics
-  });
-
-
-
-
-
-
+  })
 })
