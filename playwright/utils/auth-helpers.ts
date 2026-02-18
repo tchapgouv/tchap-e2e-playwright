@@ -4,7 +4,7 @@ import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
 import { Credentials } from './api';
 import { ScreenCheckerFixture } from '../fixtures/auth-fixture';
-import { getPasswordResetLink } from './mailpit.js';
+import { getCreateAccountLegacyLink, getPasswordResetLink } from './mailpit.js';
 /**
  * Test user type
  */
@@ -212,6 +212,21 @@ export async function openResetPasswordEmail(context: BrowserContext, screenChec
 }
 
 
+// clik on  Create Account Legacy Link
+export async function openCreateAccountLegacyLink(context: BrowserContext, screenChecker:ScreenCheckerFixture, userEmail: string): Promise<Page> {
+    // Use Mailpit API to get password reset link instead of browser automation
+    const resetLink = await getCreateAccountLegacyLink(userEmail);
+
+    // Create a new page and navigate directly to the reset link
+    const resetPasswordPage = await context.newPage();
+    await resetPasswordPage.goto(resetLink);
+
+    await screenChecker(resetPasswordPage, 'unstable/registration');
+
+    return resetPasswordPage;
+}
+
+
 export async function loginWithPassword(
     page: Page, 
     userData: { email: string; password: string }, 
@@ -304,7 +319,7 @@ export async function populateLocalStorageWithCredentials(page: Page, credential
                   // Retain any other settings which may have already been set
                   ...JSON.parse(window.localStorage.getItem("mx_local_settings") ?? "{}"),
                   // Ensure the language is set to a consistent value
-                  language: "en",
+                  language: "fr",
               }),
           );
       },

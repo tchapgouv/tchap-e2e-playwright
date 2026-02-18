@@ -9,7 +9,9 @@
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
     "test:local": "TEST_ENV=local playwright test",
-    "test:dev01": "TEST_ENV=dev01 playwright test"
+    "test:dev02": "TEST_ENV=dev02 playwright test  ./tests/minimal/",
+    "test:preprod": "TEST_ENV=preprod playwright test  ./tests/minimal/"
+
   },
   "keywords": [
     "playwright",

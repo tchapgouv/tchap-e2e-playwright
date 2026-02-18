@@ -3,7 +3,7 @@ import path from 'path';
 
 
 // Determine which environment to use
-export const env = process.env.TEST_ENV || 'local';
+export const env = process.env.TEST_ENV || 'dev02';
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
@@ -13,12 +13,14 @@ dotenv.config({ path: path.resolve(__dirname, `../.env.${env}`) });
 //dotenv.config();
 
 // URLs
-export const MAS_URL = process.env.MAS_URL || 'https://auth.tchapgouv.com';
-export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || 'https://sso.tchapgouv.com';
-export const ELEMENT_URL = process.env.ELEMENT_URL || 'https://element.tchapgouv.com';
-export const BASE_URL = process.env.BASE_URL || "https://matrix.tchapgouv.com";
-export const MAIL_URL = process.env.MAIL_URL || "https://mail.tchapgouv.com";
+export const MAS_URL = process.env.MAS_URL|| "";
+export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || "";
+export const ELEMENT_URL = process.env.ELEMENT_URL || "";
+export const BASE_URL = process.env.BASE_URL|| "";
+export const MAIL_URL = process.env.MAIL_URL || "";
 
+export const MAILPIT_USER = process.env.MAILPIT_USER || "";
+export const MAILPIT_PWD = process.env.MAILPIT_PWD || "";
 
 export const TCHAP_LEGACY:boolean = Boolean(process.env.TCHAP_LEGACY);
 
@@ -36,11 +38,11 @@ export const TEST_USER_PREFIX = process.env.TEST_USER_PREFIX || 'user.test';
 export const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Test@123456';
 
 // Email domains for test users
-export const STANDARD_EMAIL_DOMAIN = process.env.STANDARD_EMAIL_DOMAIN || 'tchapgouv.com';
-export const INVITED_EMAIL_DOMAIN = process.env.INVITED_EMAIL_DOMAIN || 'invited.externe.com';
-export const NOT_INVITED_EMAIL_DOMAIN = process.env.NOT_INVITED_EMAIL_DOMAIN || 'not.invited.externe.com';
-export const WRONG_SERVER_EMAIL_DOMAIN = process.env.WRONG_SERVER_EMAIL_DOMAIN || 'wrong.server.com';
-export const NUMERIQUE_EMAIL_DOMAIN = process.env.NUMERIQUE_EMAIL_DOMAIN || 'numerique.gouv.fr';
+export const STANDARD_EMAIL_DOMAIN = process.env.STANDARD_EMAIL_DOMAIN || "";
+export const INVITED_EMAIL_DOMAIN = process.env.INVITED_EMAIL_DOMAIN || "";
+export const NOT_INVITED_EMAIL_DOMAIN = process.env.NOT_INVITED_EMAIL_DOMAIN|| "";
+export const WRONG_SERVER_EMAIL_DOMAIN = process.env.WRONG_SERVER_EMAIL_DOMAIN || "";
+export const NUMERIQUE_EMAIL_DOMAIN = process.env.NUMERIQUE_EMAIL_DOMAIN || "";
 
 // Screenshots directory
 export const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || 'playwright-results';
