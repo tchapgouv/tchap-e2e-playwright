@@ -1,6 +1,6 @@
 
 import { test, expect } from "../../fixtures/auth-fixture";
-import { generateRoomName, generateTestUserData, openCreateAccountLegacyLink,  } from "../../utils/auth-helpers";
+import { generateRoomName, generateTestUserData, openCreateAccountLegacyLink, openResetPasswordEmailLegacy,  } from "../../utils/auth-helpers";
 import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from "../../utils/config";
 import { getLatestVerificationCode, waitForMessage } from "../../utils/mailpit";
 import path from "path";
@@ -13,7 +13,7 @@ import path from "path";
 
 test.describe.serial("Minimal scenario", () => {
   
-  test.setTimeout(120_000);
+  test.setTimeout(180_000);
 
   const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
   const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
@@ -25,7 +25,8 @@ test.describe.serial("Minimal scenario", () => {
  * send file, compromised file
  * activate secure backup
  * external users can not create rooms
- * 
+ * TODO :  A. exporter les participants de la room
+ * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
  *
  */
   
@@ -176,6 +177,31 @@ test.describe.serial("Minimal scenario", () => {
     await page.getByRole('button', { name: 'Inviter' }).click();
     //await expect(page.getByTestId('virtuoso-item-list').getByText(external_user.username)).toBeVisible();
 
+    //disconnect
+    await page.getByRole('button', { name: 'Avatar' }).click();
+    await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    //await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    //await page.getByRole('button', { name: 'Se déconnecter quand-même' }).click();
+    await page.getByTestId('dialog-primary-button').click(); //se déconnecter
+    
+    //reset passsword
+    await page.getByRole('link', { name: 'Se connecter' }).click();
+    await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
+    await page.getByRole('button', { name: 'Continuer' }).click();
+    await page.getByRole('button', { name: 'Mot de passe oublié ?' }).click();
+    await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
+    await page.getByRole('button', { name: 'Envoyer le mail' }).click();
+
+    await openResetPasswordEmailLegacy(context, screenChecker, agent_user.email);
+
+    const new_password = agent_user.password + '4';
+    await page.getByRole('button', { name: 'Suivant' }).click();
+    await page.getByRole('textbox', { name: 'Nouveau mot de passe', exact: true }).fill(new_password);
+    await page.getByRole('textbox', { name: 'Confirmer le nouveau mot de' }).fill(new_password);
+    await page.getByRole('button', { name: 'Réinitialiser le mot de passe' }).click();
+    await page.getByRole('button', { name: 'Retourner à l’écran de' }).click();//back to login
+
+
     const context_ext  = await browser.newContext();
     const page_ext = await context_ext.newPage();
   
@@ -228,10 +254,10 @@ test.describe.serial("Minimal scenario", () => {
 
 
     //ne peut pas trouver le salon public
-    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
-    await page.getByRole("menuitem", { name: "Rejoindre un forum", exact: true }).click();
-    await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
-    await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeFalsy();
-    await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
+    await page_ext.getByRole('button', { name: 'Ajouter', exact: true }).click();
+    await page_ext.getByRole('menuitem', { name: 'Rejoindre un forum', exact: true }).click();
+    await page_ext.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
+    await expect(page_ext.getByLabel('Suggestions').getByText(public_room_name)).toHaveCount(0);
+    await page_ext.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
   })
 })
