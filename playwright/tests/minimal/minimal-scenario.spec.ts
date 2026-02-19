@@ -1,6 +1,6 @@
 
 import { test, expect } from "../../fixtures/auth-fixture";
-import { generateTestUserData, openCreateAccountLegacyLink,  } from "../../utils/auth-helpers";
+import { generateRoomName, generateTestUserData, openCreateAccountLegacyLink,  } from "../../utils/auth-helpers";
 import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from "../../utils/config";
 import { getLatestVerificationCode, waitForMessage } from "../../utils/mailpit";
 import path from "path";
@@ -20,6 +20,7 @@ test.describe.serial("Minimal scenario", () => {
 /*
  * tested:
  * account creation
+ * create private room
  * invite external user
  * send file, compromised file
  * activate secure backup
@@ -38,6 +39,19 @@ test.describe.serial("Minimal scenario", () => {
   }) => {
 
 
+
+    const invitee1_search_name = "olivier test1";// TODO : ensure that invitee exists in the environment
+    const invitee1_display_name = "Olivier Test1";// TODO : ensure that invitee exists in the environment
+
+    const invitee2_email = "testeur@agent2.tchap.incubateur.net"; // TODO : ensure that invitee exists in the environment
+    const invitee2_display_name = "Testeur [Incubateur]";// TODO : ensure that invitee exists in the environment
+
+    const public_room_name = generateRoomName("Forum");
+    const room_name = generateRoomName("Salon Privé_");
+
+    // Grant clipboard permissions to browser context
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+ 
     //creer compte agent 
     await page.goto(ELEMENT_URL);
     await page.getByRole('link', { name: 'Créer un compte' }).click();
@@ -58,8 +72,6 @@ test.describe.serial("Minimal scenario", () => {
     await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
 
     //configurer la sauvegarde
-    // grant access to clipboard (you can also set this in the playwright.config.ts file)
-    await context.grantPermissions(['clipboard-read']);
     await screenChecker(page, "#/home")
     
     //configurer la sauvegarde (only possible at first connexion)
@@ -82,17 +94,29 @@ test.describe.serial("Minimal scenario", () => {
 
     await screenChecker(page, "#/home")
 
-    await page.getByRole('button', { name: 'OK' }).click();
-    await page.getByRole('button', { name: 'OK' }).click();
-
-    const invitee1_search_name = "olivier test1";
-    const invitee1_display_name = "Olivier Test1";
-
-    const invitee2_email = "testeur@agent2.tchap.incubateur.net"; // TODO : ensure that invitee exists in the environment
-    const invitee2_display_name = "Testeur [Incubateur]";
+    //await page.getByRole('button', { name: 'OK' }).click();
+    //await page.getByRole('button', { name: 'OK' }).click();
 
 
-    const room_name = "Salon privé";
+    //creer salon public
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Nouveau salon", exact: true }).click();
+    const dialog = page.locator(".tc_TchapCreateRoomDialog");
+    await page.getByRole('textbox', { name: 'Nom' }).fill(public_room_name);
+    await dialog
+      .locator(".tc_TchapRoomTypeSelector_RadioButton_title")
+      .getByText("Forum")
+      .click();
+    await dialog.getByRole("button", { name: "Créer un nouveau salon" }).click();
+    await expect(page.locator('button').filter({ hasText: public_room_name })).toBeVisible();
+
+
+    //chercher salon public
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Rejoindre un forum", exact: true }).click();
+    await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
+    await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeVisible();
+    await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
 
     //creer salon privé
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
@@ -104,7 +128,7 @@ test.describe.serial("Minimal scenario", () => {
     await page.locator('button').filter({ hasText: room_name }).click();
     await page.getByRole('menuitem', { name: 'Paramètres' }).click();
     await page.getByText('Vie privée').click();
-    //expect(await page.getByRole('switch', { name: 'Chiffré' })).toBeDisabled();
+    await expect(page.getByRole('switch', { name: 'Chiffré' })).toBeDisabled();
     await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
 
     //inviter agents by name
@@ -201,5 +225,13 @@ test.describe.serial("Minimal scenario", () => {
     await screenChecker(page_ext, '#/room')
     await expect(await page_ext.getByText('En tant qu\'invité externe,')).toBeVisible();
     await page_ext.getByRole('button', { name: 'OK' }).click();
+
+
+    //ne peut pas trouver le salon public
+    await page.getByRole("button", { name: "Ajouter", exact: true }).click();
+    await page.getByRole("menuitem", { name: "Rejoindre un forum", exact: true }).click();
+    await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
+    await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeFalsy();
+    await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
   })
 })

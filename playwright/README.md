@@ -99,3 +99,8 @@ npm run test:ui
 ## Captures d'écran
 
 Les tests génèrent des captures d'écran à chaque étape importante du processus d'authentification. Ces captures sont enregistrées dans le répertoire `playwright-results/`.
+
+
+## Executer avec docker 
+
+`docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:dev02`

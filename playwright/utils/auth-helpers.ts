@@ -281,6 +281,13 @@ export async function performSimplePasswordLogin(
   console.log(`[Auth] Password login successful for user: ${user.username}`);
 }
 
+export function generateRoomName(prefix:string){
+  const timestamp = new Date().getTime();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  return `prefix_${timestamp}_${randomSuffix}`
+}
+
+
 // Generate a unique username and email for testing
 export function generateTestUserData(domain:string):TestUser {
   const timestamp = new Date().getTime();
