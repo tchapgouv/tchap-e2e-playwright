@@ -19,15 +19,18 @@ test.describe.serial("Minimal scenario", () => {
   const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
 /*
  * tested:
- * account creation
- * create private room
- * invite external user
- * send file, compromised file
- * activate secure backup
- * external users can not create rooms
+ * creer compte agent 
+ * creer salon privé
+ * creer forum public
+ * creer salon privé ouverts aux externes
+ * inviter un externe
+ * envoyer fichier, fichier vérolé
+ * activer la sauvegarde
+ * vérifier qu'un externe ne peut pas créer de salon, ne peut pas chercher un forum
+ * se déconnecter
+ * reset mot de passe
  * TODO :  A. exporter les participants de la room
  * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
- *
  */
   
   
