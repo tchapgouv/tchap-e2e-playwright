@@ -63,6 +63,35 @@ function extractResetLinkFromContent(content: string): string {
 }
 
 
+function extractResetLinkLegacyFromContent(content: string): string {
+  // Match URLs that contain password/recovery or similar patterns
+  // Look for full URLs in the email
+  console.log(content);
+
+  const urlMatch = content.match(/(https?:\/\/[^\s<>"]+(?:password_reset)[^\s<>"]*)/i);
+  if (!urlMatch) {
+    throw new Error('Unable to extract password reset link from email content');
+  }
+  return urlMatch[1];
+}
+
+export async function getPasswordResetLinkLegacy(toEmail: string): Promise<string> {
+  try {
+
+    const {message, content} = await waitForMessage(toEmail , 30000, "Changement de mot de passe");
+
+    console.log('[Mailpit] Email content preview:', content.substring(0, 300));
+
+    const resetLink = extractResetLinkLegacyFromContent(content);
+    console.log(`[Mailpit] Extracted password reset link: ${resetLink}`);
+
+    return resetLink;
+  } catch (error) {
+    console.error('[Mailpit] Error fetching password reset link:', error);
+    throw error;
+  }
+}
+
 export async function getPasswordResetLink(toEmail: string): Promise<string> {
   try {
 
