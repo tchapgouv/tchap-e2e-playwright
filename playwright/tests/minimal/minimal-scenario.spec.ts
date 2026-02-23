@@ -183,10 +183,7 @@ test.describe.serial("Minimal scenario", () => {
     //disconnect
     await page.getByRole('button', { name: 'Avatar' }).click();
     await page.getByRole('button', { name: 'Se déconnecter' }).click();
-    //await page.getByRole('button', { name: 'Se déconnecter' }).click();
-    //await page.getByRole('button', { name: 'Se déconnecter quand-même' }).click();
-    await page.getByTestId('dialog-primary-button').click(); //se déconnecter
-    
+    await page.locator('#mx_Dialog_Container').getByRole('button', { name: 'Se déconnecter' }).click();
     //reset passsword
     await page.getByRole('link', { name: 'Se connecter' }).click();
     await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
