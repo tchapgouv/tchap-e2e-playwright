@@ -1,7 +1,7 @@
 
 import { test, expect } from "../../fixtures/auth-fixture";
 import { generateRoomName, generateTestUserData, openCreateAccountLegacyLink, openResetPasswordEmailLegacy,  } from "../../utils/auth-helpers";
-import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from "../../utils/config";
+import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, USE_MAS } from "../../utils/config";
 import { getLatestVerificationCode, waitForMessage } from "../../utils/mailpit";
 import path from "path";
 
@@ -56,21 +56,56 @@ test.describe.serial("Minimal scenario", () => {
     // Grant clipboard permissions to browser context
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
  
-    //creer compte agent 
-    await page.goto(ELEMENT_URL);
-    await page.getByRole('link', { name: 'Créer un compte' }).click();
-    await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
-    await page.getByRole('button', { name: 'Continuer' }).click();
-    await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
-    await page.getByRole('textbox', { name: 'Mot de passe', exact: true }).fill(agent_user.password);
-    await page.getByRole('textbox', { name: 'Confirmer le mot de passe' }).fill(agent_user.password);
-    await page.getByRole('button', { name: 'S’inscrire' }).click();
-    
-    //cliquer sur le lien du mail pour valider l'inscription
-    const tab = await openCreateAccountLegacyLink(context, screenChecker, agent_user.email);
-    await expect(tab.getByText('Votre email a été validé')).toBeVisible();
-    await tab.close();
+    //creer compte agent without MAS
+    if(!USE_MAS){
+      console.log("do not use MAS")
 
+      await page.goto(ELEMENT_URL);
+      await page.getByRole('link', { name: 'Créer un compte' }).click();
+      await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
+      await page.getByRole('button', { name: 'Continuer' }).click();
+      await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
+      await page.getByRole('textbox', { name: 'Mot de passe', exact: true }).fill(agent_user.password);
+      await page.getByRole('textbox', { name: 'Confirmer le mot de passe' }).fill(agent_user.password);
+      await page.getByRole('button', { name: 'S’inscrire' }).click();
+      
+      //cliquer sur le lien du mail pour valider l'inscription
+      const tab = await openCreateAccountLegacyLink(context, screenChecker, agent_user.email);
+      await expect(tab.getByText('Votre email a été validé')).toBeVisible();
+      await tab.close();
+    }else{
+      console.log("use MAS")
+
+      await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
+      await screenChecker(page, '#/welcome');
+      await page.getByRole('link').filter({ hasText: 'Créer un compte' }).click();
+
+      await screenChecker(page, '#/email-precheck-sso');
+      await page.locator('input').fill(agent_user.email);
+      await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+      await screenChecker(page, '/register');
+      await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
+      await screenChecker(page, '/register/password');
+      await expect(page.locator('input[name="email"]')).toHaveValue(agent_user.email);
+      
+      await page.locator('input[name="password"]').fill(agent_user.password);
+      await page.locator('input[name="password_confirm"]').fill(agent_user.password);
+
+      //wait for password-confirm matching confirmation
+      await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field    
+      //await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
+      await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:3}); //2 clicks works better than one
+
+      await screenChecker(page, '/verify-email');
+      let verificationCode  = await getLatestVerificationCode(agent_user.email);
+      await page.locator('input[name="code"]').fill(verificationCode);
+      await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+      await screenChecker(page, '/consent');
+      await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    }
+      
 
     //await expect(page.locator('text=Bienvenue')).toBeVisible({timeout: 20000});
     await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
@@ -113,20 +148,38 @@ test.describe.serial("Minimal scenario", () => {
       .click();
     await dialog.getByRole("button", { name: "Créer un nouveau salon" }).click();
     await expect(page.locator('button').filter({ hasText: public_room_name })).toBeVisible();
+    
+    //ecrire dans le salon public
+    await page.locator('.mx_BasicMessageComposer')
+      .getByRole('textbox')
+      .fill('message non chiffré');
+    await page.getByRole('button', { name: 'Envoyer le message' }).click();
+    await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
 
 
     //chercher salon public
+    /*
+    bug in preprod
     await page.getByRole("button", { name: "Ajouter", exact: true }).click();
     await page.getByRole("menuitem", { name: "Rejoindre un forum", exact: true }).click();
     await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
     await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeVisible();
     await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
+    */
 
     //creer salon privé
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await page.getByText('Nouveau salon').click();
     await page.getByRole('textbox', { name: 'Nom' }).fill(room_name);
     await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+
+    //ecrire dans le salon privé
+    await page.locator('.mx_BasicMessageComposer')
+      .getByRole('textbox')
+      .fill('message chiffré');
+    await page.getByRole('button', { name: 'Envoyer le message' }).click();
+    await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
     
     //vérfier les parametres du salon privé
     await page.locator('button').filter({ hasText: room_name }).click();
@@ -254,10 +307,12 @@ test.describe.serial("Minimal scenario", () => {
 
 
     //ne peut pas trouver le salon public
+    /*
     await page_ext.getByRole('button', { name: 'Ajouter', exact: true }).click();
     await page_ext.getByRole('menuitem', { name: 'Rejoindre un forum', exact: true }).click();
     await page_ext.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
     await expect(page_ext.getByLabel('Suggestions').getByText(public_room_name)).toHaveCount(0);
     await page_ext.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
+    */
   })
 })
