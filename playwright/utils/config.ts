@@ -3,7 +3,7 @@ import path from 'path';
 
 
 // Determine which environment to use
-export const env = process.env.TEST_ENV || 'dev02';
+export const env = process.env.ENV || 'local';
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
@@ -50,6 +50,7 @@ export const SCREENSHOTS_DIR = process.env.SCREENSHOTS_DIR || 'playwright-result
 // Browser locale
 export const BROWSER_LOCALE = process.env.BROWSER_LOCALE || 'fr-FR';
 
+export const USE_MAS = process.env.USE_MAS === 'true' || false;
 
 // TODO Move all below to env file
 // Fixed tests data, that can be used across environement
