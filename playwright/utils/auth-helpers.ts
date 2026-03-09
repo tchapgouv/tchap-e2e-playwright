@@ -4,7 +4,7 @@ import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
 import { Credentials } from './api';
 import { ScreenCheckerFixture } from '../fixtures/auth-fixture';
-import { getPasswordResetLink } from './mailpit.js';
+import { getCreateAccountLegacyLink, getPasswordResetLink, getPasswordResetLinkLegacy } from './mailpit.js';
 /**
  * Test user type
  */
@@ -211,6 +211,38 @@ export async function openResetPasswordEmail(context: BrowserContext, screenChec
     return resetPasswordPage;
 }
 
+// open reset password screen from email
+export async function openResetPasswordEmailLegacy(context: BrowserContext, screenChecker:ScreenCheckerFixture, userEmail: string): Promise<Page> {
+    // Use Mailpit API to get password reset link instead of browser automation
+    const resetLink = await getPasswordResetLinkLegacy(userEmail);
+
+    // Create a new page and navigate directly to the reset link
+    const resetPasswordPage = await context.newPage();
+    await resetPasswordPage.goto(resetLink);
+
+    await screenChecker(resetPasswordPage, 'password_reset');
+
+    await resetPasswordPage.getByRole('button', {name:'Continuer la réinitialisation'}).click();
+    await resetPasswordPage.getByText('La vérification de votre adresse email est réussie!');
+
+    return resetPasswordPage;
+}
+
+
+// clik on  Create Account Legacy Link
+export async function openCreateAccountLegacyLink(context: BrowserContext, screenChecker:ScreenCheckerFixture, userEmail: string): Promise<Page> {
+    // Use Mailpit API to get password reset link instead of browser automation
+    const resetLink = await getCreateAccountLegacyLink(userEmail);
+
+    // Create a new page and navigate directly to the reset link
+    const resetPasswordPage = await context.newPage();
+    await resetPasswordPage.goto(resetLink);
+
+    await screenChecker(resetPasswordPage, 'unstable/registration');
+
+    return resetPasswordPage;
+}
+
 
 export async function loginWithPassword(
     page: Page, 
@@ -266,6 +298,13 @@ export async function performSimplePasswordLogin(
   console.log(`[Auth] Password login successful for user: ${user.username}`);
 }
 
+export function generateRoomName(prefix:string){
+  const timestamp = new Date().getTime();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  return `prefix_${timestamp}_${randomSuffix}`
+}
+
+
 // Generate a unique username and email for testing
 export function generateTestUserData(domain:string):TestUser {
   const timestamp = new Date().getTime();
@@ -304,7 +343,7 @@ export async function populateLocalStorageWithCredentials(page: Page, credential
                   // Retain any other settings which may have already been set
                   ...JSON.parse(window.localStorage.getItem("mx_local_settings") ?? "{}"),
                   // Ensure the language is set to a consistent value
-                  language: "en",
+                  language: "fr",
               }),
           );
       },
