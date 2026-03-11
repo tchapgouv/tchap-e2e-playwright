@@ -4,7 +4,7 @@ import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './
 import { ELEMENT_URL, KEYCLOAK_URL, MAS_URL, SCREENSHOTS_DIR, TEST_USER_PASSWORD, TEST_USER_PREFIX } from './config';
 import { Credentials } from './api';
 import { ScreenCheckerFixture } from '../fixtures/auth-fixture';
-import { getCreateAccountLegacyLink, getPasswordResetLink, getPasswordResetLinkLegacy } from './mailpit.js';
+import { getCreateAccountLegacyLink, getExpirationAccountLink as getRenewAccountLink, getPasswordResetLink, getPasswordResetLinkLegacy } from './mailpit.js';
 /**
  * Test user type
  */
@@ -210,6 +210,21 @@ export async function openResetPasswordEmail(context: BrowserContext, screenChec
 
     return resetPasswordPage;
 }
+
+// open reset password screen from email
+export async function openRenewAccountEmail(context: BrowserContext, screenChecker:ScreenCheckerFixture, userEmail: string): Promise<Page> {
+    // Use Mailpit API to get password reset link instead of browser automation
+    const renewLink = await getRenewAccountLink(userEmail);
+
+    // Create a new page and navigate directly to the reset link
+    const resetPasswordPage = await context.newPage();
+    await resetPasswordPage.goto(renewLink);
+
+    await screenChecker(resetPasswordPage, 'email_account_validity');
+
+    return resetPasswordPage;
+}
+
 
 // open reset password screen from email
 export async function openResetPasswordEmailLegacy(context: BrowserContext, screenChecker:ScreenCheckerFixture, userEmail: string): Promise<Page> {

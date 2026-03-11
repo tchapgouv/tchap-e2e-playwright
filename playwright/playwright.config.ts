@@ -22,7 +22,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   
-  retries: process.env.CI ? 2 : 2,
+  retries: process.env.CI ? 2 : 0,
   /* Reporter to use */
   reporter: 'html',
   /* Shared settings for all the projects below */

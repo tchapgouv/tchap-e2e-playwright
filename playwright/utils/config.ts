@@ -3,7 +3,7 @@ import path from 'path';
 
 
 // Determine which environment to use
-export const env = process.env.ENV || 'local';
+export const env = process.env.ENV || 'dev01';
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
@@ -58,3 +58,4 @@ export const FIX_USER_USERNAME = "Michelle_test";
 export const FIX_USER_PASSWORD = "Michelle1313!";
 export const FIX_USER_EMAIL = "Michelle1313!";
 
+export const SYNAPSE_ADMIN_TOKEN = process.env.SYNAPSE_ADMIN_TOKEN|| "";

@@ -140,6 +140,27 @@ function extractCreateAccountLegacyLink(content: string): string {
   return urlMatch[1];
 }
 
+export async function getExpirationAccountLink(toEmail: string): Promise<string> {
+  try {
+
+    const {message, content} = await waitForMessage(toEmail , 20000, "Renouvelez votre compte Tchap");
+
+    console.log('[Mailpit] Email content preview:', content.substring(0, 300));
+
+    const urlMatch = content.match(/(https?:\/\/[^\s<>"]+(?:email_account_validity)[^\s<>"]*)/i);
+    if (!urlMatch) {
+      throw new Error('Unable to extract expiration account link from email content');
+    }
+    const resetLink =  urlMatch[1];
+    console.log(`[Mailpit] Extracted expiration account link: ${resetLink}`);
+
+    return resetLink;
+  } catch (error) {
+    console.error('[Mailpit] Error fetchingexpiration account:', error);
+    throw error;
+  }
+}
+
 
 /**
  * Search for messages and get content with retry
