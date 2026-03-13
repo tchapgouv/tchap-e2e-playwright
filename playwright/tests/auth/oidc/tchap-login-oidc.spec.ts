@@ -1,10 +1,10 @@
-import { test, expect } from '../../fixtures/auth-fixture';
+import { test, expect } from '../../../fixtures/auth-fixture';
 import { 
   verifyUserInMas, 
   performOidcLoginFromTchap
-} from '../../utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../utils/mas-admin';
-import { SCREENSHOTS_DIR, TCHAP_LEGACY } from '../../utils/config';
+} from '../../../utils/auth-helpers';
+import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../../utils/mas-admin';
+import { SCREENSHOTS_DIR, TCHAP_LEGACY } from '../../../utils/config';
 
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});

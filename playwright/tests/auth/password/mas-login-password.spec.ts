@@ -1,11 +1,11 @@
-import { test, expect } from '../../fixtures/auth-fixture';
+import { test, expect } from '../../../fixtures/auth-fixture';
 import { 
   createMasTestUser, 
   cleanupMasTestUser, 
   performPasswordLogin, 
   TestUser 
-} from '../../utils/auth-helpers';
-import { SCREENSHOTS_DIR } from '../../utils/config';
+} from '../../../utils/auth-helpers';
+import { SCREENSHOTS_DIR } from '../../../utils/config';
 
 test.describe('MAS login password', () => {
 
