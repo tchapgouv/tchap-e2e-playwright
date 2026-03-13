@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { BASE_URL, MAS_URL } from '../../utils/config';
+import { BASE_URL, MAS_URL } from '../../../utils/config';
 
 test.describe('Tchap : Legacy SSO Flow', () => {
   

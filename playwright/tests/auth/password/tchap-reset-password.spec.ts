@@ -1,7 +1,7 @@
-import { test, expect } from '../../fixtures/auth-fixture';
-import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../utils/mas-admin';
-import { ELEMENT_URL  } from '../../utils/config';
-import { openResetPasswordEmail } from '../../utils/auth-helpers';
+import { test, expect } from '../../../fixtures/auth-fixture';
+import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../../utils/mas-admin';
+import { ELEMENT_URL  } from '../../../utils/config';
+import { openResetPasswordEmail } from '../../../utils/auth-helpers';
 
 
 test.describe('Tchap : reset password', () => {
@@ -40,7 +40,7 @@ test.describe('Tchap : reset password', () => {
     await expect(resetPwdPage.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
     await resetPwdPage.getByRole('button').filter({ hasText: 'Sauvegarder et continuer' }).click({clickCount:2});
 
-    //new tab is redirected back to welcome page
+    //new tab is redirected back to MAS welcome page
     await expect(resetPwdPage.getByRole('link').filter({ hasText: 'Continuer dans Tchap' })).toBeVisible();
     await screenChecker(resetPwdPage, '/')
 

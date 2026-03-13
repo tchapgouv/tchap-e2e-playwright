@@ -1,11 +1,11 @@
-import { test, expect } from '../../fixtures/auth-fixture';
+import { test, expect } from '../../../fixtures/auth-fixture';
 import { 
   createKeycloakTestUser,
   performOidcLogin,
   TestUser,
-} from '../../utils/auth-helpers';
-import { createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../utils/mas-admin';
-import { SCREENSHOTS_DIR, STANDARD_EMAIL_DOMAIN } from '../../utils/config';
+} from '../../../utils/auth-helpers';
+import { createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject, getOauthLinkBySubject, deleteOauthLink, reactivateMasUser, addUserEmail } from '../../../utils/mas-admin';
+import { SCREENSHOTS_DIR, STANDARD_EMAIL_DOMAIN } from '../../../utils/config';
 
 test.describe('MAS Login OIDC', () => {
  

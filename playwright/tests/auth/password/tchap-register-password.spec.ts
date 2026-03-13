@@ -1,11 +1,11 @@
-import { test, expect } from '../../fixtures/auth-fixture';
+import { test, expect } from '../../../fixtures/auth-fixture';
 import { 
   createMasTestUser,
   generateTestUserData
-} from '../../utils/auth-helpers';
-import { getMasUserByEmail } from '../../utils/mas-admin';
-import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../utils/config';
-import { getLatestVerificationCode } from '../../utils/mailpit';
+} from '../../../utils/auth-helpers';
+import { getMasUserByEmail } from '../../../utils/mas-admin';
+import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../../utils/config';
+import { getLatestVerificationCode } from '../../../utils/mailpit';
 
 
 test.describe('Tchap : register with password', () => {
