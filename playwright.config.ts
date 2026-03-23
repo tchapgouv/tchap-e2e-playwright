@@ -17,7 +17,7 @@ export default defineConfig({
 
   /* Define how many workers */
   // Limit the number of workers on CI, use default locally
-  workers: process.env.CI ? 2 : 2,
+  workers: process.env.CI ? 2 : 1,
 
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,

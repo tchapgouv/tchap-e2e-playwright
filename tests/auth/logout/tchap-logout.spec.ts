@@ -1,8 +1,6 @@
-import { test, expect } from '../../fixtures/auth-fixture';
-import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../utils/config';
-import { Page } from '@playwright/test';
-import { loginWithPassword } from '../../utils/auth-helpers';
+import { test, expect } from '../../../fixtures/auth-fixture';
+import {createMasUserWithPassword } from '../../../utils/mas-admin';
+import { loginWithPassword } from '../../../utils/auth-helpers';
 
 
 test.describe('Tchap : logout', () => {

@@ -1,13 +1,9 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { 
   performOidcLogin, 
-  verifyUserInMas, 
-  createMasTestUser, 
-  cleanupMasTestUser, 
-  performPasswordLogin, 
-  TestUser 
+  verifyUserInMas
 } from '../../../utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword, getMasUserByEmail, deactivateMasUser } from '../../../utils/mas-admin';
+import { checkMasUserExistsByEmail} from '../../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../../utils/config';
 
 test.describe('MAS register OIDC', () => {

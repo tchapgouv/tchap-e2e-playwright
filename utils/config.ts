@@ -3,7 +3,7 @@ import path from 'path';
 
 
 // Determine which environment to use
-export const env = process.env.ENV || 'dev01';
+export const env = process.env.ENV || 'local';
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
