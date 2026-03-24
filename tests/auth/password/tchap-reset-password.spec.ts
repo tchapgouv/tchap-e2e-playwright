@@ -48,4 +48,7 @@ test.describe('Tchap : reset password', () => {
     await screenChecker(page, '/recover/progress')
 
   });
+
+
+  //TODO add reset password when user is connected -> show an error
 });
