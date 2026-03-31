@@ -246,11 +246,11 @@ export async function deactivateMasUser(userId: string): Promise<void> {
   
   if (!response.ok()) {
     const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+    console.error(`[MAS API] Failed to deactivate user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to deactivate MAS user: ${response.status()} - ${errorText}`);
   }
   
-  console.log(`[MAS API] User deleted successfully`);
+  console.log(`[MAS API] User deactivated successfully`);
 }
 
 /**
