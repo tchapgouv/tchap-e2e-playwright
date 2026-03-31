@@ -10,15 +10,30 @@ import { getLatestVerificationCode } from '../../utils/mailpit';
 
 test.describe('Tchap : Login password', () => {
 
-  test('login when account is deactivated displays "Identifiants Invalides"', 
-    async ({ page, userData, screenChecker }) => {
+  test('password login when account is deactivated displays "Identifiants Invalides"', 
+    async ({ page, browser, userData, screenChecker }) => {
 
     //create user
     userData.masId = await createMasUserWithPassword(userData.username, userData.email, userData.password);
     
+    //login
+    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+    await screenChecker(page, `#/welcome`)
+    await page.getByRole('link').filter({hasText : "Se connecter"}).click();
+    await screenChecker(page, `#/email-precheck-sso`)
+    await page.locator('input').fill(userData.email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+    await screenChecker(page, `/login`)
+    await expect(page.locator('input[name="username"]')).toHaveValue(userData.email);
+    await page.locator('input[name="password"]').fill(userData.password);
+    await page.locator('button[type="submit"]').click();
+
     //deactivate user
     await deactivateMasUser(userData.masId);
   
+    //login with another browser 
+    page = await (await browser.newContext()).newPage();
+
     //login
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
     await screenChecker(page, `#/welcome`)
@@ -68,7 +83,8 @@ test.describe('Tchap : Login password', () => {
     
   });
 
-  test('match account by email when former account is deactivated but another one is valid', async ({page, oidcUser, screenChecker }) => {
+  test('match account by email when former account is deactivated but another one is valid', 
+    async ({page, oidcUser, screenChecker }) => {
     const screenshot_path = test.info().title.replace(" ", "_");
 
     // Create a user in MAS with the same email as the Keycloak user
@@ -114,24 +130,34 @@ test.describe('Tchap : Login password', () => {
   });
   
   test('oidc login match account by email when account was deactivated, reactivate account', 
-    async ({page, oidcUser }) => {
+    async ({page, browser, oidcUser, screenChecker }) => {
+
+      test.setTimeout(30000);
+
       const screenshot_path = test.info().title.replace(" ", "_");
       
       //create user  
       oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, oidcUser.password);
-      
+
+      //login into account
+      await performOidcLogin(page, oidcUser, screenshot_path);
+
       //deactivate, email is unset
       await deactivateMasUser(oidcUser.masId);
       try{
-          //user has no email when deasactivated
+          //user has no email when deactivated
           await getMasUserByEmail(oidcUser.email);
       }   catch(e){
           expect(e).toBeDefined();
       }
+      
+      //login with another browser context
+      page = await (await browser.newContext()).newPage();
+
 
       // Perform the OIDC login flow
       await performOidcLogin(page, oidcUser, screenshot_path);
-
+      await screenChecker(page, "/")
       await expect(page.locator('text=Connecté')).toBeVisible();
 
       //mas user is reactivated and email is set
