@@ -246,11 +246,11 @@ export async function deactivateMasUser(userId: string): Promise<void> {
   
   if (!response.ok()) {
     const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
+    console.error(`[MAS API] Failed to deactivate user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to deactivate MAS user: ${response.status()} - ${errorText}`);
   }
   
-  console.log(`[MAS API] User deleted successfully`);
+  console.log(`[MAS API] User deactivated successfully`);
 }
 
 /**
@@ -410,6 +410,48 @@ export async function addUserEmail(userId: string, email: string): Promise<void>
   return;
 }
 
+export async function getUserEmail(userId: string, email: string): Promise<any> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.get(`/api/admin/v1/user-emails?filter[user]=${userId}&filter[email]=${email}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to set email for user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to set email for user: ${response.status()} - ${errorText}`);
+  }
+  const json = await response.json();
+  const user_email = json.data[0];
+  console.log(`[MAS API] User email retrieved for userId:${userId}, user_email : ${JSON.stringify(user_email)} `);
+  return user_email;
+}
+
+
+export async function deleteUserEmail(id: string): Promise<void> {
+  const token = await getMasAdminToken();
+  const apiRequestContext = await getApiContext();
+  
+  const response = await apiRequestContext.delete(`/api/admin/v1/user-emails/${id}`, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  if (!response.ok()) {
+    const errorText = await response.text();
+    console.error(`[MAS API] Failed to set email for user: ${response.status()} - ${errorText}`);
+    throw new Error(`Failed to set email for user: ${response.status()} - ${errorText}`);
+  }
+  console.log(`[MAS API] User email deleted for user-emails:${id}, response : ${JSON.stringify(response)} `);
+  return;
+}
 
 
 /**

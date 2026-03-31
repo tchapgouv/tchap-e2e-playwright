@@ -4,7 +4,7 @@ import {
   generateTestUserData
 } from '../../../utils/auth-helpers';
 import { getMasUserByEmail } from '../../../utils/mas-admin';
-import {ELEMENT_URL, NOT_INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../../utils/config';
+import {NOT_INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, WRONG_SERVER_EMAIL_DOMAIN } from '../../../utils/config';
 import { getLatestVerificationCode } from '../../../utils/mailpit';
 
 
