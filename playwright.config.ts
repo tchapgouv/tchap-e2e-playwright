@@ -21,7 +21,7 @@ export default defineConfig({
 
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  
+
   retries: process.env.CI ? 2 : 0,
   /* Reporter to use */
   reporter: 'html',
@@ -29,26 +29,26 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
     baseURL: process.env.MAS_URL || 'https://auth.tchapgouv.com',
-    
+
     /* Set locale to French */
     locale: BROWSER_LOCALE,
-    
+
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
-    
+
     /* Take screenshot on failure */
     screenshot: 'only-on-failure',
-    
+
     /* Record video on failure */
     video: 'on-first-retry',
-    
+
     /* Ignore HTTPS errors */
     ignoreHTTPSErrors: true,
   },
-  
+
   /* Configure projects for major browsers */
   projects: [
-   /* e2e tests do not work well on firefox nor webkit (bit flaky)
+    /* e2e tests do not work well on firefox nor webkit (bit flaky)
      {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
@@ -57,12 +57,10 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Edge'] },
     },
-    */ 
-     {
+    */
+    {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      },
-      
-    
+    },
   ],
 });
