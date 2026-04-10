@@ -1,9 +1,9 @@
-import { APIRequestContext, request } from '@playwright/test';
-import { 
-  KEYCLOAK_URL, 
-  KEYCLOAK_ADMIN_USERNAME, 
+import { type APIRequestContext, request } from '@playwright/test';
+import {
+  KEYCLOAK_URL,
+  KEYCLOAK_ADMIN_USERNAME,
   KEYCLOAK_ADMIN_PASSWORD,
-  KEYCLOAK_REALM
+  KEYCLOAK_REALM,
 } from './config';
 
 // Create a reusable API request context
@@ -14,7 +14,7 @@ async function getApiContext(): Promise<APIRequestContext> {
     //console.log(`[Keycloak API] Creating new API context with baseURL: ${KEYCLOAK_URL}`);
     apiContext = await request.newContext({
       baseURL: KEYCLOAK_URL,
-      ignoreHTTPSErrors: true
+      ignoreHTTPSErrors: true,
     });
   }
   return apiContext;
@@ -26,15 +26,15 @@ async function getApiContext(): Promise<APIRequestContext> {
 export async function getKeycloakAdminToken(): Promise<string> {
   console.log(`[Keycloak API] Requesting admin token with username: ${KEYCLOAK_ADMIN_USERNAME}`);
   const apiRequestContext = await getApiContext();
-  
+
   const response = await apiRequestContext.post('/realms/master/protocol/openid-connect/token', {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     form: {
       grant_type: 'password',
       client_id: 'admin-cli',
       username: KEYCLOAK_ADMIN_USERNAME,
-      password: KEYCLOAK_ADMIN_PASSWORD
-    }
+      password: KEYCLOAK_ADMIN_PASSWORD,
+    },
   });
 
   if (!response.ok()) {
@@ -43,7 +43,7 @@ export async function getKeycloakAdminToken(): Promise<string> {
     throw new Error(`Failed to get Keycloak admin token: ${response.status()} - ${errorText}`);
   }
 
-  const data = await response.json() as { access_token: string };
+  const data = (await response.json()) as { access_token: string };
   //console.log(`[Keycloak API] Successfully obtained admin token`);
   return data.access_token;
 }
@@ -51,17 +51,21 @@ export async function getKeycloakAdminToken(): Promise<string> {
 /**
  * Create a user in Keycloak
  */
-export async function createKeycloakUser(username: string, email: string, password: string): Promise<string> {
+export async function createKeycloakUser(
+  username: string,
+  email: string,
+  password: string
+): Promise<string> {
   console.log(`[Keycloak API] Creating user: ${username} with email: ${email}`);
   const token = await getKeycloakAdminToken();
   const apiRequestContext = await getApiContext();
-  
+
   // First, create the user
   console.log(`[Keycloak API] Creating user in realm: ${KEYCLOAK_REALM}`);
   const createResponse = await apiRequestContext.post(`/admin/realms/${KEYCLOAK_REALM}/users`, {
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
     data: {
       username,
@@ -71,14 +75,16 @@ export async function createKeycloakUser(username: string, email: string, passwo
       firstName: username,
       lastName: username,
       attributes: {
-        idp_id: username
-      }
-    }
+        idp_id: username,
+      },
+    },
   });
 
   if (!createResponse.ok()) {
     const errorText = await createResponse.text();
-    console.error(`[Keycloak API] Failed to create user: ${createResponse.status()} - ${errorText}`);
+    console.error(
+      `[Keycloak API] Failed to create user: ${createResponse.status()} - ${errorText}`
+    );
     throw new Error(`Failed to create Keycloak user: ${createResponse.status()} - ${errorText}`);
   }
   console.log(`[Keycloak API] User created successfully`);
@@ -89,8 +95,8 @@ export async function createKeycloakUser(username: string, email: string, passwo
     `/admin/realms/${KEYCLOAK_REALM}/users?username=${encodeURIComponent(username)}`,
     {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 
@@ -100,7 +106,7 @@ export async function createKeycloakUser(username: string, email: string, passwo
     throw new Error(`Failed to get Keycloak user: ${usersResponse.status()} - ${errorText}`);
   }
 
-  const users = await usersResponse.json() as Array<{ id: string }>;
+  const users = (await usersResponse.json()) as Array<{ id: string }>;
   if (users.length === 0) {
     console.error(`[Keycloak API] User ${username} not found after creation`);
     throw new Error(`User ${username} not found after creation`);
@@ -116,20 +122,24 @@ export async function createKeycloakUser(username: string, email: string, passwo
     {
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
       data: {
         type: 'password',
         value: password,
-        temporary: false
-      }
+        temporary: false,
+      },
     }
   );
 
   if (!passwordResponse.ok()) {
     const errorText = await passwordResponse.text();
-    console.error(`[Keycloak API] Failed to set password: ${passwordResponse.status()} - ${errorText}`);
-    throw new Error(`Failed to set Keycloak user password: ${passwordResponse.status()} - ${errorText}`);
+    console.error(
+      `[Keycloak API] Failed to set password: ${passwordResponse.status()} - ${errorText}`
+    );
+    throw new Error(
+      `Failed to set Keycloak user password: ${passwordResponse.status()} - ${errorText}`
+    );
   }
   console.log(`[Keycloak API] Password set successfully for user: ${username}`);
 
@@ -143,13 +153,13 @@ export async function deleteKeycloakUser(userId: string): Promise<void> {
   console.log(`[Keycloak API] Deleting user with ID: ${userId}`);
   const token = await getKeycloakAdminToken();
   const apiRequestContext = await getApiContext();
-  
+
   const response = await apiRequestContext.delete(
     `/admin/realms/${KEYCLOAK_REALM}/users/${userId}`,
     {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 
@@ -168,13 +178,13 @@ export async function checkKeycloakUserExists(username: string): Promise<boolean
   console.log(`[Keycloak API] Checking if user exists: ${username}`);
   const token = await getKeycloakAdminToken();
   const apiRequestContext = await getApiContext();
-  
+
   const response = await apiRequestContext.get(
     `/admin/realms/${KEYCLOAK_REALM}/users?username=${encodeURIComponent(username)}`,
     {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     }
   );
 
@@ -184,7 +194,7 @@ export async function checkKeycloakUserExists(username: string): Promise<boolean
     throw new Error(`Failed to check Keycloak user: ${response.status()} - ${errorText}`);
   }
 
-  const users = await response.json() as Array<{ id: string }>;
+  const users = (await response.json()) as Array<{ id: string }>;
   const exists = users.length > 0;
   console.log(`[Keycloak API] User ${username} exists: ${exists}`);
   return exists;

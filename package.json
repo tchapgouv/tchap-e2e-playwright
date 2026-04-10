@@ -10,8 +10,11 @@
     "test:ui": "playwright test --ui",
     "test:local": "ENV=local playwright test",
     "test:dev02": "ENV=dev02 playwright test  ./tests/minimal/",
-    "test:preprod": "ENV=preprod playwright test  ./tests/minimal/"
-
+    "test:preprod": "ENV=preprod playwright test  ./tests/minimal/",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --fix",
+    "format": "biome format .",
+    "format:fix": "biome format . --write"
   },
   "keywords": [
     "playwright",
@@ -22,10 +25,11 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
     "@playwright/test": "^1.40.0",
     "@types/node": "^20.10.0",
     "dotenv": "^16.3.1",
-    "typescript": "^5.3.2",
-    "mailpit-api": "^1.5.4"
+    "mailpit-api": "^1.5.4",
+    "typescript": "^5.3.2"
   }
 }

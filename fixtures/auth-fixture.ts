@@ -1,14 +1,19 @@
-import { test as base, Browser, Page, TestInfo } from "@playwright/test";
+import { test as base, Browser, type Page, type TestInfo } from '@playwright/test';
 import {
   createKeycloakTestUser,
   cleanupKeycloakTestUser,
-  TestUser,
+  type TestUser,
   TypeUser,
   populateLocalStorageWithCredentials,
-} from "../utils/auth-helpers";
-import { disposeApiContext as disposeKeycloakApiContext } from "../utils/keycloak-admin";
-import { createMasUserWithPassword, deactivateMasUser, disposeApiContext as disposeMasApiContext, waitForMasUser } from "../utils/mas-admin";
-import { generateTestUserData } from "../utils/auth-helpers";
+} from '../utils/auth-helpers';
+import { disposeApiContext as disposeKeycloakApiContext } from '../utils/keycloak-admin';
+import {
+  createMasUserWithPassword,
+  deactivateMasUser,
+  disposeApiContext as disposeMasApiContext,
+  waitForMasUser,
+} from '../utils/mas-admin';
+import { generateTestUserData } from '../utils/auth-helpers';
 import fs from 'fs';
 import path from 'path';
 import { SCREENSHOTS_DIR } from '../utils/config';
@@ -20,9 +25,9 @@ import {
   WRONG_SERVER_EMAIL_DOMAIN,
   NUMERIQUE_EMAIL_DOMAIN,
   BASE_URL,
-  ELEMENT_URL
-} from "../utils/config";
-import { ClientServerApi, Credentials } from "../utils/api";
+  ELEMENT_URL,
+} from '../utils/config';
+import { ClientServerApi, type Credentials } from '../utils/api';
 
 function generateUserDataFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
@@ -31,11 +36,9 @@ function generateUserDataFixture(domain: string) {
 
       // Use the test user in the test
       await use(user);
-
     } finally {
       // Dispose API contexts
-      await Promise.all([
-      ]);
+      await Promise.all([]);
     }
   };
 }
@@ -60,16 +63,24 @@ function createKeycloakUserFixture(domain: string) {
     } finally {
       // Dispose API contexts
       await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
-      console.log("API contexts disposed");
+      console.log('API contexts disposed');
     }
   };
 }
 
 export type ScreenCheckerFixture = (page: Page, urlFragment: string) => Promise<void>;
 export type StartTchapRegisterWithEmailFixture = (page: Page, email: string) => Promise<void>;
-export type AuthenticatedUserFixture = (page: Page, user: TestUser, request: any) => Promise<Credentials>;
+export type AuthenticatedUserFixture = (
+  page: Page,
+  user: TestUser,
+  request: any
+) => Promise<Credentials>;
 
-async function screenCheckerFixture({}: {}, use: (screenChecker: ScreenCheckerFixture) => Promise<void>, testInfo: TestInfo) {
+async function screenCheckerFixture(
+  {}: {},
+  use: (screenChecker: ScreenCheckerFixture) => Promise<void>,
+  testInfo: TestInfo
+) {
   //this fixture clean up the screenshot folder before the tests
   //and exposes a method to capture a screenshot from an waited url
 
@@ -83,17 +94,26 @@ async function screenCheckerFixture({}: {}, use: (screenChecker: ScreenCheckerFi
 
   const screenChecker = async (page: Page, urlFragment: string) => {
     const browserName = page.context().browser()?.browserType().name();
-    
-    await page.waitForURL((url) => { console.log("current page url : ", url.pathname); return url.toString().includes(urlFragment)}, {waitUntil:"load"});
+
+    await page.waitForURL(
+      (url) => {
+        console.log('current page url : ', url.pathname);
+        return url.toString().includes(urlFragment);
+      },
+      { waitUntil: 'load' }
+    );
     const filename = `${browserName}_${counter.toString().padStart(2, '0')}-${urlFragment.replace(/[^\w]/g, '_')}.png`;
-    await page.screenshot({ path: path.join(screenshotPath, filename), fullPage:true });
+    await page.screenshot({ path: path.join(screenshotPath, filename), fullPage: true });
     counter++;
   };
 
   await use(screenChecker);
 }
 
-async function startTchapRegisterWithEmailFixture({ screenChecker }: { screenChecker: ScreenCheckerFixture }, use: (start: StartTchapRegisterWithEmailFixture) => Promise<void>) {
+async function startTchapRegisterWithEmailFixture(
+  { screenChecker }: { screenChecker: ScreenCheckerFixture },
+  use: (start: StartTchapRegisterWithEmailFixture) => Promise<void>
+) {
   const start = async (page: Page, email: string) => {
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
     await screenChecker(page, '#/welcome');
@@ -109,28 +129,24 @@ async function startTchapRegisterWithEmailFixture({ screenChecker }: { screenChe
   await use(start);
 }
 
-async function authenticatedUserFixture({ page, userData: user, request }: { page: Page, userData: TestUser, request: any }, use: (credentials: Credentials) => Promise<void>) {
+async function authenticatedUserFixture(
+  { page, userData: user, request }: { page: Page; userData: TestUser; request: any },
+  use: (credentials: Credentials) => Promise<void>
+) {
   // 1. Register user
-  const userId = await createMasUserWithPassword(
-    user.username,
-    user.email,
-    user.password
-  );
+  const userId = await createMasUserWithPassword(user.username, user.email, user.password);
   const csAPI = new ClientServerApi(BASE_URL, request);
 
   await waitForMasUser(user.email);
 
-  const credentials = (await csAPI.loginUser(
-    user.username,
-    user.password
-  )) as Credentials;
+  const credentials = (await csAPI.loginUser(user.username, user.password)) as Credentials;
 
   // 2. Populate localStorage
   await populateLocalStorageWithCredentials(page, credentials);
 
   // 3. Load app
   await page.goto(ELEMENT_URL);
-  await page.waitForSelector(".mx_MatrixChat", { timeout: 20000 });
+  await page.waitForSelector('.mx_MatrixChat', { timeout: 20000 });
 
   // 4. Pass page to test
   await use(credentials);
@@ -144,7 +160,7 @@ async function authenticatedUserFixture({ page, userData: user, request }: { pag
  * Extend the basic test fixtures with our authentication fixtures
  */
 export const test = base.extend<{
-  userData: TestUser,
+  userData: TestUser;
   oidcUser: TestUser;
   oidcExternalUserWithInvit: TestUser;
   oidcExternalUserWitoutInvit: TestUser;
@@ -170,4 +186,4 @@ export const test = base.extend<{
   startTchapRegisterWithEmail: startTchapRegisterWithEmailFixture,
 });
 
-export { expect } from "@playwright/test";
+export { expect } from '@playwright/test';
