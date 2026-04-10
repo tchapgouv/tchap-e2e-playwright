@@ -2,34 +2,17 @@
 
 Ce projet contient des tests Playwright pour tester le scénario d'authentification OIDC avec Keycloak dans le service d'authentification Matrix (MAS).
 
-## Prérequis
+Cela contient également un script complet avec les tests minimaux Tchap
 
-- Node.js 16 ou supérieur
-- npm ou yarn
-- Docker pour exécuter Keycloak et PostgreSQL
-- Keycloak accessible sur `sso.tchapgouv.com`
-- Matrix Authentication Service accessible sur `auth.tchapgouv.com`
+## Démarrage des services en local
+TODO
 
-### Démarrage des services
+## Executer les tests minimaux avec docker 
 
-Avant d'exécuter les tests, vous devez démarrer les services Keycloak et Matrix Authentication Service :
+`docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:dev01`
+`docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:preprod`
 
-```bash
-# Démarrer Keycloak et PostgreSQL
-./tchap/start-local-stack.sh
-
-# Démarrer le service Matrix Authentication Service
-./tchap/start-local-mas.sh
-```
-
-Ces scripts démarrent les services nécessaires pour les tests :
-- PostgreSQL pour le stockage des données
-- Keycloak avec le realm `proconnect-mock` préconfiguré
-- Matrix Authentication Service configuré pour utiliser Keycloak comme fournisseur OIDC
-
-Les entrees DNS doivent etre présentes dans le fichier hosts
-
-## Installation
+## Installation local
 
 Pour initialiser rapidement le projet, utilisez le script d'initialisation :
 
@@ -41,66 +24,22 @@ chmod +x init.sh
 ./init.sh
 ```
 
-Ce script va :
-- Créer le répertoire pour les résultats des tests
-- Installer les dépendances npm
-- Installer les navigateurs Playwright
-
-
-Vous pouvez également effectuer ces étapes manuellement :
-
-```bash
-# Installer les dépendances
-npm install
-
-# Installer les navigateurs Playwright
-npx playwright install
-```
-
 ## Configuration
 
 Les tests utilisent un fichier `.env` pour la configuration. Vous pouvez modifier ce fichier pour adapter les tests à votre environnement.
 
-```
-# URLs
-MAS_URL=https://auth.tchapgouv.com
-KEYCLOAK_URL=https://sso.tchapgouv.com
+Requis pour dev01 et preprod:
+`MAILPIT_PWD=` mailpit password
 
-# Keycloak Admin Credentials
-KEYCLOAK_ADMIN_USERNAME=admin
-KEYCLOAK_ADMIN_PASSWORD=admin
-KEYCLOAK_REALM=proconnect-mock
-
-# MAS Admin API Credentials
-MAS_ADMIN_CLIENT_ID=01J44RKQYM4G3TNVANTMTDYTX6
-MAS_ADMIN_CLIENT_SECRET=phoo8ahneir3ohY2eigh4xuu6Oodaewi
-
-# Test User Credentials
-TEST_USER_PREFIX=playwright_test_user
-TEST_USER_PASSWORD=Test@123456
-```
-
-## Exécution des tests
+## Exécution les tests
 
 ```bash
-# Exécuter tous les tests
-npm test
+# Exécuter tous les tests MAS en local
+ENV=local npm run test tests/auth --retries=2  
 
-# Exécuter les tests avec l'interface utilisateur visible
-npm run test:headed
 
-# Exécuter les tests en mode debug
-npm run test:debug
-
-# Exécuter les tests avec l'interface utilisateur de Playwright
-npm run test:ui
+# Exécuter les tests minimaux sur dev ou preprod
+ENV=preprod npm run test tests/minimal
+ENV=dev01 npm run test tests/minimal  
 ```
 
-## Captures d'écran
-
-Les tests génèrent des captures d'écran à chaque étape importante du processus d'authentification. Ces captures sont enregistrées dans le répertoire `playwright-results/`.
-
-
-## Executer avec docker 
-
-`docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:dev02`

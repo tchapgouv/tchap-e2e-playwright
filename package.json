@@ -9,7 +9,7 @@
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
     "test:local": "ENV=local playwright test",
-    "test:dev02": "ENV=dev02 playwright test  ./tests/minimal/",
+    "test:dev01": "ENV=dev01 playwright test  ./tests/minimal/",
     "test:preprod": "ENV=preprod playwright test  ./tests/minimal/",
     "lint": "biome lint .",
     "lint:fix": "biome lint . --fix",
