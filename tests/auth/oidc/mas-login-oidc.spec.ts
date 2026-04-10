@@ -1,34 +1,40 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
-import { 
+import {
   createKeycloakTestUser,
   performOidcLogin,
-  TestUser,
+  type TestUser,
 } from '../../../utils/auth-helpers';
-import { createMasUserWithPassword, getMasUserByEmail, deactivateMasUser,oauthLinkExistsByUserId, oauthLinkExistsBySubject} from '../../../utils/mas-admin';
+import {
+  createMasUserWithPassword,
+  getMasUserByEmail,
+  deactivateMasUser,
+  oauthLinkExistsByUserId,
+  oauthLinkExistsBySubject,
+} from '../../../utils/mas-admin';
 import { SCREENSHOTS_DIR, STANDARD_EMAIL_DOMAIN } from '../../../utils/config';
 
 test.describe('MAS Login OIDC', () => {
- 
-  test('match account by email', async ({ page, oidcUser: oidcUser }) => {
-    const screenshot_path = test.info().title.replace(" ", "_");
+  test('match account by email', async ({ page, oidcUser }) => {
+    const screenshot_path = test.info().title.replace(' ', '_');
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${oidcUser.email}`);
-    
-    oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, "any");
-    
+
+    oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, 'any');
+
     try {
-     
       // Perform the OIDC login flow
       await performOidcLogin(page, oidcUser, screenshot_path);
-      
+
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Connecté')).toBeVisible();
-      
+
       // Take a screenshot of the authenticated state
-      await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
-      
+      await page.screenshot({
+        path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png`,
+      });
+
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await getMasUserByEmail(oidcUser.email);
       expect(userAfterLogin.id).toBe(oidcUser.masId);
@@ -43,35 +49,46 @@ test.describe('MAS Login OIDC', () => {
     }
   });
 
-  test('match external account by email', async ({ page, oidcExternalUserWitoutInvit: externalUser }) => {
-    // we use the fixture oidcExternalUserWitoutInvit because as long as the account is created, 
+  test('match external account by email', async ({
+    page,
+    oidcExternalUserWitoutInvit: externalUser,
+  }) => {
+    // we use the fixture oidcExternalUserWitoutInvit because as long as the account is created,
     // there is no invitation pending in the identity server.
-    
-    const screenshot_path = test.info().title.replace(" ", "_");
+
+    const screenshot_path = test.info().title.replace(' ', '_');
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${externalUser.email}`);
-    
-    externalUser.masId = await createMasUserWithPassword(externalUser.username, externalUser.email, externalUser.password);
-    
+
+    externalUser.masId = await createMasUserWithPassword(
+      externalUser.username,
+      externalUser.email,
+      externalUser.password
+    );
+
     try {
       // Perform the OIDC login flow
       await performOidcLogin(page, externalUser, screenshot_path);
-      
+
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Connecté')).toBeVisible();
-      
+
       // Take a screenshot of the authenticated state
-      await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
-      
+      await page.screenshot({
+        path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png`,
+      });
+
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await getMasUserByEmail(externalUser.email);
       expect(userAfterLogin.id).toBe(externalUser.masId);
       //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
       expect(await oauthLinkExistsBySubject(externalUser.username)).toBe(true);
 
-      console.log(`Successfully verified account linking for user with email: ${externalUser.email}`);
+      console.log(
+        `Successfully verified account linking for user with email: ${externalUser.email}`
+      );
     } finally {
       // Clean up the MAS user
       await deactivateMasUser(externalUser.masId);
@@ -79,30 +96,39 @@ test.describe('MAS Login OIDC', () => {
     }
   });
 
-  test('match account by email with fallback rules', async ({ page, oidcUserWithFallbackRules: oidcUser }) => {
-    const screenshot_path = test.info().title.replace(" ", "_");
+  test('match account by email with fallback rules', async ({
+    page,
+    oidcUserWithFallbackRules: oidcUser,
+  }) => {
+    const screenshot_path = test.info().title.replace(' ', '_');
 
-    const old_email_domain = "@beta.gouv.fr";
+    const old_email_domain = '@beta.gouv.fr';
     const old_email = oidcUser.email.replace(/@.*/, old_email_domain);
 
-
     // Create a user in MAS with the same email as the Keycloak user
-    console.log(`Creating MAS user with old email: ${old_email} whereas email in keycloak is : ${oidcUser.email}`);
-    
-    oidcUser.masId = await createMasUserWithPassword(oidcUser.username+"different_from_email", old_email, oidcUser.password);
-    
+    console.log(
+      `Creating MAS user with old email: ${old_email} whereas email in keycloak is : ${oidcUser.email}`
+    );
+
+    oidcUser.masId = await createMasUserWithPassword(
+      oidcUser.username + 'different_from_email',
+      old_email,
+      oidcUser.password
+    );
+
     try {
-      
       // Perform the OIDC login flow
       await performOidcLogin(page, oidcUser, screenshot_path);
-      
+
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Connecté')).toBeVisible();
-      
+
       // Take a screenshot of the authenticated state
-      await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png` });
-      
+      await page.screenshot({
+        path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png`,
+      });
+
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await getMasUserByEmail(old_email);
       expect(userAfterLogin.id).toBe(oidcUser.masId);
@@ -116,39 +142,37 @@ test.describe('MAS Login OIDC', () => {
     }
   });
 
+  test('match account by username throw error when email does not match', async ({ page }) => {
+    const screenshot_path = test.info().title.replace(' ', '_');
 
-  test('match account by username throw error when email does not match', async ({ page}) => {
-    const screenshot_path = test.info().title.replace(" ", "_");
-    
     //create a user in keycloak with an `email` that matches a `localpart` in MAS
     //while the email in MAS is different
     //then linking will not be on the `email` but on the `localpart`
     //which is a failing edge case
     //we expect an error page
     const domain = STANDARD_EMAIL_DOMAIN;
-    
+
     const randomSuffix = Math.floor(Math.random() * 10000000);
     const mas_user_email = `any-email-${randomSuffix}@${domain}`;
 
-      const testUser: TestUser = {
-        username: `test.user${randomSuffix}-${domain}`,
-        email: `test.user${randomSuffix}@${domain}`,
-        password: "1234!",
-      };
+    const testUser: TestUser = {
+      username: `test.user${randomSuffix}-${domain}`,
+      email: `test.user${randomSuffix}@${domain}`,
+      password: '1234!',
+    };
 
     const user = await createKeycloakTestUser(testUser);
 
     user.masId = await createMasUserWithPassword(user.username, mas_user_email, user.password);
-    
+
     try {
       // Perform the OIDC login flow
       await performOidcLogin(page, user, screenshot_path);
-      
+
       // Get error
       //await expect(page.locator('text=unknown_error'));
       await expect(page.locator('text="Invalid Data"')).toBeVisible();
-;
-   
+
       console.log(`Successfully verified account linking for user with email: ${user.email}`);
     } finally {
       // Clean up the MAS user
