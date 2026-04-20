@@ -10,10 +10,10 @@ TODO
 ## Executer les tests minimaux avec docker 
 
 ```bash
-docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:dev01
+docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble npm run test:dev01
 
 
-docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:preprod
+docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble npm run test:preprod
 ```
 
 ## Installation local
