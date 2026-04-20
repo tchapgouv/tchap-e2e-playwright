@@ -1,7 +1,7 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { verifyUserInMas, performOidcLoginFromTchap } from '../../../utils/auth-helpers';
 import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../../utils/mas-admin';
-import { SCREENSHOTS_DIR, TCHAP_LEGACY } from '../../../utils/config';
+import { SCREENSHOTS_DIR } from '../../../utils/config';
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 test.describe('Tchap : Login via OIDC', () => {
@@ -19,7 +19,7 @@ test.describe('Tchap : Login via OIDC', () => {
     expect(existsBeforeLogin).toBe(true);
 
     // Perform the OIDC login flow
-    await performOidcLoginFromTchap(page, oidcUser, screenshot_path, TCHAP_LEGACY);
+    await performOidcLoginFromTchap(page, oidcUser, screenshot_path);
 
     // Take a screenshot of the authenticated state
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/05-confirmation.png` });
