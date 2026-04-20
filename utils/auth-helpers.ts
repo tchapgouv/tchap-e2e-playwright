@@ -115,8 +115,7 @@ export async function performOidcLogin(
 export async function performOidcLoginFromTchap(
   page: Page,
   user: TestUser,
-  screenshot_path: string,
-  tchap_legacy: boolean = false
+  screenshot_path: string
 ): Promise<void> {
   //we go to the welcome and then to the login page because sometimes the email field disapears
   await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
