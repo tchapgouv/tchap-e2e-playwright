@@ -25,7 +25,7 @@ test.describe
      * tested:
      * creer compte agent
      * creer salon privé
-     * creer forum public
+     * creer salon public
      * creer salon privé ouverts aux externes
      * inviter un externe
      * envoyer fichier, fichier vérolé
@@ -44,7 +44,7 @@ test.describe
       const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
-      const public_room_name = generateRoomName('Forum');
+      const public_room_name = generateRoomName('Salon public');
       const room_name = generateRoomName('Salon Privé_');
 
       // Grant clipboard permissions to browser context
@@ -118,7 +118,7 @@ test.describe
       await page.getByRole('textbox', { name: 'Nom' }).fill(public_room_name);
       await dialog
         .locator('.tc_TchapRoomTypeSelector_RadioButton_title')
-        .getByText('Forum')
+        .getByText('Salon public')
         .click();
       await dialog.getByRole('button', { name: 'Créer un nouveau salon' }).click();
       await expect(page.locator('button').filter({ hasText: public_room_name })).toBeVisible();
@@ -133,7 +133,7 @@ test.describe
 
       //chercher salon public
       await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'Rejoindre un forum', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
       await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
       await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeVisible();
       await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
