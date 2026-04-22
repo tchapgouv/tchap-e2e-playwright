@@ -30,7 +30,7 @@ test.describe
      * inviter un externe
      * envoyer fichier, fichier vérolé
      * activer la sauvegarde
-     * vérifier qu'un externe ne peut pas créer de salon, ne peut pas chercher un forum
+     * vérifier qu'un externe ne peut pas créer de salon, ne peut pas chercher un salon publique
      * se déconnecter
      * reset mot de passe
      * TODO :  A. exporter les participants de la room
