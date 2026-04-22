@@ -24,7 +24,7 @@ async function getApiContext(): Promise<APIRequestContext> {
  * Get an admin access token for Keycloak
  */
 export async function getKeycloakAdminToken(): Promise<string> {
-  console.log(`[Keycloak API] Requesting admin token with username: ${KEYCLOAK_ADMIN_USERNAME}`);
+  console.log(`[Keycloak API] Requesting admin token with username: ${KEYCLOAK_ADMIN_USERNAME} at url ${KEYCLOAK_URL}`);
   const apiRequestContext = await getApiContext();
 
   const response = await apiRequestContext.post('/realms/master/protocol/openid-connect/token', {
