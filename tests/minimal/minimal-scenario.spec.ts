@@ -206,6 +206,19 @@ test.describe
 
       await screenChecker(page, '#/home');
 
+      //click on 
+      if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
+        await page.getByRole('button', { name: 'OK' }).click();
+      }
+      // Faire la même chose une deuxième fois
+      if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
+        await page.getByRole('button', { name: 'OK' }).click();
+      }
+
+      if (await page.getByRole('button', { name: 'Ignorer' }).isVisible()) {
+        await page.getByRole('button', { name: 'Ignorer' }).click();
+      }
+
       //creer salon public
       await createPublicRoom(page, public_room_name);
 

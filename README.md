@@ -13,7 +13,7 @@ TODO
 docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:dev01
 
 
-docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:preprod
+docker run -it --rm --ipc=host -v .:/app -w /app mcr.microsoft.com/playwright:v1.51.1-noble npm run test:int01
 ```
 
 ## Installation local
@@ -32,7 +32,7 @@ chmod +x init.sh
 
 Les tests utilisent un fichier `.env` pour la configuration. Vous pouvez modifier ce fichier pour adapter les tests à votre environnement.
 
-Requis pour dev01 et preprod:
+Requis pour dev01 et int01 (preprod):
 `MAILPIT_PWD=` mailpit password
 
 ## Exécution les tests
@@ -42,8 +42,8 @@ Requis pour dev01 et preprod:
 ENV=local npm run test tests/auth --retries=2  
 
 
-# Exécuter les tests minimaux sur dev ou preprod
-ENV=preprod npm run test tests/minimal
+# Exécuter les tests minimaux sur dev ou int01 (preprod)
+ENV=int01 npm run test tests/minimal
 ENV=dev01 npm run test tests/minimal  
 ```
 
