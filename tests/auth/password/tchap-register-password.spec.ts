@@ -12,7 +12,6 @@ test.describe('Tchap : register with password', () => {
   const PASSWORd = 'sdf78qsd!9090ssss';
 
   test('tchap register with oidc native', async ({
-    context,
     page,
     userData: user,
     screenChecker: screen,
@@ -123,8 +122,6 @@ test.describe('Tchap : register with password', () => {
   });
 
   test('when user already exists', async ({
-    page,
-    context,
     browser,
     screenChecker: screen,
     startTchapRegisterWithEmail,

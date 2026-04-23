@@ -19,7 +19,7 @@ test.describe('Tchap : Legacy SSO Flow', () => {
     expect(response1.status()).toEqual(303);
 
     // Get the first redirect location (should be complete-compat-sso)
-    const completeCompatSsoUrl = response1.headers()['location'];
+    const completeCompatSsoUrl = response1.headers().location;
     expect(completeCompatSsoUrl).toBeTruthy();
     console.log(`[Legacy SSO] First redirect to: ${completeCompatSsoUrl}`);
 
@@ -30,14 +30,14 @@ test.describe('Tchap : Legacy SSO Flow', () => {
 
     // Step 2: Follow the first redirect to complete-compat-sso
     console.log(`[Legacy SSO] Step 2: Following redirect to complete-compat-sso`);
-    const response2 = await request.get(completeCompatSsoUrl!, {
+    const response2 = await request.get(completeCompatSsoUrl, {
       maxRedirects: 0,
     });
     console.log(`[Legacy SSO] Response 2 status: ${response2.status()}`);
     expect(response2.status()).toEqual(303);
 
     // Get the second redirect location (should be register page)
-    const registerUrl = response2.headers()['location'];
+    const registerUrl = response2.headers().location;
     expect(registerUrl).toBeTruthy();
     console.log(`[Legacy SSO] Second redirect to: ${registerUrl}`);
 

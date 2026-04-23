@@ -1,12 +1,6 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
-import {
-  checkMasUserExistsByEmail,
-  createMasUserWithPassword,
-  deactivateMasUser,
-} from '../../../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL, MAS_URL } from '../../../utils/config';
-import { Page } from '@playwright/test';
-import { loginWithPassword } from '../../../utils/auth-helpers';
+import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../../utils/mas-admin';
+import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../../utils/config';
 
 test.describe('Tchap : Login password', () => {
   test('tchap login with password and login_hint', async ({ page, userData, screenChecker }) => {

@@ -1,4 +1,4 @@
-import { test as base, Browser, type Page, type TestInfo } from '@playwright/test';
+import { test as base, type Page, type TestInfo } from '@playwright/test';
 import {
   createKeycloakTestUser,
   cleanupKeycloakTestUser,
@@ -14,8 +14,8 @@ import {
   waitForMasUser,
 } from '../utils/mas-admin';
 import { generateTestUserData } from '../utils/auth-helpers';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { SCREENSHOTS_DIR } from '../utils/config';
 
 import {
@@ -30,7 +30,7 @@ import {
 import { ClientServerApi, type Credentials } from '../utils/api';
 
 function generateUserDataFixture(domain: string) {
-  return async ({}, use: (user: TestUser) => Promise<void>) => {
+  return async (use: (user: TestUser) => Promise<void>) => {
     try {
       const user = generateTestUserData(domain);
 
@@ -47,7 +47,7 @@ function generateUserDataFixture(domain: string) {
  * Function to create a test user fixture with a specific domain
  */
 function createKeycloakUserFixture(domain: string) {
-  return async ({}, use: (user: TestUser) => Promise<void>) => {
+  return async (use: (user: TestUser) => Promise<void>) => {
     try {
       const testUserData = generateTestUserData(domain);
 
@@ -77,7 +77,6 @@ export type AuthenticatedUserFixture = (
 ) => Promise<Credentials>;
 
 async function screenCheckerFixture(
-  {}: {},
   use: (screenChecker: ScreenCheckerFixture) => Promise<void>,
   testInfo: TestInfo
 ) {
