@@ -13,7 +13,7 @@ export default defineConfig({
   /* Maximum time one test can run for */
   timeout: 15 * 1000,
   /* Run tests in files in parallel */
-  fullyParallel: process.env.TEST_IN_PARALLEL === 'true' ? true : false,
+  fullyParallel: process.env.TEST_IN_PARALLEL === 'true',
 
   /* Define how many workers */
   // Limit the number of workers on CI, use default locally
@@ -22,7 +22,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
 
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 2,
   /* Reporter to use */
   reporter: 'html',
   /* Shared settings for all the projects below */

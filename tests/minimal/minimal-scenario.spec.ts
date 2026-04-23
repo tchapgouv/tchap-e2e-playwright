@@ -4,16 +4,98 @@ import {
   generateTestUserData,
   openResetPasswordEmail,
 } from '../../utils/auth-helpers';
-import {
-  ELEMENT_URL,
-  INVITED_EMAIL_DOMAIN,
-  STANDARD_EMAIL_DOMAIN,
-  USE_MAS,
-} from '../../utils/config';
+import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../utils/mailpit';
-import path from 'path';
+import { TchapAppPage } from '../../utils/TchapAppPage';
+import path from 'node:path';
+import type { Page } from '@playwright/test';
 
 //this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
+
+// Helper function to create a public room
+async function createPublicRoom(page: Page, roomName: string): Promise<string> {
+  const appPage = new TchapAppPage(page);
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Nouveau salon', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
+  await appPage.selectRoomType('Salon public');
+
+  await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+  await expect(page.locator('button').filter({ hasText: roomName })).toBeVisible();
+
+  // Write in the public room
+  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
+  await page.getByRole('button', { name: 'Envoyer le message' }).click();
+  await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+  return roomName;
+}
+
+// Helper function to create an encrypted private room
+async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
+  const appPage = new TchapAppPage(page);
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByText('Nouveau salon').click();
+  await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
+  await appPage.selectRoomType('Salon privé sécurisé');
+  await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+
+  // Write in the encrypted private room
+  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message chiffré');
+  await page.getByRole('button', { name: 'Envoyer le message' }).click();
+  await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+  // Verify parameters
+  await page.locator('button').filter({ hasText: roomName }).click();
+  await page.getByRole('menuitem', { name: 'Paramètres' }).click();
+  await page.getByText('Vie privée').click();
+  await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
+  await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
+
+  return roomName;
+}
+
+// Helper function to create an unencrypted private room
+async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
+  const appPage = new TchapAppPage(page);
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByText('Nouveau salon').click();
+  await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
+  await appPage.selectRoomType('Salon privé');
+  await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+
+  // Write in the unencrypted private room
+  await expect(page.locator('button').filter({ hasText: 'Non chiffré' })).toBeVisible();
+  await expect(page.getByText('Le chiffrement de bout en bout n')).toBeVisible();
+  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
+  await page.getByRole('button', { name: 'Envoyer le message' }).click();
+  await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+  // Verify parameters
+  await page.locator('button').filter({ hasText: roomName }).click();
+  await page.getByRole('menuitem', { name: 'Paramètres' }).click();
+  await page.getByText('Vie privée').click();
+  await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
+  await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
+
+  return roomName;
+}
+
+// Helper function to create an external private room
+async function createExternalPrivateRoom(
+  page: Page,
+  roomName: string = 'Salon ouvert aux externes'
+): Promise<string> {
+  const appPage = new TchapAppPage(page);
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByText('Nouveau salon').click();
+  await page.getByLabel('Créer un salon').click();
+  await appPage.selectRoomType('Salon privé sécurisé avec externes');
+  await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
+  await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+
+  return roomName;
+}
 
 test.describe
   .serial('Minimal scenario', () => {
@@ -21,11 +103,16 @@ test.describe
 
     const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
     const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
+
+    const public_room_name = generateRoomName('public_room_name');
+    const private_crypted_room_name = generateRoomName('private_crypted_room_name');
+    const private_uncrypted_room_name = generateRoomName('private_uncrypted_room_name');
     /*
      * tested:
      * creer compte agent
      * creer salon privé
-     * creer forum public
+     * creer salon privé non chiffré
+     * creer salon public
      * creer salon privé ouverts aux externes
      * inviter un externe
      * envoyer fichier, fichier vérolé
@@ -37,15 +124,13 @@ test.describe
      * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
      */
 
-    test('test all', async ({ page, context, screenChecker, browser }) => {
+    test('internal user', async ({ page, context, screenChecker }) => {
       const invitee1_search_name = 'olivier test1'; // TODO : ensure that invitee exists in the environment
       const invitee1_display_name = 'Olivier Test1'; // TODO : ensure that invitee exists in the environment
 
       const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
-      const public_room_name = generateRoomName('Forum');
-      const room_name = generateRoomName('Salon Privé_');
 
       // Grant clipboard permissions to browser context
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -108,53 +193,34 @@ test.describe
 
       await screenChecker(page, '#/home');
 
-      //await page.getByRole('button', { name: 'OK' }).click();
-      //await page.getByRole('button', { name: 'OK' }).click();
+      //click on
+      if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
+        await page.getByRole('button', { name: 'OK' }).click();
+      }
+      // Faire la même chose une deuxième fois
+      if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
+        await page.getByRole('button', { name: 'OK' }).click();
+      }
+
+      if (await page.getByRole('button', { name: 'Ignorer' }).isVisible()) {
+        await page.getByRole('button', { name: 'Ignorer' }).click();
+      }
 
       //creer salon public
-      await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'Nouveau salon', exact: true }).click();
-      const dialog = page.locator('.tc_TchapCreateRoomDialog');
-      await page.getByRole('textbox', { name: 'Nom' }).fill(public_room_name);
-      await dialog
-        .locator('.tc_TchapRoomTypeSelector_RadioButton_title')
-        .getByText('Forum')
-        .click();
-      await dialog.getByRole('button', { name: 'Créer un nouveau salon' }).click();
-      await expect(page.locator('button').filter({ hasText: public_room_name })).toBeVisible();
-
-      //ecrire dans le salon public
-      await page
-        .locator('.mx_BasicMessageComposer')
-        .getByRole('textbox')
-        .fill('message non chiffré');
-      await page.getByRole('button', { name: 'Envoyer le message' }).click();
-      await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+      await createPublicRoom(page, public_room_name);
 
       //chercher salon public
       await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'Rejoindre un forum', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
       await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
       await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeVisible();
       await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
 
       //creer salon privé
-      await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-      await page.getByText('Nouveau salon').click();
-      await page.getByRole('textbox', { name: 'Nom' }).fill(room_name);
-      await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+      await createEncryptedPrivateRoom(page, private_crypted_room_name);
 
-      //ecrire dans le salon privé
-      await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message chiffré');
-      await page.getByRole('button', { name: 'Envoyer le message' }).click();
-      await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
-
-      //vérfier les parametres du salon privé
-      await page.locator('button').filter({ hasText: room_name }).click();
-      await page.getByRole('menuitem', { name: 'Paramètres' }).click();
-      await page.getByText('Vie privée').click();
-      await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
-      await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
+      //creer salon privé non chiffré
+      await createUnencryptedPrivateRoom(page, private_uncrypted_room_name);
 
       //inviter agents by name
       await page.getByRole('button', { name: 'Personnes' }).click();
@@ -191,12 +257,7 @@ test.describe
       await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
 
       //creer salon privé ouvert aux externes
-      await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-      await page.getByText('Nouveau salon').click();
-      await page.getByLabel('Créer un salon').click();
-      await page.getByRole('radio', { name: 'Salon ouvert aux externes' });
-      await page.getByRole('textbox', { name: 'Nom' }).fill('Salon ouvert aux externes');
-      await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+      await createExternalPrivateRoom(page);
 
       //inviter agent externe
       await page.getByRole('button', { name: 'Personnes' }).click();
@@ -226,7 +287,7 @@ test.describe
       //await openResetPasswordEmailLegacy(context, screenChecker, agent_user.email);
       const resetPwdPage = await openResetPasswordEmail(context, screenChecker, agent_user.email);
 
-      const newPassword = agent_user.password + '4';
+      const newPassword = `${agent_user.password}4`;
       await resetPwdPage.locator('input[name="new_password"]').fill(newPassword);
       await resetPwdPage.locator('input[name="new_password_again"]').fill(newPassword);
       await resetPwdPage.locator('body').click({ position: { x: 0, y: 0 } }); //unfocus field
@@ -242,7 +303,9 @@ test.describe
       await expect(
         resetPwdPage.getByRole('link').filter({ hasText: 'Continuer dans Tchap' })
       ).toBeVisible();
+    });
 
+    test('external user', async ({ screenChecker, browser }) => {
       const context_ext = await browser.newContext();
       const page_ext = await context_ext.newPage();
 

@@ -1,4 +1,4 @@
-import { test as base, Browser, type Page, type TestInfo } from '@playwright/test';
+import { test as base, type Page, type TestInfo } from '@playwright/test';
 import {
   createKeycloakTestUser,
   cleanupKeycloakTestUser,
@@ -14,8 +14,8 @@ import {
   waitForMasUser,
 } from '../utils/mas-admin';
 import { generateTestUserData } from '../utils/auth-helpers';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import { SCREENSHOTS_DIR } from '../utils/config';
 
 import {
@@ -77,7 +77,7 @@ export type AuthenticatedUserFixture = (
 ) => Promise<Credentials>;
 
 async function screenCheckerFixture(
-  {}: {},
+  {},
   use: (screenChecker: ScreenCheckerFixture) => Promise<void>,
   testInfo: TestInfo
 ) {

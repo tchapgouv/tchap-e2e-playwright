@@ -18,7 +18,7 @@ function extractCodeFromContent(content: string): string {
 export async function getMailpitClient() {
   const mailpit = await new MailpitClient(
     MAIL_URL,
-    MAILPIT_USER != '' ? { username: MAILPIT_USER, password: MAILPIT_PWD } : undefined
+    MAILPIT_USER !== '' ? { username: MAILPIT_USER, password: MAILPIT_PWD } : undefined
   );
   await mailpit.getInfo();
   return mailpit;

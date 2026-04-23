@@ -1,13 +1,11 @@
 import { test, expect } from '../../fixtures/auth-fixture';
 import {
   addUserEmail,
-  checkMasUserExistsByEmail,
   createMasUserWithPassword,
   deactivateMasUser,
   deleteOauthLink,
   getMasUserByEmail,
   getOauthLinkBySubject,
-  getUserEmail,
   oauthLinkExistsBySubject,
   reactivateMasUser,
 } from '../../utils/mas-admin';
@@ -107,7 +105,6 @@ test.describe('Tchap : Login password', () => {
   test('match account by email when former account is deactivated but another one is valid', async ({
     page,
     oidcUser,
-    screenChecker,
   }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
 
@@ -121,7 +118,7 @@ test.describe('Tchap : Login password', () => {
     await deactivateMasUser(formerTchapAccountMasId);
 
     const newTchapAccountWithIndex = {
-      username: oidcUser.username + '2',
+      username: `${oidcUser.username}2`,
       email: oidcUser.email,
       password: oidcUser.password,
       masId: '',
@@ -149,7 +146,7 @@ test.describe('Tchap : Login password', () => {
       // Verify the user in MAS is linked to the indexed account
       const userAfterLogin = await getMasUserByEmail(newTchapAccountWithIndex.email);
       expect(userAfterLogin.id).toBe(newTchapAccountWithIndex.masId);
-      expect(userAfterLogin.attributes['username']).toBe(newTchapAccountWithIndex.username);
+      expect(userAfterLogin.attributes.username).toBe(newTchapAccountWithIndex.username);
       await expect(page.locator(`text=${newTchapAccountWithIndex.username}`)).toBeVisible();
       expect(await oauthLinkExistsBySubject(oidcUser.username)).toBe(true);
 
@@ -250,7 +247,7 @@ test.describe('Tchap : Login password', () => {
 
       // SUPPORT PROCESS PERFORMED BY BOT ADMIN
       const links = await getOauthLinkBySubject(oidcUser.username);
-      await deleteOauthLink(links[0]['id']);
+      await deleteOauthLink(links[0].id);
       await reactivateMasUser(oidcUser.masId);
       await addUserEmail(oidcUser.masId, oidcUser.email);
       // END OF SUPPORT PROCESS
@@ -264,7 +261,7 @@ test.describe('Tchap : Login password', () => {
       //RESTART ANOTHER OIDC LOGIN
       await page2.goto('/login');
 
-      const screenshot_path_2 = screenshot_path + '_2';
+      const screenshot_path_2 = `${screenshot_path}_2`;
       // Take a screenshot of the login page
       await page2.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path_2}/01-login-page.png` });
 
