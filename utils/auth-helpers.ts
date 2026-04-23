@@ -1,4 +1,4 @@
-import { type BrowserContext, expect, Frame, type Page } from '@playwright/test';
+import { type BrowserContext, expect, type Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
 import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
 import {
@@ -115,8 +115,7 @@ export async function performOidcLogin(
 export async function performOidcLoginFromTchap(
   page: Page,
   user: TestUser,
-  screenshot_path: string,
-  tchap_legacy: boolean = false
+  screenshot_path: string
 ): Promise<void> {
   //we go to the welcome and then to the login page because sometimes the email field disapears
   await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
@@ -312,11 +311,7 @@ export async function loginWithPassword(
 /**
  * Same as performPasswordLogin but without the screenshots
  */
-export async function performSimplePasswordLogin(
-  page: Page,
-  user: TestUser,
-  screenshot_path: string
-): Promise<void> {
+export async function performSimplePasswordLogin(page: Page, user: TestUser): Promise<void> {
   console.log(`[Auth] Performing password login for user: ${user.username}`);
 
   // Navigate to the login page
@@ -336,14 +331,14 @@ export async function performSimplePasswordLogin(
 }
 
 export function generateRoomName(prefix: string) {
-  const timestamp = new Date().getTime();
+  const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 10000);
-  return `prefix_${timestamp}_${randomSuffix}`;
+  return `${prefix}_${timestamp}_${randomSuffix}`;
 }
 
 // Generate a unique username and email for testing
 export function generateTestUserData(domain: string): TestUser {
-  const timestamp = new Date().getTime();
+  const timestamp = Date.now();
   const randomSuffix = Math.floor(Math.random() * 10000);
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
   const localpart = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}-${domain}`;

@@ -24,7 +24,7 @@ test.describe('Create Room', () => {
 
     // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
-    if (env == 'local') {
+    if (env === 'local') {
       await page.getByRole('button').getByText('OK').click();
     } else {
       // Takes some time to appear
@@ -66,7 +66,7 @@ test.describe('Create Room', () => {
 
     // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
-    if (env == 'local') {
+    if (env === 'local') {
       await page.getByRole('button').getByText('OK').click();
     } else {
       // Takes some time
@@ -108,7 +108,7 @@ test.describe('Create Room', () => {
 
     // In local test An error dialog should appear first complaining about wss socket and SSL certificate error
     // So not really working locally
-    if (env == 'local') {
+    if (env === 'local') {
       await page.getByRole('button').getByText('OK').click();
     } else {
       // Takes some time

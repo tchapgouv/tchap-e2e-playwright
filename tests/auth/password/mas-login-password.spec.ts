@@ -3,7 +3,6 @@ import {
   createMasTestUser,
   cleanupMasTestUser,
   performPasswordLogin,
-  TestUser,
 } from '../../../utils/auth-helpers';
 import { SCREENSHOTS_DIR } from '../../../utils/config';
 

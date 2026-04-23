@@ -291,7 +291,7 @@ export async function oauthLinkExistsByUserId(userId: string): Promise<boolean> 
   //console.log(data.data)
   const links = data.data;
   console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
-  return links.length == 1;
+  return links.length === 1;
 }
 
 /**
@@ -319,7 +319,7 @@ export async function oauthLinkExistsBySubject(subject: string): Promise<boolean
   //console.log(data.data)
   const links = data.data;
   console.log(`[MAS API] Oauth links for user ${subject} : ${JSON.stringify(links)}`);
-  return links.length == 1;
+  return links.length === 1;
 }
 
 /**

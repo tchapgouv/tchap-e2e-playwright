@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import path from 'path';
+import path from 'node:path';
 
 // Determine which environment to use
 export const env = process.env.ENV || 'local';
@@ -20,8 +20,6 @@ export const MAIL_URL = process.env.MAIL_URL || '';
 
 export const MAILPIT_USER = process.env.MAILPIT_USER || '';
 export const MAILPIT_PWD = process.env.MAILPIT_PWD || '';
-
-export const TCHAP_LEGACY: boolean = Boolean(process.env.TCHAP_LEGACY);
 
 // Keycloak Admin Credentials
 export const KEYCLOAK_ADMIN_USERNAME = process.env.KEYCLOAK_ADMIN_USERNAME || 'admin';
