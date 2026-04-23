@@ -188,4 +188,31 @@ export class TchapAppPage {
       await this.page.mouse.wheel(0, 1000);
     } while (await needsScroll());
   }
+
+  /**
+   * Select a room type in the Tchap create room dialog.
+   * This function uses a robust selector to avoid flaky tests when selecting
+   * between similar room type options (e.g., "Salon privé" vs "Salon privé sécurisé")
+   * 
+   * @param roomType The exact room type to select
+   */
+  public async selectRoomType(
+    roomType:
+      'Salon privé'
+      | 'Salon privé sécurisé'
+      | 'Salon privé sécurisé avec externes'
+      | 'Salon public'
+  ): Promise<void> {
+    const dialog = this.page.locator('.tc_TchapCreateRoomDialog');
+    const radioButtonTitles = dialog.locator('.tc_TchapRoomTypeSelector_RadioButton_title');
+
+    // Use filter with regex to match the exact room type text
+    // This is more robust than getByText() as it properly handles similar strings
+    const selectedButton = radioButtonTitles.filter({
+      hasText: new RegExp(`^${roomType.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`),
+    });
+
+    // Click the button
+    await selectedButton.click();
+  }
 }
