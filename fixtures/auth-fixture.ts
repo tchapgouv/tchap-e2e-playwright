@@ -30,7 +30,7 @@ import {
 import { ClientServerApi, type Credentials } from '../utils/api';
 
 function generateUserDataFixture(domain: string) {
-  return async (use: (user: TestUser) => Promise<void>) => {
+  return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const user = generateTestUserData(domain);
 
@@ -47,7 +47,7 @@ function generateUserDataFixture(domain: string) {
  * Function to create a test user fixture with a specific domain
  */
 function createKeycloakUserFixture(domain: string) {
-  return async (use: (user: TestUser) => Promise<void>) => {
+  return async ({}, use: (user: TestUser) => Promise<void>) => {
     try {
       const testUserData = generateTestUserData(domain);
 
@@ -77,6 +77,7 @@ export type AuthenticatedUserFixture = (
 ) => Promise<Credentials>;
 
 async function screenCheckerFixture(
+  {},
   use: (screenChecker: ScreenCheckerFixture) => Promise<void>,
   testInfo: TestInfo
 ) {
