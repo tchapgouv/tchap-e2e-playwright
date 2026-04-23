@@ -9,11 +9,7 @@ import { STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 import { setAccountExpiration } from '../../utils/synapse-admin';
 
 test.describe('Tchap : account expiration', () => {
-  // Define the password for test users
-  const PASSWORD = 'Test123456sdksdfkljfs222!';
-
   test('should show expiration message when account is expired', async ({
-    context,
     page,
     request,
     screenChecker: screen,

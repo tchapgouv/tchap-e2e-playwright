@@ -4,15 +4,10 @@ import {
   generateTestUserData,
   openResetPasswordEmail,
 } from '../../utils/auth-helpers';
-import {
-  ELEMENT_URL,
-  INVITED_EMAIL_DOMAIN,
-  STANDARD_EMAIL_DOMAIN,
-  USE_MAS,
-} from '../../utils/config';
+import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../utils/mailpit';
-import path from 'path';
-import { Page } from '@playwright/test';
+import path from 'node:path';
+import type { Page } from '@playwright/test';
 
 //this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
 
@@ -21,7 +16,8 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Nouveau salon', exact: true }).click();
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
-  await page.locator('.tc_TchapCreateRoomDialog')
+  await page
+    .locator('.tc_TchapCreateRoomDialog')
     .locator('.tc_TchapRoomTypeSelector_RadioButton_title')
     .getByText('Salon public')
     .click();
@@ -29,10 +25,7 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   await expect(page.locator('button').filter({ hasText: roomName })).toBeVisible();
 
   // Write in the public room
-  await page
-    .locator('.mx_BasicMessageComposer')
-    .getByRole('textbox')
-    .fill('message non chiffré');
+  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
   await page.getByRole('button', { name: 'Envoyer le message' }).click();
   await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
 
@@ -47,7 +40,7 @@ async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise
   await page
     .locator('.tc_TchapCreateRoomDialog')
     .locator('.tc_TchapRoomTypeSelector_RadioButton_title')
-    .getByText('Salon privé sécurisé', { exact: true } )
+    .getByText('Salon privé sécurisé', { exact: true })
     .click();
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
 
@@ -96,7 +89,10 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
 }
 
 // Helper function to create an external private room
-async function createExternalPrivateRoom(page: Page, roomName: string = 'Salon ouvert aux externes'): Promise<string> {
+async function createExternalPrivateRoom(
+  page: Page,
+  roomName: string = 'Salon ouvert aux externes'
+): Promise<string> {
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByText('Nouveau salon').click();
   await page.getByLabel('Créer un salon').click();
@@ -134,7 +130,7 @@ test.describe
      * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
      */
 
-    test('internal user', async ({ page, context, screenChecker, browser }) => {
+    test('internal user', async ({ page, context, screenChecker }) => {
       const invitee1_search_name = 'olivier test1'; // TODO : ensure that invitee exists in the environment
       const invitee1_display_name = 'Olivier Test1'; // TODO : ensure that invitee exists in the environment
 
@@ -206,7 +202,7 @@ test.describe
 
       await screenChecker(page, '#/home');
 
-      //click on 
+      //click on
       if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
         await page.getByRole('button', { name: 'OK' }).click();
       }
@@ -234,7 +230,6 @@ test.describe
 
       //creer salon privé non chiffré
       await createUnencryptedPrivateRoom(page, room_name_uncrypted);
-
 
       //inviter agents by name
       await page.getByRole('button', { name: 'Personnes' }).click();
@@ -301,7 +296,7 @@ test.describe
       //await openResetPasswordEmailLegacy(context, screenChecker, agent_user.email);
       const resetPwdPage = await openResetPasswordEmail(context, screenChecker, agent_user.email);
 
-      const newPassword = agent_user.password + '4';
+      const newPassword = `${agent_user.password}4`;
       await resetPwdPage.locator('input[name="new_password"]').fill(newPassword);
       await resetPwdPage.locator('input[name="new_password_again"]').fill(newPassword);
       await resetPwdPage.locator('body').click({ position: { x: 0, y: 0 } }); //unfocus field
@@ -319,9 +314,7 @@ test.describe
       ).toBeVisible();
     });
 
-    test('external user', async ({ page, context, screenChecker, browser }) => {
- 
-
+    test('external user', async ({ screenChecker, browser }) => {
       const context_ext = await browser.newContext();
       const page_ext = await context_ext.newPage();
 

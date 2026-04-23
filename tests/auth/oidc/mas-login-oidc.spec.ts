@@ -111,7 +111,7 @@ test.describe('MAS Login OIDC', () => {
     );
 
     oidcUser.masId = await createMasUserWithPassword(
-      oidcUser.username + 'different_from_email',
+      `${oidcUser.username}different_from_email`,
       old_email,
       oidcUser.password
     );

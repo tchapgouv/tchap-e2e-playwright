@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import path from 'path';
+import path from 'node:path';
 
 // Determine which environment to use
 export const env = process.env.ENV || 'local';
