@@ -34,7 +34,7 @@ export async function getLatestVerificationCode(toEmail: string): Promise<string
     const { message, content } = await waitForMessage(
       toEmail,
       40000,
-      'Votre code de vérification est'
+      'Votre code est'
     );
 
     console.log('[Mailpit] Email content preview:', content.substring(0, 200));
