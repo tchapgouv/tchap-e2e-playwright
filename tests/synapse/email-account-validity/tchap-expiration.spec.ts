@@ -1,12 +1,12 @@
-import { test, expect } from '../../fixtures/auth-fixture';
+import { test, expect } from '../../../fixtures/auth-fixture';
 import {
   createMasTestUser,
   loginWithPassword,
   openRenewAccountEmail,
-} from '../../utils/auth-helpers';
-import { getMasUserByEmail } from '../../utils/mas-admin';
-import { STANDARD_EMAIL_DOMAIN } from '../../utils/config';
-import { setAccountExpiration } from '../../utils/synapse-admin';
+} from '../../../utils/auth-helpers';
+import { getMasUserByEmail } from '../../../utils/mas-admin';
+import { STANDARD_EMAIL_DOMAIN } from '../../../utils/config';
+import { setAccountExpiration } from '../../../utils/synapse-admin';
 
 test.describe('Tchap : account expiration', () => {
   test('should show expiration message when account is expired', async ({
