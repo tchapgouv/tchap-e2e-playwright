@@ -1,4 +1,4 @@
-import { test, expect } from '../../fixtures/auth-fixture';
+import { test, expect } from '../../../fixtures/auth-fixture';
 import {
   addUserEmail,
   createMasUserWithPassword,
@@ -8,10 +8,10 @@ import {
   getOauthLinkBySubject,
   oauthLinkExistsBySubject,
   reactivateMasUser,
-} from '../../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../utils/config';
-import { performOidcLogin } from '../../utils/auth-helpers';
-import { getLatestVerificationCode } from '../../utils/mailpit';
+} from '../../../utils/mas-admin';
+import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../../utils/config';
+import { performOidcLogin } from '../../../utils/auth-helpers';
+import { getLatestVerificationCode } from '../../../utils/mailpit';
 
 test.describe('Tchap : Login password', () => {
   test('password login when account is deactivated displays "Identifiants Invalides"', async ({
