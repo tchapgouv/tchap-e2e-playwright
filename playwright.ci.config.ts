@@ -62,5 +62,10 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
     },
-  ]
+  ],
+  webServer: {
+    // use the dist folder to start devserver in CI
+    command: "npx serve dist -l 8088",
+    port: 8088,
+  },
 });
