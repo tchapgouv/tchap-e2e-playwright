@@ -1,7 +1,3 @@
-import dotenv from 'dotenv';
-import path from 'node:path';
-
-
 // URLs
 export const MAS_URL = process.env.MAS_URL || '';
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || '';

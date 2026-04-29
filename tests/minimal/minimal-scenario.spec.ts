@@ -131,7 +131,6 @@ test.describe
       const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
-
       // Grant clipboard permissions to browser context
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
