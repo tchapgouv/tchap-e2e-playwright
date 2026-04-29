@@ -11,6 +11,8 @@
     "test:local": "ENV=local playwright test",
     "test:dev01": "ENV=dev01 playwright test  ./tests/minimal/",
     "test:int01": "ENV=int01 playwright test  ./tests/minimal/",
+    "test:web:dev01": "ENV=dev01 playwright test  ./tests/web/",
+    "test:web:int01": "ENV=int01 playwright test  ./tests/web/",
     "lint": "biome lint .",
     "lint:fix": "biome lint . --fix",
     "format": "biome format .",
