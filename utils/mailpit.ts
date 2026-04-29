@@ -31,11 +31,7 @@ export async function getMailpitClient() {
  */
 export async function getLatestVerificationCode(toEmail: string): Promise<string> {
   try {
-    const { message, content } = await waitForMessage(
-      toEmail,
-      40000,
-      'Votre code est'
-    );
+    const { message, content } = await waitForMessage(toEmail, 40000, 'Votre code est');
 
     console.log('[Mailpit] Email content preview:', content.substring(0, 200));
 
@@ -110,37 +106,29 @@ export async function getExpirationAccountLink(toEmail: string): Promise<string>
   }
 }
 
-
 /**
- * 
- * @param toEmail 
+ *
+ * @param toEmail
  * @returns succeed or not boolean
  */
 export async function getExternalInvitationEmail(toEmail: string) {
   try {
-    const { message, content } = await waitForMessage(
-      toEmail,
-      20000,
-      "Invitation Tchap",
-    );
+    const { message, content } = await waitForMessage(toEmail, 20000, 'Invitation Tchap');
 
-    console.log("[Mailpit] Email content preview:", content.substring(0, 300));
+    console.log('[Mailpit] Email content preview:', content.substring(0, 300));
 
-    const rejoindreKeyWord = content.includes("rejoindre");
-      
+    const rejoindreKeyWord = content.includes('rejoindre');
+
     if (!rejoindreKeyWord) {
-      throw new Error(
-        "Unable to get rejoindre word in email",
-      );
+      throw new Error('Unable to get rejoindre word in email');
     }
 
     return rejoindreKeyWord;
   } catch (error) {
-    console.error("[Mailpit] Error getExternalInvitationEmail account:", error);
+    console.error('[Mailpit] Error getExternalInvitationEmail account:', error);
     throw error;
   }
 }
-
 
 /**
  * Search for messages and get content with retry

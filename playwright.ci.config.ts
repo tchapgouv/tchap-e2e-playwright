@@ -3,28 +3,28 @@
  It will replace the standard playwirght config during the trigger of the action
 */
 
-import { defineConfig, devices } from "@playwright/test";
-import dotenv from "dotenv";
-import { BROWSER_LOCALE } from "./utils/config";
-import path from "path";
+import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import { BROWSER_LOCALE } from './utils/config';
+import path from 'path';
 
 // Determine which environment to use
-const env = process.env.ENV || "local";
+const env = process.env.ENV || 'local';
 console.log(`Loading environment configuration for: ${env}`);
 
 // Load environment variables from the appropriate .env file
 dotenv.config({ path: path.resolve(__dirname, `.env.${env}`) });
 
-console.log("[playwright conf] process.env", process.env);
+console.log('[playwright conf] process.env', process.env);
 /**
  * See https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: "./tests",
+  testDir: './tests',
   /* Maximum time one test can run for */
   timeout: 15 * 1000,
   /* Run tests in files in parallel */
-  fullyParallel: process.env.TEST_IN_PARALLEL === "true",
+  fullyParallel: process.env.TEST_IN_PARALLEL === 'true',
 
   /* Define how many workers */
   // Limit the number of workers on CI, use default locally
@@ -35,23 +35,23 @@ export default defineConfig({
 
   retries: process.env.CI ? 2 : 2,
   /* Reporter to use */
-  reporter: "html",
+  reporter: 'html',
   /* Shared settings for all the projects below */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
-    baseURL: process.env.MAS_URL || "https://auth.tchapgouv.com",
+    baseURL: process.env.MAS_URL || 'https://auth.tchapgouv.com',
 
     /* Set locale to French */
     locale: BROWSER_LOCALE,
 
     /* Collect trace when retrying the failed test */
-    trace: "on-first-retry",
+    trace: 'on-first-retry',
 
     /* Take screenshot on failure */
-    screenshot: "only-on-failure",
+    screenshot: 'only-on-failure',
 
     /* Record video on failure */
-    video: "on-first-retry",
+    video: 'on-first-retry',
 
     /* Ignore HTTPS errors */
     ignoreHTTPSErrors: true,
@@ -84,13 +84,13 @@ export default defineConfig({
 
     */
     {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: {
     // use the dist folder to start devserver in CI
-    command: "npx serve dist -l 8088",
+    command: 'npx serve dist -l 8088',
     port: 8088,
   },
 });
