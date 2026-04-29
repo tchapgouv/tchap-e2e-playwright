@@ -1,3 +1,8 @@
+/**
+ The new file playwright.ci.config.ts only add a webserver config to start during a web CI action run. 
+ It will replace the standard playwirght config during the trigger of the action
+*/
+
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import { BROWSER_LOCALE } from './utils/config';
@@ -83,4 +88,9 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  webServer: {
+    // use the dist folder to start devserver in CI
+    command: 'npx serve dist -l 8088',
+    port: 8088,
+  },
 });
