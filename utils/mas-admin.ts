@@ -169,23 +169,27 @@ export async function waitForMasUser(
 export async function createMasUserWithPassword(
   username: string,
   email: string,
+  displayName: string,
   password: string
 ): Promise<string> {
+  
   console.log(
-    `[MAS API] Creating user with username:${username}, email:${email}, password:${password}`
+    `[MAS API] Creating user with username:${username}, email:${email}, password:${password}, displayName:${displayName}`
   );
   const token = await getMasAdminToken();
   const apiRequestContext = await getApiContext();
+  let createUserData = {
+    username: username,
+    skip_homeserver_check: false,
+    displayname: displayName
+  }
 
   const response = await apiRequestContext.post('/api/admin/v1/users', {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    data: {
-      username: username,
-      skip_homeserver_check: false,
-    },
+    data: createUserData,
   });
 
   if (!response.ok()) {

@@ -24,6 +24,7 @@ export interface TestUser {
   password: string;
   keycloakId?: string;
   masId?: string;
+  displayName: string;
   domain: string;
 }
 
@@ -186,7 +187,7 @@ export async function verifyUserInMas(user: TestUser): Promise<void> {
  */
 export async function createMasTestUser(domain: string): Promise<TestUser> {
   const user = generateTestUserData(domain);
-  const masId = await createMasUserWithPassword(user.username, user.email, user.password);
+  const masId = await createMasUserWithPassword(user.username, user.email, user.displayName, user.password);
   return { ...user, masId };
 }
 
@@ -343,6 +344,8 @@ export function generateTestUserData(domain: string): TestUser {
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
   const localpart = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}-${domain}`;
   const email = `${username}@${domain}`;
+  let domainDisplayName = domain.split('.').map(word => word.charAt(0).toUpperCase()+ word.slice(1)).join('');
+  const displayName = username.split('.').map(word => word.charAt(0).toUpperCase()+ word.slice(1)).join(' ') + ' [' + domainDisplayName + ']';
 
   console.log('Using email: ', email);
 
@@ -351,6 +354,7 @@ export function generateTestUserData(domain: string): TestUser {
     email: email,
     password: TEST_USER_PASSWORD,
     domain: domain,
+    displayName: displayName
   };
 }
 

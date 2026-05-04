@@ -37,6 +37,7 @@ export const TEST_USER_PASSWORD = process.env.TEST_USER_PASSWORD || 'Test@123456
 
 // Email domains for test users
 export const STANDARD_EMAIL_DOMAIN = process.env.STANDARD_EMAIL_DOMAIN || '';
+export const OTHER_EMAIL_DOMAIN = process.env.OTHER_EMAIL_DOMAIN || '';
 export const INVITED_EMAIL_DOMAIN = process.env.INVITED_EMAIL_DOMAIN || '';
 export const NOT_INVITED_EMAIL_DOMAIN = process.env.NOT_INVITED_EMAIL_DOMAIN || '';
 export const WRONG_SERVER_EMAIL_DOMAIN = process.env.WRONG_SERVER_EMAIL_DOMAIN || '';

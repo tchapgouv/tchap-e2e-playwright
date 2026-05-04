@@ -4,9 +4,10 @@ import {
   generateTestUserData,
   openResetPasswordEmail,
 } from '../../utils/auth-helpers';
-import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from '../../utils/config';
+import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, OTHER_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN } from '../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../utils/mailpit';
 import { TchapAppPage } from '../../utils/TchapAppPage';
+import { createMasTestUser } from '../../utils/auth-helpers';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
 
@@ -125,11 +126,15 @@ test.describe
      */
 
     test('internal user', async ({ page, context, screenChecker }) => {
-      const invitee1_search_name = 'olivier test1'; // TODO : ensure that invitee exists in the environment
-      const invitee1_display_name = 'Olivier Test1'; // TODO : ensure that invitee exists in the environment
+      // 1. Register user
+      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
+      const invitee1_search_name = user.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + user.displayName.split(' ')[1].toLocaleLowerCase();
+      const invitee1_display_name = user.displayName;
 
-      const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
-      const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
+      const user2 = await createMasTestUser(OTHER_EMAIL_DOMAIN);
+  
+      const invitee2_email = user2.email;
+      const invitee2_display_name = user2.displayName;
 
 
       // Grant clipboard permissions to browser context
