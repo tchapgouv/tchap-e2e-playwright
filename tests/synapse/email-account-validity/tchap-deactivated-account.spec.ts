@@ -24,6 +24,7 @@ test.describe('Tchap : Login password', () => {
     userData.masId = await createMasUserWithPassword(
       userData.username,
       userData.email,
+      userData.displayName,
       userData.password
     );
 
@@ -70,6 +71,7 @@ test.describe('Tchap : Login password', () => {
     userData.masId = await createMasUserWithPassword(
       userData.username,
       userData.email,
+      userData.displayName,
       userData.password
     );
 
@@ -113,6 +115,7 @@ test.describe('Tchap : Login password', () => {
     const formerTchapAccountMasId = await createMasUserWithPassword(
       oidcUser.username,
       oidcUser.email,
+      oidcUser.displayName,
       oidcUser.password
     );
     await deactivateMasUser(formerTchapAccountMasId);
@@ -120,6 +123,7 @@ test.describe('Tchap : Login password', () => {
     const newTchapAccountWithIndex = {
       username: `${oidcUser.username}2`,
       email: oidcUser.email,
+      displayName: oidcUser.displayName,
       password: oidcUser.password,
       masId: '',
     };
@@ -127,6 +131,7 @@ test.describe('Tchap : Login password', () => {
     newTchapAccountWithIndex.masId = await createMasUserWithPassword(
       newTchapAccountWithIndex.username,
       newTchapAccountWithIndex.email,
+      newTchapAccountWithIndex.displayName,
       newTchapAccountWithIndex.password
     );
 
@@ -174,6 +179,7 @@ test.describe('Tchap : Login password', () => {
     oidcUser.masId = await createMasUserWithPassword(
       oidcUser.username,
       oidcUser.email,
+      oidcUser.displayName,
       oidcUser.password
     );
 
@@ -218,6 +224,7 @@ test.describe('Tchap : Login password', () => {
     oidcUser.masId = await createMasUserWithPassword(
       oidcUser.username,
       oidcUser.email,
+      oidcUser.displayName,
       oidcUser.password
     );
 

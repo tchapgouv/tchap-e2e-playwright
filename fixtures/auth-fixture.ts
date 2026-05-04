@@ -134,7 +134,7 @@ async function authenticatedUserFixture(
   use: (credentials: Credentials) => Promise<void>
 ) {
   // 1. Register user
-  const userId = await createMasUserWithPassword(user.username, user.email, user.password);
+  const userId = await createMasUserWithPassword(user.username, user.email, user.displayName, user.password);
   const csAPI = new ClientServerApi(BASE_URL, request);
 
   await waitForMasUser(user.email);
