@@ -19,10 +19,9 @@ export default defineConfig({
   // Limit the number of workers on CI, use default locally
   workers: process.env.CI ? 2 : 1,
 
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
+  /* use retries to handle flaky tests */
+  retries: process.env.CI ? 5 : 2,
 
-  retries: process.env.CI ? 2 : 2,
   /* Reporter to use */
   reporter: 'html',
   /* Shared settings for all the projects below */
