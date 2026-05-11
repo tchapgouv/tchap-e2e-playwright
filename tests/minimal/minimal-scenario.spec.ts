@@ -133,8 +133,9 @@ test.describe
 
       const user2 = await createMasTestUser(OTHER_EMAIL_DOMAIN);
   
-      const invitee2_email = user2.email;
-      const invitee2_display_name = user2.displayName;
+      // Cannot create user2 in OTHER_EMAIL_DOMAIN with Admin API as binding in sydent is required to perform a search by email
+      const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
+      const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
 
       // Grant clipboard permissions to browser context
