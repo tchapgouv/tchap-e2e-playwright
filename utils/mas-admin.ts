@@ -1,27 +1,52 @@
 import { type APIRequestContext, request } from '@playwright/test';
 import { MAS_URL, MAS_ADMIN_CLIENT_ID, MAS_ADMIN_CLIENT_SECRET } from './config';
 
-// Create a reusable API request context
-let apiContext: APIRequestContext | null = null;
+interface MasAdminCredentials{
+  clientId: string, 
+  secret: string
+}
 
-async function getApiContext(): Promise<APIRequestContext> {
-  if (!apiContext) {
-    //console.log(`[MAS API] Creating new API context with baseURL: ${MAS_URL}`);
-    apiContext = await request.newContext({
-      baseURL: MAS_URL,
-      ignoreHTTPSErrors: true,
-    });
+// Create a reusable API request context cache
+const apiContextCache = new Map<string, APIRequestContext>();
+const masAdminCredentialsCache = new Map<string, MasAdminCredentials>();
+
+async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
+  const cacheKey = baseUrl ?? MAS_URL;
+  
+  const cached = apiContextCache.get(cacheKey);
+  if (cached) return cached;
+
+  const context = await request.newContext({
+    baseURL: cacheKey,
+    ignoreHTTPSErrors: true,
+  });
+  apiContextCache.set(cacheKey, context);
+  return context;
+}
+
+function getMasAdminCredentials(baseUrl?: string, clientId?: string, secret?: string): MasAdminCredentials {
+  const cacheKey = baseUrl ?? MAS_URL;
+  
+  const cached = masAdminCredentialsCache.get(cacheKey);
+  if (cached) return cached;
+  const newClientId = clientId ?? MAS_ADMIN_CLIENT_ID;
+  const newSecret = secret ?? MAS_ADMIN_CLIENT_SECRET;
+  const credentials = {
+    clientId: newClientId,
+    secret: newSecret,
   }
-  return apiContext;
+  masAdminCredentialsCache.set(cacheKey, credentials);
+  return credentials;
 }
 
 /**
  * Get an admin access token for MAS
  */
-export async function getMasAdminToken(): Promise<string> {
-  //console.log(`[MAS API] Requesting admin token with client ID: ${MAS_ADMIN_CLIENT_ID}`);
-  const apiRequestContext = await getApiContext();
-  const authHeader = Buffer.from(`${MAS_ADMIN_CLIENT_ID}:${MAS_ADMIN_CLIENT_SECRET}`).toString(
+export async function getMasAdminToken(baseUrl?: string, clientId?: string, secret?: string): Promise<string> {
+  console.log(`[MAS API] Requesting admin token with baseUrl: ${baseUrl} - client ID: ${clientId}`);
+  const apiRequestContext = await getApiContext(baseUrl);
+  const credentials = getMasAdminCredentials(baseUrl, clientId, secret);
+  const authHeader = Buffer.from(`${credentials.clientId}:${credentials.secret}`).toString(
     'base64'
   );
 
@@ -169,19 +194,22 @@ export async function waitForMasUser(
 export async function createMasUserWithPassword(
   username: string,
   email: string,
-  displayName: string,
-  password: string
+  password: string,
+  displayName?: string ,
+  baseUrl?: string,
+  clientId?: string, 
+  secret?: string,
 ): Promise<string> {
   
   console.log(
-    `[MAS API] Creating user with username:${username}, email:${email}, password:${password}, displayName:${displayName}`
+    `[MAS API] Creating user with username:${username}, email:${email}, password:${password}, displayName:${displayName || "No displayname"}`
   );
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
+  const token = await getMasAdminToken(baseUrl, clientId, secret);
+  const apiRequestContext = await getApiContext(baseUrl);
   let createUserData = {
     username: username,
     skip_homeserver_check: false,
-    displayname: displayName
+    ...(displayName && { displayname: displayName })
   }
 
   const response = await apiRequestContext.post('/api/admin/v1/users', {
@@ -329,11 +357,13 @@ export async function oauthLinkExistsBySubject(subject: string): Promise<boolean
 /**
  * Dispose the API context when done
  */
-export async function disposeApiContext(): Promise<void> {
-  if (apiContext) {
+export async function disposeApiContext(baseUrl? : string): Promise<void> {
+  const cacheKey = baseUrl ?? MAS_URL;
+  const cached = apiContextCache.get(cacheKey);
+  if (cached) {
     //console.log(`[MAS API] Disposing API context`);
-    await apiContext.dispose();
-    apiContext = null;
+    await cached.dispose();
+    apiContextCache.delete(cacheKey);
     //console.log(`[MAS API] API context disposed`);
   } else {
     console.log(`[MAS API] No API context to dispose`);

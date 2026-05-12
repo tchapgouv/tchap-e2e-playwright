@@ -13,6 +13,7 @@ dotenv.config({ path: path.resolve(__dirname, `../.env.${env}`) });
 
 // URLs
 export const MAS_URL = process.env.MAS_URL || '';
+export const OTHER_MAS_URL = process.env.OTHER_MAS_URL || '';
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || '';
 export const ELEMENT_URL = process.env.ELEMENT_URL || '';
 export const BASE_URL = process.env.BASE_URL || '';
@@ -30,6 +31,8 @@ export const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'proconnect-mock';
 export const MAS_ADMIN_CLIENT_ID = process.env.MAS_ADMIN_CLIENT_ID || '01J44RKQYM4G3TNVANTMTDYTX6';
 export const MAS_ADMIN_CLIENT_SECRET =
   process.env.MAS_ADMIN_CLIENT_SECRET || 'phoo8ahneir3ohY2eigh4xuu6Oodaewi';
+export const OTHER_MAS_ADMIN_CLIENT_ID = process.env.OTHER_MAS_ADMIN_CLIENT_ID || '';
+export const OTHER_MAS_ADMIN_SECRET = process.env.OTHER_MAS_ADMIN_SECRET || '';
 
 // Test User Credentials
 export const TEST_USER_PREFIX = process.env.TEST_USER_PREFIX || 'user.test';

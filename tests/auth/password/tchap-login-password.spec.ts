@@ -9,7 +9,6 @@ test.describe('Tchap : Login password', () => {
     userData.masId = await createMasUserWithPassword(
       userData.username,
       userData.email,
-      userData.displayName,
       userData.password
     );
     const existsBeforeLogin = await checkMasUserExistsByEmail(userData.email);

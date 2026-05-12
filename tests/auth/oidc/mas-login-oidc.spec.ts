@@ -20,7 +20,7 @@ test.describe('MAS Login OIDC', () => {
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${oidcUser.email}`);
 
-    oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, oidcUser.displayName, 'any');
+    oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, 'any');
 
     try {
       // Perform the OIDC login flow
@@ -64,7 +64,6 @@ test.describe('MAS Login OIDC', () => {
     externalUser.masId = await createMasUserWithPassword(
       externalUser.username,
       externalUser.email,
-      externalUser.displayName,
       externalUser.password
     );
 
@@ -114,7 +113,6 @@ test.describe('MAS Login OIDC', () => {
     oidcUser.masId = await createMasUserWithPassword(
       `${oidcUser.username}different_from_email`,
       old_email,
-      oidcUser.displayName,
       oidcUser.password
     );
 
@@ -167,7 +165,7 @@ test.describe('MAS Login OIDC', () => {
 
     const user = await createKeycloakTestUser(testUser);
 
-    user.masId = await createMasUserWithPassword(user.username, mas_user_email, user.displayName, user.password);
+    user.masId = await createMasUserWithPassword(user.username, mas_user_email, user.password);
 
     try {
       // Perform the OIDC login flow

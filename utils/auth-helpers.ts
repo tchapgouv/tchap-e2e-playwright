@@ -185,9 +185,9 @@ export async function verifyUserInMas(user: TestUser): Promise<void> {
 /**
  * Create a test user directly in MAS with password
  */
-export async function createMasTestUser(domain: string): Promise<TestUser> {
+export async function createMasTestUser(domain: string, baseUrl?: string, clientId?: string, secret?: string,): Promise<TestUser> {
   const user = generateTestUserData(domain);
-  const masId = await createMasUserWithPassword(user.username, user.email, user.displayName, user.password);
+  const masId = await createMasUserWithPassword(user.username, user.email, user.password, user.displayName, baseUrl, clientId, secret);
   return { ...user, masId };
 }
 

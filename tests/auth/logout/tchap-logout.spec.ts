@@ -7,7 +7,6 @@ test.describe('Tchap : logout', () => {
     userData.masId = await createMasUserWithPassword(
       userData.username,
       userData.email,
-      userData.displayName,
       userData.password
     );
 

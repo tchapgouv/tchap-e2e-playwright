@@ -11,7 +11,6 @@ test.describe('Tchap : Login via OIDC', () => {
     oidcUser.masId = await createMasUserWithPassword(
       oidcUser.username,
       oidcUser.email,
-      oidcUser.displayName,
       oidcUser.password
     );
 
