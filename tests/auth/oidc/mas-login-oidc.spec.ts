@@ -158,6 +158,8 @@ test.describe('MAS Login OIDC', () => {
     const testUser: TestUser = {
       username: `test.user${randomSuffix}-${domain}`,
       email: `test.user${randomSuffix}@${domain}`,
+      displayName: `Test User${randomSuffix}`,
+      domain: domain,
       password: '1234!',
     };
 
