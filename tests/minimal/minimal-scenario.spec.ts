@@ -13,7 +13,7 @@ import type { Page } from '@playwright/test';
 //this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
 
 // Helper function to create a public room
-async function createPublicRoom(page: Page, roomName: string): Promise<string> {
+export async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   const appPage = new TchapAppPage(page);
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Nouveau salon', exact: true }).click();
@@ -32,7 +32,7 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
 }
 
 // Helper function to create an encrypted private room
-async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
+export async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
   const appPage = new TchapAppPage(page);
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByText('Nouveau salon').click();
@@ -56,7 +56,7 @@ async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise
 }
 
 // Helper function to create an unencrypted private room
-async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
+export async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
   const appPage = new TchapAppPage(page);
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByText('Nouveau salon').click();
@@ -130,7 +130,6 @@ test.describe
 
       const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
-
 
       // Grant clipboard permissions to browser context
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);

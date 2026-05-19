@@ -1,3 +1,8 @@
+/**
+ The new file playwright.ci.config.ts only add a webserver config to start during a web CI action run. 
+ It will replace the standard playwirght config during the trigger of the action
+*/
+
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import { BROWSER_LOCALE } from './utils/config';
@@ -25,9 +30,10 @@ export default defineConfig({
   // Limit the number of workers on CI, use default locally
   workers: process.env.CI ? 2 : 1,
 
-  /* use retries to handle flaky tests */
-  retries: process.env.CI ? 5 : 2,
+  /* Fail the build on CI if you accidentally left test.only in the source code. */
+  forbidOnly: !!process.env.CI,
 
+  retries: process.env.CI ? 2 : 2,
   /* Reporter to use */
   reporter: 'html',
   /* Shared settings for all the projects below */
@@ -82,4 +88,9 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  webServer: {
+    // use the dist folder to start devserver in CI
+    command: 'npx serve dist -l 8088',
+    port: 8088,
+  },
 });
