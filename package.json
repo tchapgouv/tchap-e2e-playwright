@@ -11,6 +11,10 @@
     "test:local": "ENV=local playwright test",
     "test:dev01": "ENV=dev01 playwright test  ./tests/minimal/",
     "test:int01": "ENV=int01 playwright test  ./tests/minimal/",
+    "test:matrix": "playwright test ./tests/integration/",
+    "test:matrix:local": "ENV=local playwright test ./tests/integration/",
+    "test:matrix:dev01": "ENV=dev01 playwright test ./tests/integration/",
+    "test:all": "playwright test",
     "lint": "biome lint .",
     "lint:fix": "biome lint . --fix",
     "format": "biome format .",
@@ -24,6 +28,9 @@
   ],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "matrix-js-sdk": "^41.5.0"
+  },
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",
     "@playwright/test": "^1.40.0",
