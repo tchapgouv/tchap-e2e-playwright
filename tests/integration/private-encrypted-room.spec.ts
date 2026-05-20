@@ -2,10 +2,11 @@ import { test, expect } from '@playwright/test';
 import { BASE_URL, TEST_USER_PASSWORD } from '../../utils/config';
 import { MatrixApi } from '../../utils/matrix-api';
 import { createMasUserWithPassword, deactivateMasUser } from '../../utils/mas-admin';
+import { expectStateEventError } from './room-utils';
 
 export async function createPrivateEncryptedRoom(
   matrix: MatrixApi,
-  name: string = 'Private Room',
+  name: string = 'Private Room'
 ): Promise<string> {
   return matrix.createRoom({
     name,
@@ -31,7 +32,7 @@ test.describe('API - Private Encrypted Room', () => {
     userId = await createMasUserWithPassword(
       username,
       `${username}@test.local`,
-      TEST_USER_PASSWORD,
+      TEST_USER_PASSWORD
     );
 
     matrix = new MatrixApi(BASE_URL);
@@ -55,19 +56,11 @@ test.describe('API - Private Encrypted Room', () => {
   test('Should modify joinRule between invite and private', async () => {
     roomId = await createPrivateEncryptedRoom(matrix);
 
-    await matrix.sendStateEvent(
-      roomId,
-      'm.room.join_rules',
-      { join_rule: 'invite' },
-    );
+    await matrix.sendStateEvent(roomId, 'm.room.join_rules', { join_rule: 'invite' });
 
     expect(await matrix.getJoinRule(roomId)).toBe('invite');
 
-    await matrix.sendStateEvent(
-      roomId,
-      'm.room.join_rules',
-      { join_rule: 'private' },
-    );
+    await matrix.sendStateEvent(roomId, 'm.room.join_rules', { join_rule: 'private' });
 
     expect(await matrix.getJoinRule(roomId)).toBe('private');
   });
@@ -75,38 +68,27 @@ test.describe('API - Private Encrypted Room', () => {
   test('Should change access rules from restricted to unrestricted', async () => {
     roomId = await createPrivateEncryptedRoom(matrix);
 
-    await matrix.sendStateEvent(
-      roomId,
-      'im.vector.room.access_rules',
-      { rule: 'unrestricted' },
-    );
+    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', { rule: 'unrestricted' });
 
     expect((await matrix.getAccessRules(roomId)).rule).toBe('unrestricted');
   });
 
   test('Should return 403 error when changing access rules back to restricted', async () => {
-      roomId = await createPrivateEncryptedRoom(matrix);
-  
-      await matrix.sendStateEvent(
-        roomId,
-        'im.vector.room.access_rules',
-        { rule: 'unrestricted' },
-      );
-  
-      try {
-        await matrix.sendStateEvent(
-          roomId,
-          'im.vector.room.access_rules',
-          { rule: 'restricted' },
-        );
-        throw new Error('Expected 403 error but request succeeded');
-      } catch (error: any) {
-        expect(error.status || error.statusCode).toBe(403);
-      }
-    });
+    roomId = await createPrivateEncryptedRoom(matrix);
+
+    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', { rule: 'unrestricted' });
+    expect((await matrix.getAccessRules(roomId)).rule).toBe('unrestricted');
+
+    await expectStateEventError(
+      matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'restricted' },
+      403
+    );
+  });
 
   test.afterAll(async () => {
     await deactivateMasUser(userId);
   });
 });
-

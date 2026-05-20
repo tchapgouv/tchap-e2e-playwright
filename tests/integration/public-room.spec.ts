@@ -2,10 +2,11 @@ import { test, expect } from '@playwright/test';
 import { BASE_URL, TEST_USER_PASSWORD } from '../../utils/config';
 import { MatrixApi } from '../../utils/matrix-api';
 import { createMasUserWithPassword, deactivateMasUser } from '../../utils/mas-admin';
+import { expectStateEventError } from './room-utils';
 
 export async function createPublicRoom(
   matrix: MatrixApi,
-  name: string = 'Public Room',
+  name: string = 'Public Room'
 ): Promise<string> {
   return matrix.createRoom({
     name,
@@ -31,7 +32,7 @@ test.describe('API - Public Room', () => {
     userId = await createMasUserWithPassword(
       username,
       `${username}@test.local`,
-      TEST_USER_PASSWORD,
+      TEST_USER_PASSWORD
     );
 
     matrix = new MatrixApi(BASE_URL);
@@ -49,6 +50,24 @@ test.describe('API - Public Room', () => {
     expect(accessRules.visibility).toBe('public');
     expect(await matrix.isRoomEncrypted(roomId)).toBe(false);
     expect(await matrix.getJoinRule(roomId)).toBe('public');
+  });
+
+  test('Should return 403 error when changing access rules to unrestricted', async () => {
+    roomId = await createPublicRoom(matrix);
+
+    await expectStateEventError(
+      matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'unrestricted' },
+      403
+    );
+  });
+
+  test('Should return 403 error when changing encryption', async () => {
+    roomId = await createPublicRoom(matrix);
+
+    await expectStateEventError(matrix, roomId, 'm.room.encryption', {}, 403);
   });
 
   test.afterAll(async () => {

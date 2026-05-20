@@ -2,10 +2,11 @@ import { test, expect } from '@playwright/test';
 import { BASE_URL, TEST_USER_PASSWORD } from '../../utils/config';
 import { MatrixApi } from '../../utils/matrix-api';
 import { createMasUserWithPassword, deactivateMasUser } from '../../utils/mas-admin';
+import { expectStateEventError } from './room-utils';
 
 export async function createDirectRoom(
   matrix: MatrixApi,
-  name: string = 'Direct Room',
+  name: string = 'Direct Room'
 ): Promise<string> {
   return matrix.createRoom({
     name,
@@ -18,7 +19,7 @@ export async function createDirectRoom(
       force_unencrypted_at_creation: false,
       visibility: 'private',
     },
-    is_direct:true
+    is_direct: true,
   });
 }
 
@@ -33,7 +34,7 @@ test.describe('API - Direct Room', () => {
     userId = await createMasUserWithPassword(
       username,
       `${username}@test.local`,
-      TEST_USER_PASSWORD,
+      TEST_USER_PASSWORD
     );
 
     matrix = new MatrixApi(BASE_URL);
@@ -53,49 +54,34 @@ test.describe('API - Direct Room', () => {
     expect(await matrix.getJoinRule(roomId)).toBe('private');
   });
 
-  test.skip('Should return 403 error when changing joining rule to invite', async () => {
+  test.skip('Should return 403 error when changing joining rule', async () => {
     roomId = await createDirectRoom(matrix);
 
-    try {
-      await matrix.sendStateEvent(
-        roomId,
-        'im.vector.room.access_rules',
-        { rule: 'invite' },
-      );
-      throw new Error('Expected 403 error but request succeeded');
-    } catch (error: any) {
-      expect(error.status || error.statusCode).toBe(403);
-    }
+    await expectStateEventError(matrix, roomId, 'joinRule', { rule: 'public' }, 403);
+
+    await expectStateEventError(matrix, roomId, 'joinRule', { rule: 'invite' }, 403);
+
+    await expectStateEventError(matrix, roomId, 'joinRule', { rule: 'private' }, 403);
   });
 
-  test.skip('Should return 403 error when changing access rules to unrestricted', async () => {
+  test('Should return 403 error when changing access rules', async () => {
     roomId = await createDirectRoom(matrix);
 
-    try {
-      await matrix.sendStateEvent(
-        roomId,
-        'im.vector.room.access_rules',
-        { rule: 'unrestricted' },
-      );
-      throw new Error('Expected 403 error but request succeeded');
-    } catch (error: any) {
-      expect(error.status || error.statusCode).toBe(403);
-    }
-  });
+    await expectStateEventError(
+      matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'unrestricted' },
+      403
+    );
 
-  test.skip('Should return 403 error when changing access rules to restricted', async () => {
-    roomId = await createDirectRoom(matrix);
-
-    try {
-      await matrix.sendStateEvent(
-        roomId,
-        'im.vector.room.access_rules',
-        { rule: 'restricted' },
-      );
-      throw new Error('Expected 403 error but request succeeded');
-    } catch (error: any) {
-      expect(error.status || error.statusCode).toBe(403);
-    }
+    await expectStateEventError(
+      matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'restricted' },
+      403
+    );
   });
 
   test.afterAll(async () => {

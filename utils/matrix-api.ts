@@ -1,4 +1,4 @@
-import { createClient, MatrixClient } from 'matrix-js-sdk';
+import { createClient, type MatrixClient } from 'matrix-js-sdk';
 
 export interface AccessRules {
   rule: 'restricted' | 'direct' | 'unrestricted';
@@ -71,8 +71,7 @@ export class MatrixApi {
         content.rule = options.accessRules.rule;
       }
       if (options.accessRules.force_unencrypted_at_creation !== undefined) {
-        content.force_unencrypted_at_creation =
-          options.accessRules.force_unencrypted_at_creation;
+        content.force_unencrypted_at_creation = options.accessRules.force_unencrypted_at_creation;
       }
       if (options.accessRules.visibility) {
         content.visibility = options.accessRules.visibility;
@@ -88,10 +87,10 @@ export class MatrixApi {
     const response = await this.client.createRoom({
       name: options.name,
       topic: options.topic,
-      visibility: (options.visibility as any),
-      preset: (options.preset as any),
+      visibility: options.visibility as any,
+      preset: options.preset as any,
       initial_state: initialState as any,
-      is_direct: options.is_direct
+      is_direct: options.is_direct,
     });
 
     return response.room_id;
