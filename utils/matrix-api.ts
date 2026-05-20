@@ -1,4 +1,3 @@
-import type { APIRequestContext } from '@playwright/test';
 import { createClient, MatrixClient } from 'matrix-js-sdk';
 
 export interface AccessRules {
@@ -14,14 +13,15 @@ export interface RoomCreationOptions {
   encryption?: boolean;
   visibility: 'public' | 'private';
   joinRule?: 'invite' | 'knock' | 'public' | 'private';
-  preset: 'public_chat' | 'private_chat';
+  preset: 'public_chat' | 'private_chat' | 'trusted_private_chat';
+  is_direct?: boolean;
 }
 
 export class MatrixApi {
   private client: MatrixClient;
   private baseUrl: string;
 
-  public constructor(baseUrl: string, request: APIRequestContext) {
+  public constructor(baseUrl: string) {
     this.baseUrl = baseUrl;
     this.client = createClient({
       baseUrl: `${baseUrl}`,
@@ -91,6 +91,7 @@ export class MatrixApi {
       visibility: (options.visibility as any),
       preset: (options.preset as any),
       initial_state: initialState as any,
+      is_direct: options.is_direct
     });
 
     return response.room_id;
