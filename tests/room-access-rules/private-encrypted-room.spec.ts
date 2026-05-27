@@ -1,26 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { BASE_URL, TEST_USER_PASSWORD } from '../../utils/config';
 import type { MatrixApi } from '../../utils/matrix-api';
-import { createMasUserWithPassword, deactivateMasUser } from '../../utils/mas-admin';
-import { expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
+import { deactivateMasUser } from '../../utils/mas-admin';
+import { createPrivateEncryptedRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
 
-export async function createPrivateEncryptedRoom(
-  matrix: MatrixApi,
-  name: string = 'Private Room'
-): Promise<string> {
-  return matrix.createRoom({
-    name,
-    joinRule: 'invite',
-    preset: 'private_chat',
-    visibility: 'private',
-    accessRules: {
-      rule: 'restricted',
-      force_unencrypted_at_creation: false,
-      visibility: 'private',
-    },
-  });
-}
 
 test.describe('API - Private Encrypted Room', () => {
   let matrix: MatrixApi;

@@ -1,6 +1,5 @@
 import { expect } from '@playwright/test';
 import { MatrixApi } from '../../utils/matrix-api';
-import type { StateEvents } from 'matrix-js-sdk';
 import { BASE_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../utils/config';
 import { createMasUserWithPassword } from '../../utils/mas-admin';
 
@@ -42,4 +41,21 @@ export async function expectErrorWhenSendStateEvent(
   } catch (error: any) {
     expect(error.httpStatus).toBe(expectedStatus);
   }
+}
+
+export async function createPrivateEncryptedRoom(
+  matrix: MatrixApi,
+  name: string = 'Private Room'
+): Promise<string> {
+  return matrix.createRoom({
+    name,
+    joinRule: 'invite',
+    preset: 'private_chat',
+    visibility: 'private',
+    accessRules: {
+      rule: 'restricted',
+      force_unencrypted_at_creation: false,
+      visibility: 'private',
+    },
+  });
 }
