@@ -100,7 +100,7 @@ export interface Credentials {
  */
 export class ClientServerApi extends Api {
   public constructor(baseUrl: string, request: APIRequestContext) {
-    super(`${baseUrl}/_matrix/client`);
+    super(`${baseUrl}`);
     this.setRequest(request);
   }
 
