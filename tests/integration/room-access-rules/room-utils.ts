@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
-import { MatrixApi } from '../../utils/matrix-api';
-import { BASE_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../utils/config';
-import { createMasUserWithPassword } from '../../utils/mas-admin';
+import { MatrixApi } from '../../../utils/matrix-api';
+import { BASE_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../../utils/config';
+import { createMasUserWithPassword } from '../../../utils/mas-admin';
 
 /**
  * Helper function to login with a new user
