@@ -109,6 +109,38 @@ test.describe('API - Public Room', () => {
     );
   });
 
+  test('Should keep access rules when upgrading room from v1 to V9', async () => {
+    const roomId = await matrix.createRoom({
+      name: "name",
+      joinRule: 'invite',
+      preset: 'private_chat',
+      visibility: 'private',
+      encryption: false,
+      accessRules: {
+        rule: 'unrestricted',
+        force_unencrypted_at_creation: true,
+        visibility: 'private',
+      },
+      room_version:"1"
+    });
+  
+    const accessRules = await matrix.getAccessRules(roomId);
+    expect(accessRules.rule).toBe('unrestricted');
+    expect(accessRules.force_unencrypted_at_creation).toBe(true);
+    expect(accessRules.visibility).toBe('private');
+
+    const upgradeResponse = await matrix.upgradeRoom(roomId, "9");
+
+    //check that access rule exists in the upgraded room with correct value
+    const replacementRoomId = upgradeResponse.replacement_room;
+    console.log("Ugraded room id", replacementRoomId)
+    const upgradedAccessRules = await matrix.getAccessRules(replacementRoomId);
+    expect(upgradedAccessRules.rule).toBe('unrestricted');
+    expect(upgradedAccessRules.force_unencrypted_at_creation).toBe(true);
+    expect(upgradedAccessRules.visibility).toBe('private');
+    
+  });
+
   test.afterAll(async () => {
     await deactivateMasUser(userId);
   });
