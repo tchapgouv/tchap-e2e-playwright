@@ -26,7 +26,7 @@ Requis pour dev01 et int01:
 ### avec docker 
 ```bash
 # specific test
-docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble bash -c ENV=dev01 && npx playwright test ./tests/integration/room-access-rules --grep "Should create private encrypted room with correct properties"
+docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble bash -c 'ENV=dev01 npx playwright test ./tests/integration/room-access-rules --grep "Should create private encrypted room with correct properties"'
 
 # tests suite
 docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble npm run test:room:dev02
