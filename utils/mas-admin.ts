@@ -26,7 +26,7 @@ async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
 
 function getMasAdminCredentials(baseUrl?: string, clientId?: string, secret?: string): MasAdminCredentials {
   const cacheKey = baseUrl ?? MAS_URL;
-  
+  console.log(`[MAS API] Requesting admin token with baseUrl: ${cacheKey}`);
   const cached = masAdminCredentialsCache.get(cacheKey);
   if (cached) return cached;
   const newClientId = clientId ?? MAS_ADMIN_CLIENT_ID;
@@ -43,7 +43,6 @@ function getMasAdminCredentials(baseUrl?: string, clientId?: string, secret?: st
  * Get an admin access token for MAS
  */
 export async function getMasAdminToken(baseUrl?: string, clientId?: string, secret?: string): Promise<string> {
-  console.log(`[MAS API] Requesting admin token with baseUrl: ${baseUrl} - client ID: ${clientId}`);
   const apiRequestContext = await getApiContext(baseUrl);
   const credentials = getMasAdminCredentials(baseUrl, clientId, secret);
   const authHeader = Buffer.from(`${credentials.clientId}:${credentials.secret}`).toString(
