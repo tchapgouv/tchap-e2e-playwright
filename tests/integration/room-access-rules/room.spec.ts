@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../utils/matrix-api';
 import { deactivateMasUser } from '../../../utils/mas-admin';
-import { createPrivateEncryptedRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
+import { createPrivateEncryptedRoom, createPublicRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
 
 test.describe('API - Room', () => {
   let matrix: MatrixApi;
@@ -85,11 +85,11 @@ test.describe('API - Room', () => {
     );
   });
 
-  test('Should return 403 error when removing visibility', async () => {
-    const roomId = await createPrivateEncryptedRoom(matrix);
+  test('Should return 403 error when removing "public" visibility', async () => {
+    const roomId = await createPublicRoom(matrix);
     
     const accessRules = await matrix.getAccessRules(roomId);
-    expect(accessRules.visibility).toBe('private');
+    expect(accessRules.visibility).toBe('public');
     expect(accessRules.rule).toBe('restricted');
 
     //set a visibility when undefined should not be possible
@@ -97,7 +97,7 @@ test.describe('API - Room', () => {
       matrix,
       roomId,
       'im.vector.room.access_rules',
-      { rule: 'restricted', visiblity :undefined },
+      { rule: 'restricted', visibility :undefined },
       403
     );
   });
