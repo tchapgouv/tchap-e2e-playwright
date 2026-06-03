@@ -3,7 +3,7 @@ import type { MatrixApi } from '../../../utils/matrix-api';
 import { deactivateMasUser } from '../../../utils/mas-admin';
 import { createPrivateEncryptedRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
 
-test.describe('API - Public Room', () => {
+test.describe('API - Room', () => {
   let matrix: MatrixApi;
   let userId: string;
 
@@ -68,23 +68,36 @@ test.describe('API - Public Room', () => {
     expect(await matrix.getJoinRule(roomId)).toBe('invite');
   });
 
-  test('Should return 403 error when changing visibility', async () => {
+  test('Should return 403 error when updating visibility from private to public', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
     
     const accessRules = await matrix.getAccessRules(roomId);
     expect(accessRules.visibility).toBe('private');
+    expect(accessRules.rule).toBe('restricted');
 
-    //remove visibility should not be possible
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {rule: 'restricted'});
-    const newAccessRules = await matrix.getAccessRules(roomId);
-    expect(newAccessRules.visibility).toBe(undefined);
+    //update visibility from private to public is forbidden
+    await expectErrorWhenSendStateEvent(
+      matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'restricted', visibility:'public' },
+      403
+    );
+  });
+
+  test('Should return 403 error when removing visibility', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+    
+    const accessRules = await matrix.getAccessRules(roomId);
+    expect(accessRules.visibility).toBe('private');
+    expect(accessRules.rule).toBe('restricted');
 
     //set a visibility when undefined should not be possible
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
       'im.vector.room.access_rules',
-      { rule: 'restricted', visibility:'public' },
+      { rule: 'restricted', visiblity :undefined },
       403
     );
   });
