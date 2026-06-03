@@ -17,6 +17,7 @@ export interface RoomCreationOptions {
   is_direct?: boolean;
   power_level_content_override?:any
   creation_content?:any
+  room_version?:string;
 }
 
 export class MatrixApi {
@@ -94,11 +95,19 @@ export class MatrixApi {
       initial_state: initialState as any,
       is_direct: options.is_direct,
       power_level_content_override: options.power_level_content_override,
-      creation_content: options.creation_content
+      creation_content: options.creation_content,
+      room_version: options.room_version
     });
 
     return response.room_id;
   }
+
+  public async upgradeRoom(roomId: string,  newVersion: string): Promise<{
+    replacement_room: string;
+}> {
+     return await this.client.upgradeRoom(roomId, newVersion);
+  }
+
 
   /**
    * Get room state
