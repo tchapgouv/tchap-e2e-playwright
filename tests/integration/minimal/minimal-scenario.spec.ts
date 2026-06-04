@@ -245,6 +245,7 @@ test.describe
       //inviter agents by email
       await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
       await page.getByRole('textbox', { name: 'Rechercher' }).fill(invitee2_email);
+      await page.getByText(invitee2_display_name).first().click();
       await page.getByRole('button', { name: 'Inviter' }).click();
       await expect(
         page.getByTestId('virtuoso-item-list').getByText(invitee2_display_name)
@@ -262,7 +263,7 @@ test.describe
       //envoyer fichier png
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../sample-files/element.png'));
+        .setInputFiles(path.join(__dirname, '../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await page.getByRole('link', { name: 'element.png' }).click();
@@ -271,18 +272,19 @@ test.describe
       //envoyer fichier vérolé
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../sample-files/eicar.com'));
+        .setInputFiles(path.join(__dirname, '../../../sample-files/eicar.com'));
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
-
-      //creer salon privé ouvert aux externes
-      await createExternalPrivateRoom(page);
+      
+      //creer salon privé
+      await createEncryptedPrivateRoom(page, private_crypted_room_name);
 
       //inviter agent externe
       await page.getByRole('button', { name: 'Personnes' }).click();
       await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
       await page.getByRole('textbox', { name: 'Rechercher' }).fill(external_user.email);
       await page.getByRole('button', { name: 'Inviter' }).click();
+      await page.getByRole('button', { name: 'OK' }).click();
       //await expect(page.getByTestId('virtuoso-item-list').getByText(external_user.username)).toBeVisible();
       await expect(
         page.getByRole('option', { name: external_user.email.split('@')[0] })
@@ -371,7 +373,7 @@ test.describe
       //rejoindre le salon
       await page_ext
         .locator('div')
-        .filter({ hasText: /^Salon ouvert aux externes$/ })
+        .filter({ hasText: /^Salon vide$/ })
         .first()
         .click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
