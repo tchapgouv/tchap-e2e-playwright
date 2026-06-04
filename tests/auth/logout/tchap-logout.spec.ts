@@ -41,7 +41,9 @@ test.describe('Tchap : logout', () => {
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     // Success - Confirm identity
-    await expect(page.getByRole('button').filter({hasText: 'Vérification impossible ?'})).toBeVisible({ timeout: 20000 });
+    await expect(
+      page.getByRole('button').filter({ hasText: 'Vérification impossible ?' })
+    ).toBeVisible({ timeout: 20000 });
     await screenChecker(page, `/`);
   });
 });

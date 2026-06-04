@@ -193,12 +193,12 @@ export class TchapAppPage {
    * Select a room type in the Tchap create room dialog.
    * This function uses a robust selector to avoid flaky tests when selecting
    * between similar room type options (e.g., "Salon privé" vs "Salon privé sécurisé")
-   * 
+   *
    * @param roomType The exact room type to select
    */
   public async selectRoomType(
     roomType:
-      'Salon privé'
+      | 'Salon privé'
       | 'Salon privé sécurisé'
       | 'Salon privé sécurisé avec externes'
       | 'Salon public'

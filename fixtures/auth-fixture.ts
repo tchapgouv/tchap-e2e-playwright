@@ -152,8 +152,8 @@ async function authenticatedUserFixture(
   await use(credentials);
 
   // Clean up, deactivate user
-  await deactivateMasUser(userId);
-  console.log(`Cleaned up MAS user: ${user.username}`);
+  // await deactivateMasUser(userId);
+  // console.log(`Cleaned up MAS user: ${user.username}`);
 }
 
 /**
