@@ -262,7 +262,7 @@ test.describe
       //envoyer fichier png
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../sample-files/element.png'));
+        .setInputFiles(path.join(__dirname, '../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await page.getByRole('link', { name: 'element.png' }).click();
@@ -271,7 +271,7 @@ test.describe
       //envoyer fichier vérolé
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../sample-files/eicar.com'));
+        .setInputFiles(path.join(__dirname, '../../../sample-files/eicar.com'));
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
 
