@@ -17,6 +17,7 @@ export const OTHER_MAS_URL = process.env.OTHER_MAS_URL || '';
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || '';
 export const ELEMENT_URL = process.env.ELEMENT_URL || '';
 export const BASE_URL = process.env.BASE_URL || '';
+export const OTHER_BASE_URL = process.env.OTHER_BASE_URL || '';
 export const MAIL_URL = process.env.MAIL_URL || '';
 
 export const MAILPIT_USER = process.env.MAILPIT_USER || '';

@@ -227,9 +227,9 @@ export async function createMasUserWithPassword(
 
   const data = await response.json();
   //console.log(data.data)
-  const userId = data.data.id;
+  const masId = data.data.id;
 
-  const responsePwd = await apiRequestContext.post(`/api/admin/v1/users/${userId}/set-password`, {
+  const responsePwd = await apiRequestContext.post(`/api/admin/v1/users/${masId}/set-password`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
@@ -254,7 +254,7 @@ export async function createMasUserWithPassword(
       Authorization: `Bearer ${token}`,
     },
     data: {
-      user_id: userId,
+      user_id: masId,
       email: email,
     },
   });
@@ -270,8 +270,8 @@ export async function createMasUserWithPassword(
   // Verify the user exists in MAS
   const existsBeforeLogin = await checkMasUserExistsByEmail(email);
 
-  console.log(`[MAS API] User created successfully with ID: ${userId}`);
-  return existsBeforeLogin ? userId : 'error';
+  console.log(`[MAS API] User created successfully with ID: ${masId}`);
+  return existsBeforeLogin ? masId : 'error';
 }
 
 /**

@@ -33,6 +33,7 @@ export class MatrixApi {
 
   /**
    * Login a user
+   * @
    */
   public async login(username: string, password: string): Promise<string> {
     const response = await this.client.loginRequest({
@@ -49,7 +50,7 @@ export class MatrixApi {
       deviceId: response.device_id,
     });
 
-    return response.access_token;
+    return response.user_id;
   }
 
   /**
@@ -177,4 +178,13 @@ export class MatrixApi {
   public async logout(): Promise<void> {
     await this.client.logout();
   }
-}
+
+  /**
+   * get authenticated Matrix client
+   * @returns MatrixClient
+   */
+  public getClient(){
+    return this.client;
+  }
+
+ }

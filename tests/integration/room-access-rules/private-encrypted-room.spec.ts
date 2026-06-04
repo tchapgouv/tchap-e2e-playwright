@@ -7,11 +7,11 @@ import { EventType, JoinRule } from 'matrix-js-sdk';
 
 test.describe('API - Private Encrypted Room', () => {
   let matrix: MatrixApi;
-  let userId: string;
+  let masId: string;
 
   test.beforeAll(async () => {
     const userData = await loginWithNewUser();
-    userId = userData.userId;
+    masId = userData.masId;
     matrix = userData.matrix;
   });
 
@@ -65,6 +65,6 @@ test.describe('API - Private Encrypted Room', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(userId);
+    await deactivateMasUser(masId);
   });
 });
