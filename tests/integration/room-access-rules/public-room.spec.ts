@@ -7,12 +7,12 @@ import { EventType } from 'matrix-js-sdk';
 
 
 test.describe('API - Public Room', () => {
-  let userId: string;
+  let masId: string;
   let matrix: MatrixApi;
 
   test.beforeAll(async () => {
     const userData = await loginWithNewUser();
-    userId = userData.userId;
+    masId = userData.masId;
     matrix = userData.matrix;
   });
 
@@ -48,6 +48,6 @@ test.describe('API - Public Room', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(userId);
+    await deactivateMasUser(masId);
   });
 });

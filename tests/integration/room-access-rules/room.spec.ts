@@ -5,11 +5,11 @@ import { createPrivateEncryptedRoom, createPublicRoom, expectErrorWhenSendStateE
 
 test.describe('API - Room', () => {
   let matrix: MatrixApi;
-  let userId: string;
+  let masId: string;
 
   test.beforeAll(async () => {
     const userData = await loginWithNewUser();
-    userId = userData.userId;
+    masId = userData.masId;
     matrix = userData.matrix;
   });
 
@@ -155,6 +155,6 @@ test.describe('API - Room', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(userId);
+    await deactivateMasUser(masId);
   });
 });
