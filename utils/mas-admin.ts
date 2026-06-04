@@ -74,10 +74,10 @@ export async function getMasAdminToken(baseUrl?: string, clientId?: string, secr
 /**
  * Get user details from MAS by email
  */
-export async function getMasUserByEmail(email: string): Promise<any | null> {
+export async function getMasUserByEmail(email: string, baseUrl?: string): Promise<any | null> {
   //console.log(`[MAS API] Getting user details for email: ${email}`);
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
+  const token = await getMasAdminToken(baseUrl);
+  const apiRequestContext = await getApiContext(baseUrl);
 
   // Step 1: Get user ID from email
   const emailResponse = await apiRequestContext.get(
@@ -266,21 +266,17 @@ export async function createMasUserWithPassword(
     );
     throw new Error(`Failed to set email for user: ${responseEmail.status()} - ${errorText}`);
   }
-
-  // Verify the user exists in MAS
-  const existsBeforeLogin = await checkMasUserExistsByEmail(email);
-
   console.log(`[MAS API] User created successfully with ID: ${masId}`);
-  return existsBeforeLogin ? masId : 'error';
+  return masId;
 }
 
 /**
  * Delete a user from MAS
  */
-export async function deactivateMasUser(userId: string): Promise<void> {
+export async function deactivateMasUser(userId: string, baseUrl?:string): Promise<void> {
   console.log(`[MAS API] Deleting user with ID: ${userId}`);
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
+  const token = await getMasAdminToken(baseUrl);
+  const apiRequestContext = await getApiContext(baseUrl);
 
   const response = await apiRequestContext.post(`/api/admin/v1/users/${userId}/deactivate`, {
     headers: {

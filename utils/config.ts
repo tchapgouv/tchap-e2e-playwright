@@ -11,15 +11,21 @@ dotenv.config({ path: path.resolve(__dirname, `../.env.${env}`) });
 // Load environment variables from .env file
 //dotenv.config();
 
-// URLs
+// MAS URLs
 export const MAS_URL = process.env.MAS_URL || '';
 export const OTHER_MAS_URL = process.env.OTHER_MAS_URL || '';
+export const EXTERNAL_MAS_URL = process.env.EXTERNAL_MAS_URL || '';
+
+
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || '';
 export const ELEMENT_URL = process.env.ELEMENT_URL || '';
+
+//SYNAPSE 
 export const BASE_URL = process.env.BASE_URL || '';
 export const OTHER_BASE_URL = process.env.OTHER_BASE_URL || '';
-export const MAIL_URL = process.env.MAIL_URL || '';
+export const EXTERNAL_BASE_URL = process.env.EXTERNAL_BASE_URL || '';
 
+export const MAIL_URL = process.env.MAIL_URL || '';
 export const MAILPIT_USER = process.env.MAILPIT_USER || '';
 export const MAILPIT_PWD = process.env.MAILPIT_PWD || '';
 
@@ -29,11 +35,12 @@ export const KEYCLOAK_ADMIN_PASSWORD = process.env.KEYCLOAK_ADMIN_PASSWORD || 'a
 export const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'proconnect-mock';
 
 // MAS Admin API Credentials
-export const MAS_ADMIN_CLIENT_ID = process.env.MAS_ADMIN_CLIENT_ID || '01J44RKQYM4G3TNVANTMTDYTX6';
-export const MAS_ADMIN_CLIENT_SECRET =
-  process.env.MAS_ADMIN_CLIENT_SECRET || 'phoo8ahneir3ohY2eigh4xuu6Oodaewi';
+export const MAS_ADMIN_CLIENT_ID = process.env.MAS_ADMIN_CLIENT_ID || '';
+export const MAS_ADMIN_CLIENT_SECRET = process.env.MAS_ADMIN_CLIENT_SECRET || '';
 export const OTHER_MAS_ADMIN_CLIENT_ID = process.env.OTHER_MAS_ADMIN_CLIENT_ID || '';
 export const OTHER_MAS_ADMIN_SECRET = process.env.OTHER_MAS_ADMIN_SECRET || '';
+export const EXTERNAL_MAS_ADMIN_CLIENT_ID = process.env.EXTERNAL_MAS_ADMIN_CLIENT_ID || '';
+export const EXTERNAL_MAS_ADMIN_SECRET = process.env.EXTERNAL_MAS_ADMIN_SECRET || '';
 
 // Test User Credentials
 export const TEST_USER_PREFIX = process.env.TEST_USER_PREFIX || 'user.test';

@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { MatrixApi } from '../../../utils/matrix-api';
-import { BASE_URL, OTHER_BASE_URL, OTHER_EMAIL_DOMAIN, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET, OTHER_MAS_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../../utils/config';
+import { BASE_URL, EXTERNAL_BASE_URL, EXTERNAL_MAS_ADMIN_CLIENT_ID, EXTERNAL_MAS_ADMIN_SECRET, EXTERNAL_MAS_URL, INVITED_EMAIL_DOMAIN, OTHER_BASE_URL, OTHER_EMAIL_DOMAIN, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET, OTHER_MAS_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../../utils/config';
 import { createMasUserWithPassword } from '../../../utils/mas-admin';
 
 /**
@@ -44,6 +44,29 @@ export async function loginWithFederatedNewUser(): Promise<{
   );
 
   const matrix = new MatrixApi(OTHER_BASE_URL);
+  const mxId = await matrix.login(username, TEST_USER_PASSWORD);
+
+  return { mxId, username, matrix, masId };
+}
+
+export async function loginWithExternalNewUser(): Promise<{
+  mxId: string;
+  username: string;
+  matrix: MatrixApi;
+  masId: string;
+}> {
+  const username = `user.${Date.now()}`;
+  const masId = await createMasUserWithPassword(
+    username,
+    `${username}@${INVITED_EMAIL_DOMAIN}`,
+    TEST_USER_PASSWORD,
+    "",
+    EXTERNAL_MAS_URL,
+    EXTERNAL_MAS_ADMIN_CLIENT_ID,
+    EXTERNAL_MAS_ADMIN_SECRET
+  );
+
+  const matrix = new MatrixApi(EXTERNAL_BASE_URL);
   const mxId = await matrix.login(username, TEST_USER_PASSWORD);
 
   return { mxId, username, matrix, masId };
