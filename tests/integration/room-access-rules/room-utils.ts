@@ -2,6 +2,7 @@ import { expect } from '@playwright/test';
 import { MatrixApi } from '../../../utils/matrix-api';
 import { BASE_URL, EXTERNAL_BASE_URL, EXTERNAL_MAS_ADMIN_CLIENT_ID, EXTERNAL_MAS_ADMIN_SECRET, EXTERNAL_MAS_URL, INVITED_EMAIL_DOMAIN, OTHER_BASE_URL, OTHER_EMAIL_DOMAIN, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET, OTHER_MAS_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../../utils/config';
 import { createMasUserWithPassword } from '../../../utils/mas-admin';
+import { EventType } from 'matrix-js-sdk';
 
 /**
  * Helper function to login with a new user
@@ -152,4 +153,44 @@ export async function createPublicRoom(
       },
     }
   });
+}
+
+/**
+ * Sets the power level for a specific user in a room by updating the existing power levels event.
+ * This function first fetches the current power levels, then updates the specified user's PL.
+ *
+ * @param matrix - The Matrix API instance
+ * @param roomId - The room ID
+ * @param userId - The user ID to set power level for
+ * @param powerLevel - The power level to set (e.g., 50 for moderator, 100 for admin)
+ */
+export async function setUserPowerLevel(
+  matrix: MatrixApi,
+  roomId: string,
+  userId: string,
+  powerLevel: number
+): Promise<void> {
+  // Get current power levels
+  const currentPowerLevels = await matrix.getClient().getStateEvent(
+    roomId,
+    EventType.RoomPowerLevels,
+    ''
+  );
+
+  // Create updated power levels content
+  const updatedPowerLevels = {
+    ...currentPowerLevels,
+    users: {
+      ...currentPowerLevels.users,
+      [userId]: powerLevel
+    }
+  };
+
+  // Send the updated power levels event
+  await matrix.getClient().sendStateEvent(
+    roomId,
+    EventType.RoomPowerLevels,
+    updatedPowerLevels,
+    ''
+  );
 }
