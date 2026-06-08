@@ -25,49 +25,6 @@ test.describe('API - Manage Last Admin', () => {
     masId = user.masId;
   });
 
-  test('Should leave an unencrypted room opened to external', async () => {
-    const roomId = await createPrivateUnencryptedRoom(matrix);
-
-    // Change the state of the room to invite an external
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
-      rule: 'unrestricted',
-      visibility: 'private',
-      force_unencrypted_at_creation: true,
-    });
-
-    const externalUser = await addExternalNewUserToRoom(matrix, roomId);
-
-    // room owner leaves the room
-    await matrix.getClient().leave(roomId);
-
-    // as owner has left the room, we expect getRoom to return null, the value is defined but is null
-    const room = await matrix.getClient().getRoom(roomId);
-    expect(room).toBeNull();
-
-    await deactivateMasUser(externalUser.masId, EXTERNAL_MAS_URL);
-  });
-
-  test('Should leave an encrypted room opened to external', async () => {
-    const roomId = await createPrivateEncryptedRoom(matrix);
-
-    // Change the state of the room to invite an external
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
-      rule: 'unrestricted',
-      visibility: 'private',
-    });
-
-    const externalUser = await addExternalNewUserToRoom(matrix, roomId);
-
-    // Leave the room
-    await matrix.getClient().leave(roomId);
-
-    // as owner has left the room, we expect getRoom to return null, the value is defined but is null
-    const room = await matrix.getClient().getRoom(roomId);
-    expect(room).toBeNull();
-
-    await deactivateMasUser(externalUser.masId, EXTERNAL_MAS_URL);
-  });
-
   test('Scenario 1: Last admin leaves private room - users_default becomes 100', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
 
@@ -195,17 +152,15 @@ test.describe('API - Manage Last Admin', () => {
     await deactivateMasUser(external1.masId, EXTERNAL_MAS_URL);
   });
 
-  test('Scenario 6: Admin leaves empty external room - no error', async () => {
-    // Create empty external room
-    const roomId = await matrix.createRoom({
-      name: 'Empty External Room',
-      joinRule: 'invite',
-      preset: 'private_chat',
+  test('Scenario 6: Admin leaves an empty external unencrypted room - no error', async () => {
+    // Create empty an unencrypted room
+    const roomId = await createPrivateUnencryptedRoom(matrix);
+
+    // Change the state of the room to invite an external
+    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+      rule: 'unrestricted',
       visibility: 'private',
-      accessRules: {
-        rule: 'unrestricted',
-        visibility: 'private',
-      },
+      force_unencrypted_at_creation: true,
     });
 
     // Admin (mxId) leaves - should not throw error
@@ -216,6 +171,24 @@ test.describe('API - Manage Last Admin', () => {
     expect(room).toBeNull();
   });
 
+
+  test('Scenario 7: Admin leaves an empty encrypted external room - no error', async () => {
+    // Create empty an unencrypted room
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    // Change the state of the room to invite an external
+    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+      rule: 'unrestricted',
+      visibility: 'private',
+    });
+
+    // Admin (mxId) leaves - should not throw error
+    await expect(matrix.getClient().leave(roomId)).resolves.toBeDefined();
+
+    // Check that room is no longer accessible to admin
+    const room = await matrix.getClient().getRoom(roomId);
+    expect(room).toBeNull();
+  });
 
   test.afterAll(async () => {
     await deactivateMasUser(masId);
