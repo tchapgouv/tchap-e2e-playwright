@@ -216,6 +216,7 @@ test.describe('API - Manage Last Admin', () => {
     expect(room).toBeNull();
   });
 
+
   test.afterAll(async () => {
     await deactivateMasUser(masId);
   });

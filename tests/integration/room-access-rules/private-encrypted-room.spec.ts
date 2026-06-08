@@ -1,9 +1,14 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../utils/matrix-api';
 import { deactivateMasUser } from '../../../utils/mas-admin';
-import { createPrivateEncryptedRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
+import {
+  addModeratorToRoom,
+  createPrivateEncryptedRoom,
+  expectErrorWhenSendStateEvent,
+  loginWithNewUser,
+  setDefaultPowerLevel,
+} from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
-
 
 test.describe('API - Private Encrypted Room', () => {
   let matrix: MatrixApi;
@@ -60,6 +65,36 @@ test.describe('API - Private Encrypted Room', () => {
       roomId,
       'im.vector.room.access_rules',
       { rule: 'restricted' },
+      403
+    );
+  });
+
+  test('Should return 403 error when non admin send rules from restricted to unrestricted', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    const mod = await addModeratorToRoom(matrix, roomId);
+    
+    await expectErrorWhenSendStateEvent(
+      mod.matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'unrestricted' },
+      403
+    );
+  });
+
+
+  test('Should return 403 error when invite external with PL user defaults admin', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    //change users_default PL to 100
+    await setDefaultPowerLevel(matrix,roomId, 100);
+
+    await expectErrorWhenSendStateEvent(
+      matrix,
+      roomId,
+      'im.vector.room.access_rules',
+      { rule: 'unrestricted' },
       403
     );
   });

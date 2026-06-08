@@ -203,6 +203,36 @@ export async function setUserPowerLevel(
 }
 
 /**
+ * Sets the power level for users_default 
+ *
+ * @param matrix - The Matrix API instance
+ * @param roomId - The room ID
+ * @param powerLevel - The power level to set (e.g., 50 for moderator, 100 for admin)
+ */
+export async function setDefaultPowerLevel(
+  matrix: MatrixApi,
+  roomId: string,
+  defaultPowerLevel: number
+): Promise<void> {
+  // Get current power levels
+  const currentPowerLevels = await matrix
+    .getClient()
+    .getStateEvent(roomId, EventType.RoomPowerLevels, '');
+
+   const updatedPowerLevels = {
+    ...currentPowerLevels,
+    users_default: defaultPowerLevel
+  };
+
+  await matrix.getClient().sendStateEvent(
+    roomId,
+    EventType.RoomPowerLevels,
+    updatedPowerLevels,
+    ''
+  );
+}
+
+/**
  * Creates a new user and adds them to a room with default power level.
  *
  * @param matrix - The Matrix API instance of the room admin/creator
