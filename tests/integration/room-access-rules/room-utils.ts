@@ -1,6 +1,20 @@
 import { expect } from '@playwright/test';
 import { MatrixApi } from '../../../utils/matrix-api';
-import { BASE_URL, EXTERNAL_BASE_URL, EXTERNAL_MAS_ADMIN_CLIENT_ID, EXTERNAL_MAS_ADMIN_SECRET, EXTERNAL_MAS_URL, INVITED_EMAIL_DOMAIN, OTHER_BASE_URL, OTHER_EMAIL_DOMAIN, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET, OTHER_MAS_URL, STANDARD_EMAIL_DOMAIN, TEST_USER_PASSWORD } from '../../../utils/config';
+import {
+  BASE_URL,
+  EXTERNAL_BASE_URL,
+  EXTERNAL_MAS_ADMIN_CLIENT_ID,
+  EXTERNAL_MAS_ADMIN_SECRET,
+  EXTERNAL_MAS_URL,
+  INVITED_EMAIL_DOMAIN,
+  OTHER_BASE_URL,
+  OTHER_EMAIL_DOMAIN,
+  OTHER_MAS_ADMIN_CLIENT_ID,
+  OTHER_MAS_ADMIN_SECRET,
+  OTHER_MAS_URL,
+  STANDARD_EMAIL_DOMAIN,
+  TEST_USER_PASSWORD,
+} from '../../../utils/config';
 import { createMasUserWithPassword } from '../../../utils/mas-admin';
 import { EventType } from 'matrix-js-sdk';
 
@@ -38,7 +52,7 @@ export async function loginWithFederatedNewUser(): Promise<{
     username,
     `${username}@${OTHER_EMAIL_DOMAIN}`,
     TEST_USER_PASSWORD,
-    "",
+    '',
     OTHER_MAS_URL,
     OTHER_MAS_ADMIN_CLIENT_ID,
     OTHER_MAS_ADMIN_SECRET
@@ -61,7 +75,7 @@ export async function loginWithExternalNewUser(): Promise<{
     username,
     `${username}@${INVITED_EMAIL_DOMAIN}`,
     TEST_USER_PASSWORD,
-    "",
+    '',
     EXTERNAL_MAS_URL,
     EXTERNAL_MAS_ADMIN_CLIENT_ID,
     EXTERNAL_MAS_ADMIN_SECRET
@@ -83,9 +97,9 @@ export async function expectErrorWhenSendStateEvent(
   content: Record<string, any>,
   expectedStatus: number = 403
 ): Promise<void> {
-  await expect(matrix.sendStateEvent(roomId, eventType, content))
-    .rejects
-    .toMatchObject({ httpStatus: expectedStatus });
+  await expect(matrix.sendStateEvent(roomId, eventType, content)).rejects.toMatchObject({
+    httpStatus: expectedStatus,
+  });
 }
 
 export async function createPrivateEncryptedRoom(
@@ -123,7 +137,6 @@ export async function createPrivateUnencryptedRoom(
   });
 }
 
-
 export async function createPublicRoom(
   matrix: MatrixApi,
   name: string = 'Public Room'
@@ -138,20 +151,19 @@ export async function createPublicRoom(
       force_unencrypted_at_creation: false,
       visibility: 'public',
     },
-    power_level_content_override:{
-      events:
-      {
-         "m.room.name": 50,
-          "m.room.avatar": 50,
-          "m.room.power_levels": 100,
-          "m.room.history_visibility": 100,
-          "m.room.canonical_alias": 50,
-          "m.room.tombstone": 100,
-          "m.room.server_acl": 100,
-          "m.room.encryption": 100,
-          "org.matrix.msc3401.call.member": 0
+    power_level_content_override: {
+      events: {
+        'm.room.name': 50,
+        'm.room.avatar': 50,
+        'm.room.power_levels': 100,
+        'm.room.history_visibility': 100,
+        'm.room.canonical_alias': 50,
+        'm.room.tombstone': 100,
+        'm.room.server_acl': 100,
+        'm.room.encryption': 100,
+        'org.matrix.msc3401.call.member': 0,
       },
-    }
+    },
   });
 }
 
@@ -171,26 +183,107 @@ export async function setUserPowerLevel(
   powerLevel: number
 ): Promise<void> {
   // Get current power levels
-  const currentPowerLevels = await matrix.getClient().getStateEvent(
-    roomId,
-    EventType.RoomPowerLevels,
-    ''
-  );
+  const currentPowerLevels = await matrix
+    .getClient()
+    .getStateEvent(roomId, EventType.RoomPowerLevels, '');
 
   // Create updated power levels content
   const updatedPowerLevels = {
     ...currentPowerLevels,
     users: {
       ...currentPowerLevels.users,
-      [userId]: powerLevel
-    }
+      [userId]: powerLevel,
+    },
   };
 
   // Send the updated power levels event
-  await matrix.getClient().sendStateEvent(
-    roomId,
-    EventType.RoomPowerLevels,
-    updatedPowerLevels,
-    ''
-  );
+  await matrix
+    .getClient()
+    .sendStateEvent(roomId, EventType.RoomPowerLevels, updatedPowerLevels, '');
+}
+
+/**
+ * Creates a new user and adds them to a room with default power level.
+ *
+ * @param matrix - The Matrix API instance of the room admin/creator
+ * @param roomId - The room ID to add the user to
+ * @returns Promise resolving to the created user object (mxId, matrix, masId)
+ */
+export async function addUserToRoom(
+  matrix: MatrixApi,
+  roomId: string
+): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
+  // Create new user
+  const user = await loginWithNewUser();
+
+  // Invite user to room
+  await matrix.getClient().invite(roomId, user.mxId);
+
+  // User joins room
+  await user.matrix.getClient().joinRoom(roomId);
+
+  return user;
+}
+
+/**
+ * Creates a new user and adds them to a room with default power level.
+ *
+ * @param matrix - The Matrix API instance of the room admin/creator
+ * @param roomId - The room ID to add the user to
+ * @returns Promise resolving to the created user object (mxId, matrix, masId)
+ */
+export async function addExternalUserToRoom(
+  matrix: MatrixApi,
+  roomId: string
+): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
+  // Create new user
+  const user = await loginWithExternalNewUser();
+
+  // Invite user to room
+  await matrix.getClient().invite(roomId, user.mxId);
+
+  // User joins room
+  await user.matrix.getClient().joinRoom(roomId);
+
+  return user;
+}
+
+/**
+ * Creates a new user and adds them to a room as a moderator (PL=50).
+ *
+ * @param matrix - The Matrix API instance of the room admin/creator
+ * @param roomId - The room ID to add the moderator to
+ * @returns Promise resolving to the created moderator user object (mxId, matrix, masId)
+ */
+export async function addModeratorToRoom(
+  matrix: MatrixApi,
+  roomId: string
+): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
+  // Create and add user to room
+  const user = await addUserToRoom(matrix, roomId);
+
+  // Set user's power level to 50 (moderator)
+  await setUserPowerLevel(matrix, roomId, user.mxId, 50);
+
+  return user;
+}
+
+/**
+ * Creates another admin to a room as a admin (PL=100).
+ *
+ * @param matrix - The Matrix API instance of the room admin/creator
+ * @param roomId - The room ID to add the moderator to
+ * @returns Promise resolving to the created admin user object (mxId, matrix, masId)
+ */
+export async function addAdminToRoom(
+  matrix: MatrixApi,
+  roomId: string
+): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
+  // Create and add user to room
+  const user = await addUserToRoom(matrix, roomId);
+
+  // Set user's power level to 100 (admin)
+  await setUserPowerLevel(matrix, roomId, user.mxId, 100);
+
+  return user;
 }
