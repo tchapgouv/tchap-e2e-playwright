@@ -4,7 +4,7 @@ import {
   generateTestUserData,
   openResetPasswordEmail,
 } from '../../../../utils/auth-helpers';
-import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, OTHER_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, OTHER_MAS_URL, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET} from '../../../utils/config';
+import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, OTHER_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, OTHER_MAS_URL, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET} from '../../../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../../../utils/mailpit';
 import { TchapAppPage } from '../../../../utils/TchapAppPage';
 import { createMasTestUser } from '../../../../utils/auth-helpers';
