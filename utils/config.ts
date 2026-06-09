@@ -35,10 +35,15 @@ export const KEYCLOAK_ADMIN_PASSWORD = process.env.KEYCLOAK_ADMIN_PASSWORD || 'a
 export const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM || 'proconnect-mock';
 
 // MAS Admin API Credentials
+export const MAS_ADMIN_URL = process.env.MAS_ADMIN_URL || MAS_URL;
 export const MAS_ADMIN_CLIENT_ID = process.env.MAS_ADMIN_CLIENT_ID || '';
 export const MAS_ADMIN_CLIENT_SECRET = process.env.MAS_ADMIN_CLIENT_SECRET || '';
+
+export const OTHER_MAS_ADMIN_URL = process.env.OTHER_MAS_ADMIN_URL || OTHER_MAS_URL;
 export const OTHER_MAS_ADMIN_CLIENT_ID = process.env.OTHER_MAS_ADMIN_CLIENT_ID || '';
 export const OTHER_MAS_ADMIN_SECRET = process.env.OTHER_MAS_ADMIN_SECRET || '';
+
+export const EXTERNAL_MAS_ADMIN_URL = process.env.EXTERNAL_MAS_ADMIN_URL || EXTERNAL_MAS_URL;
 export const EXTERNAL_MAS_ADMIN_CLIENT_ID = process.env.EXTERNAL_MAS_ADMIN_CLIENT_ID || '';
 export const EXTERNAL_MAS_ADMIN_SECRET = process.env.EXTERNAL_MAS_ADMIN_SECRET || '';
 

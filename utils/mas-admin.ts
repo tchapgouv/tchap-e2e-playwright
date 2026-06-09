@@ -1,5 +1,5 @@
 import { type APIRequestContext, request } from '@playwright/test';
-import { MAS_URL, MAS_ADMIN_CLIENT_ID, MAS_ADMIN_CLIENT_SECRET } from './config';
+import {MAS_ADMIN_CLIENT_ID, MAS_ADMIN_CLIENT_SECRET, MAS_ADMIN_URL } from './config';
 
 interface MasAdminCredentials{
   clientId: string, 
@@ -11,7 +11,7 @@ const apiContextCache = new Map<string, APIRequestContext>();
 const masAdminCredentialsCache = new Map<string, MasAdminCredentials>();
 
 async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
-  const cacheKey = baseUrl ?? MAS_URL;
+  const cacheKey = baseUrl ?? MAS_ADMIN_URL;
   
   const cached = apiContextCache.get(cacheKey);
   if (cached) return cached;
@@ -25,7 +25,7 @@ async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
 }
 
 function getMasAdminCredentials(baseUrl?: string, clientId?: string, secret?: string): MasAdminCredentials {
-  const cacheKey = baseUrl ?? MAS_URL;
+  const cacheKey = baseUrl ?? MAS_ADMIN_URL;
   console.log(`[MAS API] Requesting admin token with baseUrl: ${cacheKey}`);
   const cached = masAdminCredentialsCache.get(cacheKey);
   if (cached) return cached;
@@ -353,7 +353,7 @@ export async function oauthLinkExistsBySubject(subject: string): Promise<boolean
  * Dispose the API context when done
  */
 export async function disposeApiContext(baseUrl? : string): Promise<void> {
-  const cacheKey = baseUrl ?? MAS_URL;
+  const cacheKey = baseUrl ?? MAS_ADMIN_URL;
   const cached = apiContextCache.get(cacheKey);
   if (cached) {
     //console.log(`[MAS API] Disposing API context`);

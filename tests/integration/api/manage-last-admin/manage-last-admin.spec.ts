@@ -10,7 +10,7 @@ import {
   addModeratorToRoom,
   addAdminToRoom,
 } from '../room-access-rules/room-utils';
-import { EXTERNAL_MAS_URL } from '../../../../utils/config';
+import { EXTERNAL_MAS_ADMIN_URL, EXTERNAL_MAS_URL } from '../../../../utils/config';
 import { EventType } from 'matrix-js-sdk';
 
 test.describe('API - Manage Last Admin', () => {
@@ -117,7 +117,7 @@ test.describe('API - Manage Last Admin', () => {
     }
 
     await deactivateMasUser(internal1.masId);
-    await deactivateMasUser(external1.masId, EXTERNAL_MAS_URL);
+    await deactivateMasUser(external1.masId, EXTERNAL_MAS_ADMIN_URL);
   });
 
   test('Scenario 5: Last admin leaves external room - moderators promoted', async () => {

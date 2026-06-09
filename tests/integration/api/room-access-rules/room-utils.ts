@@ -7,6 +7,7 @@ import {
   EXTERNAL_MAS_ADMIN_SECRET,
   EXTERNAL_MAS_URL,
   INVITED_EMAIL_DOMAIN,
+  MAS_URL,
   OTHER_BASE_URL,
   OTHER_EMAIL_DOMAIN,
   OTHER_MAS_ADMIN_CLIENT_ID,
@@ -36,7 +37,7 @@ export async function loginWithNewUser(): Promise<{
     TEST_USER_PASSWORD
   );
 
-  const matrix = new MatrixApi(BASE_URL);
+  const matrix = new MatrixApi(BASE_URL, MAS_URL);
   const mxId = await matrix.login(username, TEST_USER_PASSWORD);
 
   return { mxId, username, matrix, masId };
@@ -59,7 +60,7 @@ export async function loginWithFederatedNewUser(): Promise<{
     OTHER_MAS_ADMIN_SECRET
   );
 
-  const matrix = new MatrixApi(OTHER_BASE_URL);
+  const matrix = new MatrixApi(OTHER_BASE_URL, OTHER_MAS_URL);
   const mxId = await matrix.login(username, TEST_USER_PASSWORD);
 
   return { mxId, username, matrix, masId };
@@ -82,7 +83,7 @@ export async function loginWithExternalNewUser(): Promise<{
     EXTERNAL_MAS_ADMIN_SECRET
   );
 
-  const matrix = new MatrixApi(EXTERNAL_BASE_URL);
+  const matrix = new MatrixApi(EXTERNAL_BASE_URL, EXTERNAL_BASE_URL);
   const mxId = await matrix.login(username, TEST_USER_PASSWORD);
 
   return { mxId, username, matrix, masId };

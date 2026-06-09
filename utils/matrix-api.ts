@@ -22,13 +22,14 @@ export interface RoomCreationOptions {
 
 export class MatrixApi {
   private client: MatrixClient;
-  private baseUrl: string;
+  private matrixUrl: string;
 
-  public constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  public constructor(matrixUrl: string, masUrl:string) {
+    this.matrixUrl = matrixUrl;
+    // create client with MAS URL to ease local login on preprod server
     this.client = createClient({
-      baseUrl: `${baseUrl}`,
-    });
+      baseUrl: `${masUrl}`,
+    });   
   }
 
   /**
@@ -44,7 +45,7 @@ export class MatrixApi {
 
     // Create a new MatrixClient instance with the token
     this.client = createClient({
-      baseUrl: `${this.baseUrl}`,
+      baseUrl: `${this.matrixUrl}`,
       accessToken: response.access_token,
       userId: response.user_id,
       deviceId: response.device_id,
