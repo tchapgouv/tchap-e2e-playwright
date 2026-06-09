@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test';
-import { MatrixApi } from '../../../utils/matrix-api';
+import { MatrixApi } from '../../../../utils/matrix-api';
 import {
   BASE_URL,
   EXTERNAL_BASE_URL,
@@ -15,8 +15,8 @@ import {
   STANDARD_EMAIL_DOMAIN,
   TEST_USER_PASSWORD,
   TEST_USER_PREFIX,
-} from '../../../utils/config';
-import { createMasUserWithPassword } from '../../../utils/mas-admin';
+} from '../../../../utils/config';
+import { createMasUserWithPassword } from '../../../../utils/mas-admin';
 import { EventType } from 'matrix-js-sdk';
 
 /**

@@ -4,11 +4,11 @@ Ce projet contient differents tests :
 
 `/auth` : tests Playwright pour tester le scénario d'authentification OIDC avec Keycloak dans le service d'authentification Matrix (MAS). Nécessite un environnement local docker avec les services mockés de https://github.com/tchapgouv/tchap-docker-integration. 
 
-`/integration/room-access-rules` : tests d'intégration API pour le module room-access-rules. Nécessite un environnement Tchap complet.
+`/integration/api/room-access-rules` : tests d'intégration API pour le module room-access-rules. Nécessite un environnement Tchap complet.
 
-`/integration/email-account-validity` : scénario de recette web pour le module remail-account-validity. Nécessite un environnement Tchap complet et un service mailpit
+`/integration/api/email-account-validity` : scénario de recette web pour le module remail-account-validity. Nécessite un environnement Tchap complet et un service mailpit
 
-`/integration/minimal` : scénario minimal de recette e2e sur navigateur sur les serveurs de DEV (dev01, ext01) et PREPROD (int01, ext01). Nécessite un environnement Tchap complet avec un serveur agent et un serveur externe, ainsi qu'un service mailpit.
+`/integration/web/minimal` : scénario minimal de recette e2e sur navigateur sur les serveurs de DEV (dev01, ext01) et PREPROD (int01, ext01). Nécessite un environnement Tchap complet avec un serveur agent et un serveur externe, ainsi qu'un service mailpit.
 
 
 ## Configuration
@@ -26,10 +26,10 @@ Requis pour dev01 et int01:
 ### avec docker 
 ```bash
 # specific test
-docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble bash -c 'ENV=dev01 npx playwright test ./tests/integration/room-access-rules --grep "Should create private encrypted room with correct properties"'
+docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble bash -c 'ENV=dev01 npx playwright test ./tests/integration/api/room-access-rules --grep "Should create private encrypted room with correct properties"'
 
 # tests suite
-docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble npm run test:room:dev02
+docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble npm run test:api:dev01
 ```
 
 
@@ -45,10 +45,10 @@ chmod +x init.sh
 ./init.sh
 
 # tests suite
-npm run test:room:dev02
+npm run test:room:dev01
 
 # specific test
-ENV=dev01 && npx playwright test ./tests/integration/room-access-rules --grep "Should create private encrypted room with correct properties"
+ENV=dev01 && npx playwright test ./tests/integration/api/room-access-rules --grep "Should create private encrypted room with correct properties"
 ```
 
 

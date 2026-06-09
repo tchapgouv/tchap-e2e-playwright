@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../utils/mas-admin';
+import type { MatrixApi } from '../../../../utils/matrix-api';
+import { deactivateMasUser } from '../../../../utils/mas-admin';
 import { createPrivateEncryptedRoom, createPrivateUnencryptedRoom, expectErrorWhenSendStateEvent, loginWithFederatedNewUser, loginWithNewUser } from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
 import { cpSync } from 'fs';

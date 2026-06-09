@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../utils/matrix-api';
+import type { MatrixApi } from '../../../../utils/matrix-api';
 import { createPrivateEncryptedRoom, loginWithExternalNewUser, loginWithFederatedNewUser, loginWithNewUser } from './room-utils';
-import { deactivateMasUser } from '../../../utils/mas-admin';
-import { EXTERNAL_MAS_URL, TEST_USER_PREFIX } from '../../../utils/config';
+import { deactivateMasUser } from '../../../../utils/mas-admin';
+import { EXTERNAL_MAS_URL, TEST_USER_PREFIX } from '../../../../utils/config';
 
 
 

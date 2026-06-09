@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../utils/mas-admin';
+import type { MatrixApi } from '../../../../utils/matrix-api';
+import { deactivateMasUser } from '../../../../utils/mas-admin';
 import { createPrivateEncryptedRoom, createPublicRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
 
 test.describe('API - Room', () => {

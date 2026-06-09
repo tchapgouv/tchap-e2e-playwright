@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../utils/mas-admin';
+import type { MatrixApi } from '../../../../utils/matrix-api';
+import { deactivateMasUser } from '../../../../utils/mas-admin';
 import {
   createPrivateUnencryptedRoom,
   createPrivateEncryptedRoom,
@@ -10,7 +10,7 @@ import {
   addModeratorToRoom,
   addAdminToRoom,
 } from '../room-access-rules/room-utils';
-import { EXTERNAL_MAS_URL } from '../../../utils/config';
+import { EXTERNAL_MAS_URL } from '../../../../utils/config';
 import { EventType } from 'matrix-js-sdk';
 
 test.describe('API - Manage Last Admin', () => {
