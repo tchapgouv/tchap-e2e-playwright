@@ -21,9 +21,9 @@ export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || '';
 export const ELEMENT_URL = process.env.ELEMENT_URL || '';
 
 //SYNAPSE 
-export const BASE_URL = process.env.BASE_URL || '';
-export const OTHER_BASE_URL = process.env.OTHER_BASE_URL || '';
-export const EXTERNAL_BASE_URL = process.env.EXTERNAL_BASE_URL || '';
+export const MATRIX_URL = process.env.MATRIX_URL || '';
+export const OTHER_MATRIX_URL = process.env.OTHER_MATRIX_URL || '';
+export const EXTERNAL_MATRIX_URL = process.env.EXTERNAL_MATRIX_URL || '';
 
 export const MAIL_URL = process.env.MAIL_URL || '';
 export const MAILPIT_USER = process.env.MAILPIT_USER || '';

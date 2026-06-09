@@ -24,7 +24,7 @@ import {
   NOT_INVITED_EMAIL_DOMAIN,
   WRONG_SERVER_EMAIL_DOMAIN,
   NUMERIQUE_EMAIL_DOMAIN,
-  BASE_URL,
+  MATRIX_URL,
   ELEMENT_URL,
 } from '../utils/config';
 import { ClientServerApi, type Credentials } from '../utils/api';
@@ -135,7 +135,7 @@ async function authenticatedUserFixture(
 ) {
   // 1. Register user
   const userId = await createMasUserWithPassword(user.username, user.email, user.password);
-  const csAPI = new ClientServerApi(BASE_URL, request);
+  const csAPI = new ClientServerApi(MATRIX_URL, request);
 
   await waitForMasUser(user.email);
 

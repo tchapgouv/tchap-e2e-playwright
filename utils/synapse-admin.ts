@@ -1,5 +1,5 @@
 import type { APIRequestContext } from '@playwright/test';
-import { SYNAPSE_ADMIN_TOKEN, BASE_URL } from './config';
+import { SYNAPSE_ADMIN_TOKEN, MATRIX_URL } from './config';
 
 /**
  * Helper function to set account expiration using the Synapse admin API
@@ -18,7 +18,7 @@ export async function setAccountExpiration(
 ): Promise<any> {
   console.log(`[Synapse API] Setting expiration for user: ${userId} to timestamp: ${expirationTs}`);
 
-  const response = await request.post(`${BASE_URL}/_synapse/client/email_account_validity/admin`, {
+  const response = await request.post(`${MATRIX_URL}/_synapse/client/email_account_validity/admin`, {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${SYNAPSE_ADMIN_TOKEN}`,

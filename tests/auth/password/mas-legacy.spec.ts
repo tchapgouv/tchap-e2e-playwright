@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { BASE_URL, MAS_URL } from '../../../utils/config';
+import { MATRIX_URL, MAS_URL } from '../../../utils/config';
 
 test.describe('Tchap : Legacy SSO Flow', () => {
   test('verify legacy SSO redirect chain for registration', async ({ request }) => {
     // The initial legacy SSO URL
     const email = 'user@exemple.com';
-    const initialUrl = `${BASE_URL}/_matrix/client/r0/login/sso/redirect?redirectUrl=tchap%3A%2F%2Fconnect&org.matrix.msc3824.action=REGISTER&login_hint=${encodeURIComponent(email)}`;
+    const initialUrl = `${MATRIX_URL}/_matrix/client/r0/login/sso/redirect?redirectUrl=tchap%3A%2F%2Fconnect&org.matrix.msc3824.action=REGISTER&login_hint=${encodeURIComponent(email)}`;
     //login_hint is not taken into account in MAS for compat-sso flow
 
     console.log(`[Legacy SSO] Step 1: Calling initial URL: ${initialUrl}`);
