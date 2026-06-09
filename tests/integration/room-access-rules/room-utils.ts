@@ -14,6 +14,7 @@ import {
   OTHER_MAS_URL,
   STANDARD_EMAIL_DOMAIN,
   TEST_USER_PASSWORD,
+  TEST_USER_PREFIX,
 } from '../../../utils/config';
 import { createMasUserWithPassword } from '../../../utils/mas-admin';
 import { EventType } from 'matrix-js-sdk';
@@ -28,7 +29,7 @@ export async function loginWithNewUser(): Promise<{
   matrix: MatrixApi;
   masId: string;
 }> {
-  const username = `user.${Date.now()}`;
+  const username = `${TEST_USER_PREFIX}${Date.now()}`;
   const masId = await createMasUserWithPassword(
     username,
     `${username}@${STANDARD_EMAIL_DOMAIN}`,
@@ -47,7 +48,7 @@ export async function loginWithFederatedNewUser(): Promise<{
   matrix: MatrixApi;
   masId: string;
 }> {
-  const username = `user.${Date.now()}`;
+  const username = `${TEST_USER_PREFIX}${Date.now()}`;
   const masId = await createMasUserWithPassword(
     username,
     `${username}@${OTHER_EMAIL_DOMAIN}`,
@@ -70,7 +71,7 @@ export async function loginWithExternalNewUser(): Promise<{
   matrix: MatrixApi;
   masId: string;
 }> {
-  const username = `user.${Date.now()}`;
+  const username = `${TEST_USER_PREFIX}${Date.now()}`;
   const masId = await createMasUserWithPassword(
     username,
     `${username}@${INVITED_EMAIL_DOMAIN}`,
