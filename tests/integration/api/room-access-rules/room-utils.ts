@@ -83,7 +83,7 @@ export async function loginWithExternalNewUser(): Promise<{
     EXTERNAL_MAS_ADMIN_SECRET
   );
 
-  const matrix = new MatrixApi(EXTERNAL_MATRIX_URL, EXTERNAL_MATRIX_URL);
+  const matrix = new MatrixApi(EXTERNAL_MATRIX_URL, EXTERNAL_MAS_URL);
   const mxId = await matrix.login(username, TEST_USER_PASSWORD);
 
   return { mxId, username, matrix, masId };
