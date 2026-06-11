@@ -3,88 +3,91 @@ import { MatrixApi } from '../../../../utils/matrix-api';
 import {
   MATRIX_URL,
   EXTERNAL_MATRIX_URL,
-  EXTERNAL_MAS_ADMIN_CLIENT_ID,
-  EXTERNAL_MAS_ADMIN_SECRET,
   EXTERNAL_MAS_URL,
   INVITED_EMAIL_DOMAIN,
   MAS_URL,
   OTHER_MATRIX_URL,
   OTHER_EMAIL_DOMAIN,
-  OTHER_MAS_ADMIN_CLIENT_ID,
-  OTHER_MAS_ADMIN_SECRET,
   OTHER_MAS_URL,
   STANDARD_EMAIL_DOMAIN,
   TEST_USER_PASSWORD,
   TEST_USER_PREFIX,
 } from '../../../../utils/config';
-import { createMasUserWithPassword } from '../../../../utils/mas-admin';
+import type { MasAdminClient } from '../../../../utils/mas-admin';
 import { EventType } from 'matrix-js-sdk';
 
+/**
+ * Options for loginWithNewUser function
+ */
+interface CreateUserOptions {
+  domain: string;
+  username_prefix: string;
+  password: string;
+  matrix_url: string;
+  mas_url: string;
+  displayName?: string;
+}
+
+export function standardUserOptions(overrides: Partial<CreateUserOptions> = {}): CreateUserOptions {
+  return {
+    domain: STANDARD_EMAIL_DOMAIN,
+    password: TEST_USER_PASSWORD,
+    matrix_url: MATRIX_URL,
+    mas_url: MAS_URL,
+    displayName: undefined,
+    username_prefix: TEST_USER_PREFIX,
+    ...overrides,
+  };
+}
+export function externalUserOptions(overrides: Partial<CreateUserOptions> = {}): CreateUserOptions {
+  return {
+    domain: INVITED_EMAIL_DOMAIN,
+    password: TEST_USER_PASSWORD,
+    matrix_url: EXTERNAL_MATRIX_URL,
+    mas_url: EXTERNAL_MAS_URL,
+    displayName: undefined,
+    username_prefix: TEST_USER_PREFIX,
+    ...overrides,
+  };
+}
+
+export function federatedUserOptions(
+  overrides: Partial<CreateUserOptions> = {}
+): CreateUserOptions {
+  return {
+    domain: OTHER_EMAIL_DOMAIN,
+    password: TEST_USER_PASSWORD,
+    matrix_url: OTHER_MATRIX_URL,
+    mas_url: OTHER_MAS_URL,
+    displayName: undefined,
+    username_prefix: TEST_USER_PREFIX,
+    ...overrides,
+  };
+}
 /**
  * Helper function to login with a new user
  * Creates a new MAS user and returns the userId, username, and authenticated MatrixApi instance
  */
-export async function loginWithNewUser(): Promise<{
+export async function loginWithNewUser(
+  masAdminClient: MasAdminClient,
+  opts: CreateUserOptions
+): Promise<{
   mxId: string;
   username: string;
   matrix: MatrixApi;
   masId: string;
 }> {
-  const username = `${TEST_USER_PREFIX}${Date.now()}`;
-  const masId = await createMasUserWithPassword(
+  const username = `${opts.username_prefix}${Date.now()}`;
+
+  const masId = await masAdminClient.createUserWithPassword(
     username,
-    `${username}@${STANDARD_EMAIL_DOMAIN}`,
-    TEST_USER_PASSWORD
+    `${username}@${opts.domain}`,
+    opts.password,
+    opts.displayName
   );
 
-  const matrix = new MatrixApi(MATRIX_URL, MAS_URL);
-  const mxId = await matrix.login(username, TEST_USER_PASSWORD);
-
-  return { mxId, username, matrix, masId };
-}
-
-export async function loginWithFederatedNewUser(): Promise<{
-  mxId: string;
-  username: string;
-  matrix: MatrixApi;
-  masId: string;
-}> {
-  const username = `${TEST_USER_PREFIX}${Date.now()}`;
-  const masId = await createMasUserWithPassword(
-    username,
-    `${username}@${OTHER_EMAIL_DOMAIN}`,
-    TEST_USER_PASSWORD,
-    '',
-    OTHER_MAS_URL,
-    OTHER_MAS_ADMIN_CLIENT_ID,
-    OTHER_MAS_ADMIN_SECRET
-  );
-
-  const matrix = new MatrixApi(OTHER_MATRIX_URL, OTHER_MAS_URL);
-  const mxId = await matrix.login(username, TEST_USER_PASSWORD);
-
-  return { mxId, username, matrix, masId };
-}
-
-export async function loginWithExternalNewUser(): Promise<{
-  mxId: string;
-  username: string;
-  matrix: MatrixApi;
-  masId: string;
-}> {
-  const username = `${TEST_USER_PREFIX}${Date.now()}`;
-  const masId = await createMasUserWithPassword(
-    username,
-    `${username}@${INVITED_EMAIL_DOMAIN}`,
-    TEST_USER_PASSWORD,
-    '',
-    EXTERNAL_MAS_URL,
-    EXTERNAL_MAS_ADMIN_CLIENT_ID,
-    EXTERNAL_MAS_ADMIN_SECRET
-  );
-
-  const matrix = new MatrixApi(EXTERNAL_MATRIX_URL, EXTERNAL_MAS_URL);
-  const mxId = await matrix.login(username, TEST_USER_PASSWORD);
+  const matrix = new MatrixApi(opts.matrix_url, opts.mas_url);
+  const mxId = await matrix.login(username, opts.password);
 
   return { mxId, username, matrix, masId };
 }
@@ -205,7 +208,7 @@ export async function setUserPowerLevel(
 }
 
 /**
- * Sets the power level for users_default 
+ * Sets the power level for users_default
  *
  * @param matrix - The Matrix API instance
  * @param roomId - The room ID
@@ -221,17 +224,14 @@ export async function setDefaultPowerLevel(
     .getClient()
     .getStateEvent(roomId, EventType.RoomPowerLevels, '');
 
-   const updatedPowerLevels = {
+  const updatedPowerLevels = {
     ...currentPowerLevels,
-    users_default: defaultPowerLevel
+    users_default: defaultPowerLevel,
   };
 
-  await matrix.getClient().sendStateEvent(
-    roomId,
-    EventType.RoomPowerLevels,
-    updatedPowerLevels,
-    ''
-  );
+  await matrix
+    .getClient()
+    .sendStateEvent(roomId, EventType.RoomPowerLevels, updatedPowerLevels, '');
 }
 
 /**
@@ -241,35 +241,14 @@ export async function setDefaultPowerLevel(
  * @param roomId - The room ID to add the user to
  * @returns Promise resolving to the created user object (mxId, matrix, masId)
  */
-export async function addUserToRoom(
+export async function addNewUserToRoom(
   matrix: MatrixApi,
-  roomId: string
+  roomId: string,
+  masAdminClient: MasAdminClient,
+  createUserOptions: CreateUserOptions
 ): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
   // Create new user
-  const user = await loginWithNewUser();
-
-  // Invite user to room
-  await matrix.getClient().invite(roomId, user.mxId);
-
-  // User joins room
-  await user.matrix.getClient().joinRoom(roomId);
-
-  return user;
-}
-
-/**
- * Creates a new user and adds them to a room with default power level.
- *
- * @param matrix - The Matrix API instance of the room admin/creator
- * @param roomId - The room ID to add the user to
- * @returns Promise resolving to the created user object (mxId, matrix, masId)
- */
-export async function addExternalUserToRoom(
-  matrix: MatrixApi,
-  roomId: string
-): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
-  // Create new user
-  const user = await loginWithExternalNewUser();
+  const user = await loginWithNewUser(masAdminClient, createUserOptions);
 
   // Invite user to room
   await matrix.getClient().invite(roomId, user.mxId);
@@ -289,10 +268,11 @@ export async function addExternalUserToRoom(
  */
 export async function addModeratorToRoom(
   matrix: MatrixApi,
-  roomId: string
+  roomId: string,
+  masAdminClient: MasAdminClient
 ): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
   // Create and add user to room
-  const user = await addUserToRoom(matrix, roomId);
+  const user = await addNewUserToRoom(matrix, roomId, masAdminClient, standardUserOptions());
 
   // Set user's power level to 50 (moderator)
   await setUserPowerLevel(matrix, roomId, user.mxId, 50);
@@ -309,10 +289,11 @@ export async function addModeratorToRoom(
  */
 export async function addAdminToRoom(
   matrix: MatrixApi,
-  roomId: string
+  roomId: string,
+  masAdminClient: MasAdminClient
 ): Promise<{ mxId: string; matrix: MatrixApi; masId: string }> {
   // Create and add user to room
-  const user = await addUserToRoom(matrix, roomId);
+  const user = await addNewUserToRoom(matrix, roomId, masAdminClient, standardUserOptions());
 
   // Set user's power level to 100 (admin)
   await setUserPowerLevel(matrix, roomId, user.mxId, 100);

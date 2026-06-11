@@ -1,21 +1,22 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { verifyUserInMas, performOidcLoginFromTchap } from '../../../utils/auth-helpers';
-import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../../utils/mas-admin';
+import { MasAdminClient } from '../../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../../utils/config';
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 test.describe('Tchap : Login via OIDC', () => {
   test('tchap match account by email', async ({ page, oidcUser }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
-    oidcUser.masId = await createMasUserWithPassword(
+    oidcUser.masId = await masAdminClient.createUserWithPassword(
       oidcUser.username,
       oidcUser.email,
       oidcUser.password
     );
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcUser.email);
+    const existsBeforeLogin = await masAdminClient.checkUserExistsByEmail(oidcUser.email);
     expect(existsBeforeLogin).toBe(true);
 
     // Perform the OIDC login flow
@@ -33,10 +34,10 @@ test.describe('Tchap : Login via OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-auth-success.png` });
 
     // Verify the user was created in MAS
-    await verifyUserInMas(oidcUser);
+    await verifyUserInMas(oidcUser, masAdminClient);
 
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(oidcUser.email);
+    const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(oidcUser.email);
     expect(existsAfterLogin).toBe(true);
 
     console.log(

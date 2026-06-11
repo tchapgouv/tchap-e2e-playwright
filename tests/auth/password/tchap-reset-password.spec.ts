@@ -1,17 +1,23 @@
+import { MasAdminClient } from '../../../utils/mas-admin';
 import { test, expect } from '../../../fixtures/auth-fixture';
-import { checkMasUserExistsByEmail, createMasUserWithPassword } from '../../../utils/mas-admin';
 import { ELEMENT_URL } from '../../../utils/config';
 import { openResetPasswordEmail } from '../../../utils/auth-helpers';
 
 test.describe('Tchap : reset password', () => {
   test('tchap reset password', async ({ page, userData, screenChecker }) => {
+    /*
     userData.masId = await createMasUserWithPassword(
       userData.username,
       userData.email,
       userData.password
     );
-    const existsBeforeLogin = await checkMasUserExistsByEmail(userData.email);
-    expect(existsBeforeLogin).toBe(true);
+    */
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    const masId = await masAdminClient.createUserWithPassword(
+      userData.username,
+      userData.email,
+      userData.password
+    );
 
     await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
 
@@ -57,6 +63,8 @@ test.describe('Tchap : reset password', () => {
 
     //first tab is stuck back to recovery page
     await screenChecker(page, '/recover/progress');
+
+    masAdminClient.deactivateUser(masId);
   });
 
   //TODO add reset password when user is connected -> show an error

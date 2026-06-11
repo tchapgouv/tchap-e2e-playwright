@@ -1,26 +1,28 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../../utils/mas-admin';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPrivateUnencryptedRoom,
   createPrivateEncryptedRoom,
   loginWithNewUser,
-  addExternalUserToRoom as addExternalNewUserToRoom,
-  addUserToRoom as addNewUserToRoom,
+  addNewUserToRoom,
   addModeratorToRoom,
   addAdminToRoom,
+  standardUserOptions,
+  externalUserOptions,
 } from '../room-access-rules/room-utils';
-import { EXTERNAL_MAS_ADMIN_URL, EXTERNAL_MAS_URL } from '../../../../utils/config';
 import { EventType } from 'matrix-js-sdk';
 
 test.describe('API - Manage Last Admin', () => {
   let matrix: MatrixApi;
-  let mxId: string;
   let masId: string;
+  let masAdminClient: MasAdminClient;
+  let externalMasClient: MasAdminClient;
 
   test.beforeAll(async () => {
-    const user = await loginWithNewUser();
-    mxId = user.mxId;
+    masAdminClient = await MasAdminClient.createDefaultMAS();
+    externalMasClient = await MasAdminClient.createExternalMAS();
+    const user = await loginWithNewUser(masAdminClient, standardUserOptions());
     matrix = user.matrix;
     masId = user.masId;
   });
@@ -28,7 +30,7 @@ test.describe('API - Manage Last Admin', () => {
   test('Scenario 1: Last admin leaves private room - users_default becomes 100', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
 
-    const user1 = await addNewUserToRoom(matrix, roomId);
+    const user1 = await addNewUserToRoom(matrix, roomId, masAdminClient, standardUserOptions());
 
     // Check initial state, users_default PL should be 0
     const initialPowerLevels = await matrix
@@ -46,14 +48,14 @@ test.describe('API - Manage Last Admin', () => {
       .getStateEvent(roomId, EventType.RoomPowerLevels, '');
     expect(finalPowerLevels.users_default).toBe(100);
 
-    await deactivateMasUser(user1.masId);
+    await masAdminClient.deactivateUser(user1.masId);
   });
 
   test('Scenario 2: Admin leaves - another admin remains - no changes', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
 
     // Create and promote a second admin
-    const admin2 = await addAdminToRoom(matrix, roomId);
+    const admin2 = await addAdminToRoom(matrix, roomId, masAdminClient);
 
     // Admin (mxId) leaves
     await matrix.getClient().leave(roomId);
@@ -67,14 +69,14 @@ test.describe('API - Manage Last Admin', () => {
     // Check that admin2 remains admin
     expect(finalPowerLevels.users[admin2.mxId]).toBe(100);
 
-    await deactivateMasUser(admin2.masId);
+    masAdminClient.deactivateUser(admin2.masId);
   });
 
   test('Scenario 3: Last admin leaves - moderator promoted to admin', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
 
-    const user = await addNewUserToRoom(matrix, roomId);
-    const moderator = await addModeratorToRoom(matrix, roomId);
+    const user = await addNewUserToRoom(matrix, roomId, masAdminClient, standardUserOptions());
+    const moderator = await addModeratorToRoom(matrix, roomId, masAdminClient);
 
     // Admin (mxId) leaves
     await matrix.getClient().leave(roomId);
@@ -85,8 +87,8 @@ test.describe('API - Manage Last Admin', () => {
       .getStateEvent(roomId, EventType.RoomPowerLevels, '');
     expect(finalPowerLevels.users[moderator.mxId]).toBe(100);
 
-    await deactivateMasUser(moderator.masId);
-    await deactivateMasUser(user.masId);
+    await masAdminClient.deactivateUser(moderator.masId);
+    await masAdminClient.deactivateUser(user.masId);
   });
 
   test('Scenario 4: Last admin leaves external room - internal users promoted', async () => {
@@ -102,8 +104,13 @@ test.describe('API - Manage Last Admin', () => {
       },
     });
 
-    const internal1 = await addNewUserToRoom(matrix, roomId);
-    const external1 = await addExternalNewUserToRoom(matrix, roomId);
+    const internal1 = await addNewUserToRoom(matrix, roomId, masAdminClient, standardUserOptions());
+    const external1 = await addNewUserToRoom(
+      matrix,
+      roomId,
+      externalMasClient,
+      externalUserOptions()
+    );
 
     // Admin (mxId) leaves
     await matrix.getClient().leave(roomId);
@@ -116,8 +123,8 @@ test.describe('API - Manage Last Admin', () => {
       expect(finalPowerLevels.users[u.mxId]).toBe(100);
     }
 
-    await deactivateMasUser(internal1.masId);
-    await deactivateMasUser(external1.masId, EXTERNAL_MAS_ADMIN_URL);
+    await masAdminClient.deactivateUser(internal1.masId);
+    await externalMasClient.deactivateUser(external1.masId);
   });
 
   test('Scenario 5: Last admin leaves external room - moderators promoted', async () => {
@@ -133,9 +140,14 @@ test.describe('API - Manage Last Admin', () => {
       },
     });
 
-    const user = await addNewUserToRoom(matrix, roomId);
-    const mod1 = await addModeratorToRoom(matrix, roomId);
-    const external1 = await addExternalNewUserToRoom(matrix, roomId);
+    const user = await addNewUserToRoom(matrix, roomId, masAdminClient, standardUserOptions());
+    const mod1 = await addModeratorToRoom(matrix, roomId, masAdminClient);
+    const external1 = await addNewUserToRoom(
+      matrix,
+      roomId,
+      externalMasClient,
+      externalUserOptions()
+    );
 
     // Admin (mxId) leaves
     await matrix.getClient().leave(roomId);
@@ -147,9 +159,9 @@ test.describe('API - Manage Last Admin', () => {
     expect(finalPowerLevels.users[mod1.mxId]).toBe(100);
 
     // clean
-    await deactivateMasUser(mod1.masId);
-    await deactivateMasUser(user.masId);
-    await deactivateMasUser(external1.masId, EXTERNAL_MAS_URL);
+    await masAdminClient.deactivateUser(mod1.masId);
+    await masAdminClient.deactivateUser(user.masId);
+    await externalMasClient.deactivateUser(external1.masId);
   });
 
   test('Scenario 6: Admin leaves an empty external unencrypted room - no error', async () => {
@@ -171,7 +183,6 @@ test.describe('API - Manage Last Admin', () => {
     expect(room).toBeNull();
   });
 
-
   test('Scenario 7: Admin leaves an empty encrypted external room - no error', async () => {
     // Create empty an unencrypted room
     const roomId = await createPrivateEncryptedRoom(matrix);
@@ -191,6 +202,6 @@ test.describe('API - Manage Last Admin', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId);
+    await masAdminClient.deactivateUser(masId);
   });
 });

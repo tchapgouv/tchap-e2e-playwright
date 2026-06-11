@@ -5,13 +5,15 @@ import {
   performPasswordLogin,
 } from '../../../utils/auth-helpers';
 import { SCREENSHOTS_DIR } from '../../../utils/config';
+import { MasAdminClient } from '../../../utils/mas-admin';
 
 test.describe('MAS login password', () => {
   test('with allowed account', async ({ page }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
 
     // Create a test user with a password in MAS
-    const user = await createMasTestUser('exemple.com');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    const user = await createMasTestUser('exemple.com', masAdminClient);
 
     try {
       console.log(`Created test user in MAS: ${user.username} (${user.email})`);
@@ -30,7 +32,7 @@ test.describe('MAS login password', () => {
       console.log(`Successfully authenticated with password for user: ${user.username}`);
     } finally {
       // Clean up the test user
-      await cleanupMasTestUser(user);
+      await cleanupMasTestUser(user, masAdminClient);
       console.log(`Cleaned up test user: ${user.username}`);
     }
   });

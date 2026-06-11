@@ -1,538 +1,576 @@
 import { type APIRequestContext, request } from '@playwright/test';
-import {MAS_ADMIN_CLIENT_ID, MAS_ADMIN_CLIENT_SECRET, MAS_ADMIN_URL } from './config';
+import {
+  EXTERNAL_MAS_ADMIN_CLIENT_ID,
+  EXTERNAL_MAS_ADMIN_SECRET,
+  EXTERNAL_MAS_ADMIN_URL,
+  MAS_ADMIN_CLIENT_ID,
+  MAS_ADMIN_CLIENT_SECRET,
+  MAS_ADMIN_URL,
+  OTHER_MAS_ADMIN_CLIENT_ID,
+  OTHER_MAS_ADMIN_SECRET,
+  OTHER_MAS_ADMIN_URL,
+} from './config';
 
-interface MasAdminCredentials{
-  clientId: string, 
-  secret: string
+interface MasAdminCredentials {
+  clientId: string;
+  secret: string;
 }
 
 // Create a reusable API request context cache
 const apiContextCache = new Map<string, APIRequestContext>();
 const masAdminCredentialsCache = new Map<string, MasAdminCredentials>();
 
-async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
-  const cacheKey = baseUrl ?? MAS_ADMIN_URL;
-  
-  const cached = apiContextCache.get(cacheKey);
-  if (cached) return cached;
-
-  const context = await request.newContext({
-    baseURL: cacheKey,
-    ignoreHTTPSErrors: true,
-  });
-  apiContextCache.set(cacheKey, context);
-  return context;
-}
-
-function getMasAdminCredentials(baseUrl?: string, clientId?: string, secret?: string): MasAdminCredentials {
-  const cacheKey = baseUrl ?? MAS_ADMIN_URL;
-  console.log(`[MAS API] Requesting admin token with baseUrl: ${cacheKey}`);
-  const cached = masAdminCredentialsCache.get(cacheKey);
-  if (cached) return cached;
-  const newClientId = clientId ?? MAS_ADMIN_CLIENT_ID;
-  const newSecret = secret ?? MAS_ADMIN_CLIENT_SECRET;
-  const credentials = {
-    clientId: newClientId,
-    secret: newSecret,
-  }
-  masAdminCredentialsCache.set(cacheKey, credentials);
-  return credentials;
-}
-
 /**
- * Get an admin access token for MAS
+ * MasAdminClient - A class-based client for interacting with MAS Admin API
+ * This class handles authentication, token caching, and API requests automatically
  */
-export async function getMasAdminToken(baseUrl?: string, clientId?: string, secret?: string): Promise<string> {
-  const apiRequestContext = await getApiContext(baseUrl);
-  const credentials = getMasAdminCredentials(baseUrl, clientId, secret);
-  const authHeader = Buffer.from(`${credentials.clientId}:${credentials.secret}`).toString(
-    'base64'
-  );
+class MasAdminClient {
+  private readonly baseUrl: string;
+  private readonly clientId: string;
+  private readonly secret: string;
+  private apiContext!: APIRequestContext;
+  private token: string | null = null;
 
-  const response = await apiRequestContext.post('/oauth2/token', {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${authHeader}`,
-    },
-    form: {
-      grant_type: 'client_credentials',
-      scope: 'urn:mas:admin',
-    },
-  });
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to get admin token: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to get MAS admin token: ${response.status()} - ${errorText}`);
+  public static async createDefaultMAS() {
+    return MasAdminClient.create(MAS_ADMIN_URL, MAS_ADMIN_CLIENT_ID, MAS_ADMIN_CLIENT_SECRET);
   }
 
-  const data = (await response.json()) as { access_token: string };
-  //console.log(`[MAS API] Successfully obtained admin token ${data.access_token}`);
-  return data.access_token;
-}
+  public static async createFederatedMAS() {
+    return MasAdminClient.create(
+      OTHER_MAS_ADMIN_URL,
+      OTHER_MAS_ADMIN_CLIENT_ID,
+      OTHER_MAS_ADMIN_SECRET
+    );
+  }
 
-/**
- * Get user details from MAS by email
- */
-export async function getMasUserByEmail(email: string, baseUrl?: string): Promise<any | null> {
-  //console.log(`[MAS API] Getting user details for email: ${email}`);
-  const token = await getMasAdminToken(baseUrl);
-  const apiRequestContext = await getApiContext(baseUrl);
+  public static async createExternalMAS() {
+    return MasAdminClient.create(
+      EXTERNAL_MAS_ADMIN_URL,
+      EXTERNAL_MAS_ADMIN_CLIENT_ID,
+      EXTERNAL_MAS_ADMIN_SECRET
+    );
+  }
 
-  // Step 1: Get user ID from email
-  const emailResponse = await apiRequestContext.get(
-    `/api/admin/v1/user-emails?filter[email]=${encodeURIComponent(email)}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+  /**
+   * Factory method to create and initialize a MasAdminClient in one step
+   * @param baseUrl The base URL of the MAS server
+   * @param clientId The client ID for authentication (required)
+   * @param secret The client secret for authentication (required)
+   * @returns A fully initialized MasAdminClient instance
+   */
+  public static async create(
+    baseUrl: string,
+    clientId: string,
+    secret: string
+  ): Promise<MasAdminClient> {
+    const client = new MasAdminClient(baseUrl, clientId, secret);
+    await client.initialize();
+    return client;
+  }
+
+  /**
+   * Create a new MAS Admin client instance
+   * @param baseUrl The base URL of the MAS server
+   * @param clientId The client ID for authentication (required)
+   * @param secret The client secret for authentication (required)
+   */
+  private constructor(baseUrl: string, clientId: string, secret: string) {
+    this.baseUrl = baseUrl;
+    this.clientId = clientId;
+    this.secret = secret;
+  }
+
+  /**
+   * Initialize the client - must be called before using the client
+   */
+  public async initialize(): Promise<void> {
+    this.apiContext = await request.newContext({
+      baseURL: this.baseUrl,
+      ignoreHTTPSErrors: true,
+    });
+  }
+
+  /**
+   * Dispose the client resources
+   */
+  public async dispose(): Promise<void> {
+    if (this.apiContext) {
+      await this.apiContext.dispose();
     }
-  );
-
-  if (!emailResponse.ok()) {
-    const errorText = await emailResponse.text();
-    console.error(`[MAS API] Failed to get user email: ${emailResponse.status()} - ${errorText}`);
-    throw new Error(`Failed to get MAS user email: ${emailResponse.status()} - ${errorText}`);
   }
 
-  const emailResult = await emailResponse.json();
-  if (emailResult.data.length === 0) {
-    console.log(`[MAS API] No user found with email: ${email}`);
-    throw new Error(`[MAS API] No user found with email: ${email}`);
-  }
+  /**
+   * Get the current access token, obtaining a new one if necessary
+   */
+  private async getToken(): Promise<string> {
+    // Check if token is still valid (simple implementation - could be enhanced)
+    if (!this.token) {
+      const authHeader = Buffer.from(`${this.clientId}:${this.secret}`).toString('base64');
 
-  if (emailResult.data.length > 1) {
-    console.log(`[MAS API] Multiple users found with email: ${email}`);
-    throw new Error(`[MAS API] Multiple users found with email: ${email}`);
-  }
+      const response = await this.apiContext.post('/oauth2/token', {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Authorization: `Basic ${authHeader}`,
+        },
+        form: {
+          grant_type: 'client_credentials',
+          scope: 'urn:mas:admin',
+        },
+      });
 
-  // Extract user_id from the attributes
-  const userId = emailResult.data[0].attributes.user_id;
-  //console.log(`[MAS API] Found user ID: ${userId} for email: ${email}`);
-
-  // Step 2: Get complete user details using the user ID
-  const userResponse = await apiRequestContext.get(`/api/admin/v1/users/${userId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!userResponse.ok()) {
-    const errorText = await userResponse.text();
-    console.error(`[MAS API] Failed to get user details: ${userResponse.status()} - ${errorText}`);
-    throw new Error(`Failed to get MAS user details: ${userResponse.status()} - ${errorText}`);
-  }
-
-  const userResult = await userResponse.json();
-  const user = userResult.data;
-
-  //console.log(`[MAS API] User found: Yes`);
-  console.log(
-    `[MAS API] User found : ID: ${user.id}, Username: ${user.attributes.username || 'N/A'}`
-  );
-
-  return user;
-}
-
-/**
- * Check if a user exists in MAS by email
- */
-export async function checkMasUserExistsByEmail(email: string): Promise<boolean> {
-  console.log(`[MAS API] Checking if user exists with email: ${email}`);
-  try {
-    const user = await getMasUserByEmail(email);
-    const exists = user !== null;
-    //console.log(`[MAS API] User with email ${email} exists: ${exists}`);
-    return exists;
-  } catch (error) {
-    console.error(`[MAS API] Error checking user existence: ${error}`);
-    return false;
-  }
-}
-
-/**
- * Wait for a user to be created in MAS
- * This is useful after OIDC authentication, as there might be a slight delay
- * before the user is fully created in MAS
- */
-export async function waitForMasUser(
-  email: string,
-  maxAttempts = 10,
-  delayMs = 1000
-): Promise<any> {
-  console.log(
-    `[MAS API] Waiting for user with email ${email} to be created (max ${maxAttempts} attempts)`
-  );
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    console.log(`[MAS API] Attempt ${attempt + 1}/${maxAttempts} to find user`);
-    try {
-      const user = await getMasUserByEmail(email);
-      if (user) {
-        console.log(`[MAS API] User found on attempt ${attempt + 1}`);
-        return user;
+      if (!response.ok()) {
+        const errorText = await response.text();
+        console.error(`[MAS API] Failed to get admin token: ${response.status()} - ${errorText}`);
+        throw new Error(`Failed to get MAS admin token: ${response.status()} - ${errorText}`);
       }
-      console.log(
-        `[MAS API] User not found on attempt ${attempt + 1}, waiting ${delayMs}ms before next attempt`
+
+      const data = (await response.json()) as { access_token: string };
+      this.token = data.access_token;
+      console.log(`[MAS API] Successfully obtained admin token for ${this.baseUrl}`);
+    }
+    return this.token;
+  }
+
+  /**
+   * Get user details from MAS by email
+   */
+  public async getUserByEmail(email: string): Promise<any> {
+    console.log(`[MAS API] Getting user details for email: ${email} on ${this.baseUrl}`);
+    const token = await this.getToken();
+
+    // Step 1: Get user ID from email
+    const emailResponse = await this.apiContext.get(
+      `/api/admin/v1/user-emails?filter[email]=${encodeURIComponent(email)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!emailResponse.ok()) {
+      const errorText = await emailResponse.text();
+      console.error(`[MAS API] Failed to get user email: ${emailResponse.status()} - ${errorText}`);
+      throw new Error(`Failed to get MAS user email: ${emailResponse.status()} - ${errorText}`);
+    }
+
+    const emailResult = await emailResponse.json();
+    if (emailResult.data.length === 0) {
+      console.log(`[MAS API] No user found with email: ${email}`);
+      throw new Error(`[MAS API] No user found with email: ${email}`);
+    }
+
+    if (emailResult.data.length > 1) {
+      console.log(`[MAS API] Multiple users found with email: ${email}`);
+      throw new Error(`[MAS API] Multiple users found with email: ${email}`);
+    }
+
+    // Extract user_id from the attributes
+    const userId = emailResult.data[0].attributes.user_id;
+    console.log(`[MAS API] Found user ID: ${userId} for email: ${email}`);
+
+    // Step 2: Get complete user details using the user ID
+    const userResponse = await this.apiContext.get(`/api/admin/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!userResponse.ok()) {
+      const errorText = await userResponse.text();
+      console.error(
+        `[MAS API] Failed to get user details: ${userResponse.status()} - ${errorText}`
       );
+      throw new Error(`Failed to get MAS user details: ${userResponse.status()} - ${errorText}`);
+    }
+
+    const userResult = await userResponse.json();
+    const user = userResult.data;
+
+    console.log(
+      `[MAS API] User found : ID: ${user.id}, Username: ${user.attributes.username || 'N/A'}`
+    );
+
+    return user;
+  }
+
+  /**
+   * Check if a user exists in MAS by email
+   */
+  public async checkUserExistsByEmail(email: string): Promise<boolean> {
+    console.log(`[MAS API] Checking if user exists with email: ${email}`);
+    try {
+      const user = await this.getUserByEmail(email);
+      return user !== null;
     } catch (error) {
-      console.warn(`[MAS API] Attempt ${attempt + 1}/${maxAttempts} failed: ${error}`);
+      console.error(`[MAS API] Error checking user existence: ${error}`);
+      return false;
     }
-
-    // Wait before the next attempt
-    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
-  const errorMsg = `User with email ${email} not found in MAS after ${maxAttempts} attempts`;
-  console.error(`[MAS API] ${errorMsg}`);
-  throw new Error(errorMsg);
-}
-
-/**
- * Create a user in MAS with a password
- */
-export async function createMasUserWithPassword(
-  username: string,
-  email: string,
-  password: string,
-  displayName?: string ,
-  baseUrl?: string,
-  clientId?: string, 
-  secret?: string,
-): Promise<string> {
-  
-  console.log(
-    `[MAS API] Creating user with username:${username}, email:${email}, password:${password}, displayName:${displayName || "No displayname"}`
-  );
-  const token = await getMasAdminToken(baseUrl, clientId, secret);
-  const apiRequestContext = await getApiContext(baseUrl);
-  let createUserData = {
-    username: username,
-    skip_homeserver_check: false,
-    ...(displayName && { displayname: displayName })
-  }
-
-  const response = await apiRequestContext.post('/api/admin/v1/users', {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    data: createUserData,
-  });
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to create user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to create MAS user: ${response.status()} - ${errorText}`);
-  }
-
-  const data = await response.json();
-  //console.log(data.data)
-  const masId = data.data.id;
-
-  const responsePwd = await apiRequestContext.post(`/api/admin/v1/users/${masId}/set-password`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    data: {
-      password: password,
-      skip_password_check: true,
-    },
-  });
-
-  if (!responsePwd.ok()) {
-    const errorText = await responsePwd.text();
-    console.error(
-      `[MAS API] Failed to set password for user: ${responsePwd.status()} - ${errorText}`
+  /**
+   * Wait for a user to be created in MAS
+   */
+  public async waitForUser(email: string, maxAttempts = 10, delayMs = 1000): Promise<any> {
+    console.log(
+      `[MAS API] Waiting for user with email ${email} to be created (max ${maxAttempts} attempts)`
     );
-    throw new Error(`Failed to set password for user: ${responsePwd.status()} - ${errorText}`);
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`[MAS API] Attempt ${attempt + 1}/${maxAttempts} to find user`);
+      try {
+        const user = await this.getUserByEmail(email);
+        if (user) {
+          console.log(`[MAS API] User found on attempt ${attempt + 1}`);
+          return user;
+        }
+        console.log(
+          `[MAS API] User not found on attempt ${attempt + 1}, waiting ${delayMs}ms before next attempt`
+        );
+      } catch (error) {
+        console.warn(`[MAS API] Attempt ${attempt + 1}/${maxAttempts} failed: ${error}`);
+      }
+
+      // Wait before the next attempt
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    const errorMsg = `User with email ${email} not found in MAS after ${maxAttempts} attempts`;
+    console.error(`[MAS API] ${errorMsg}`);
+    throw new Error(errorMsg);
   }
 
-  const responseEmail = await apiRequestContext.post(`/api/admin/v1/user-emails`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    data: {
-      user_id: masId,
-      email: email,
-    },
-  });
-
-  if (!responseEmail.ok()) {
-    const errorText = await responseEmail.text();
-    console.error(
-      `[MAS API] Failed to set email for user: ${responseEmail.status()} - ${errorText}`
+  /**
+   * Create a user in MAS with a password
+   */
+  public async createUserWithPassword(
+    username: string,
+    email: string,
+    password: string,
+    displayName?: string
+  ): Promise<string> {
+    console.log(
+      `[MAS API] Creating user with username:${username}, email:${email}, password:${password}, displayName:${displayName || 'No displayname'}`
     );
-    throw new Error(`Failed to set email for user: ${responseEmail.status()} - ${errorText}`);
-  }
-  console.log(`[MAS API] User created successfully with ID: ${masId}`);
-  return masId;
-}
+    const token = await this.getToken();
 
-/**
- * Delete a user from MAS
- */
-export async function deactivateMasUser(userId: string, baseUrl?:string): Promise<void> {
-  console.log(`[MAS API] Deleting user with ID: ${userId}`);
-  const token = await getMasAdminToken(baseUrl);
-  const apiRequestContext = await getApiContext(baseUrl);
+    const createUserData = {
+      username: username,
+      skip_homeserver_check: false,
+      ...(displayName && { displayname: displayName }),
+    };
 
-  const response = await apiRequestContext.post(`/api/admin/v1/users/${userId}/deactivate`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to deactivate user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to deactivate MAS user: ${response.status()} - ${errorText}`);
-  }
-
-  console.log(`[MAS API] User deactivated successfully`);
-}
-
-/**
- * Check if a oauth link exists
- */
-export async function oauthLinkExistsByUserId(userId: string): Promise<boolean> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.get(
-    `/api/admin/v1/upstream-oauth-links?filter[user]=${userId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
-  }
-  const data = await response.json();
-  //console.log(data.data)
-  const links = data.data;
-  console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
-  return links.length === 1;
-}
-
-/**
- * Check if a oauth link exists
- */
-export async function oauthLinkExistsBySubject(subject: string): Promise<boolean> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.get(
-    `/api/admin/v1/upstream-oauth-links?filter[subject]=${subject}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
-  }
-  const data = await response.json();
-  //console.log(data.data)
-  const links = data.data;
-  console.log(`[MAS API] Oauth links for user ${subject} : ${JSON.stringify(links)}`);
-  return links.length === 1;
-}
-
-/**
- * Dispose the API context when done
- */
-export async function disposeApiContext(baseUrl? : string): Promise<void> {
-  const cacheKey = baseUrl ?? MAS_ADMIN_URL;
-  const cached = apiContextCache.get(cacheKey);
-  if (cached) {
-    //console.log(`[MAS API] Disposing API context`);
-    await cached.dispose();
-    apiContextCache.delete(cacheKey);
-    //console.log(`[MAS API] API context disposed`);
-  } else {
-    console.log(`[MAS API] No API context to dispose`);
-  }
-}
-
-/**
- * Check if a oauth link exists
- */
-export async function getOauthLinkByUserId(userId: string): Promise<any> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.get(
-    `/api/admin/v1/upstream-oauth-links?filter[user]=${userId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
-  }
-  const data = await response.json();
-  //console.log(data.data)
-  const links = data.data;
-  console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
-  return links;
-}
-
-export async function getOauthLinkBySubject(subject: string): Promise<any> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.get(
-    `/api/admin/v1/upstream-oauth-links?filter[subject]=${subject}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
-  }
-  const data = await response.json();
-  //console.log(data.data)
-  const links = data.data;
-  console.log(`[MAS API] Oauth links for user ${subject} : ${JSON.stringify(links)}`);
-  return links;
-}
-
-export async function deleteOauthLink(id: string): Promise<void> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.delete(`/api/admin/v1/upstream-oauth-links/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to delete user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to delete MAS user: ${response.status()} - ${errorText}`);
-  }
-  console.log(
-    `[MAS API] Oauth links deleted for id:${id}, response : ${JSON.stringify(response)} `
-  );
-  return;
-}
-
-export async function addUserEmail(userId: string, email: string): Promise<void> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.post(`/api/admin/v1/user-emails`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-    data: {
-      user_id: userId,
-      email: email,
-    },
-  });
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to set email for user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to set email for user: ${response.status()} - ${errorText}`);
-  }
-  console.log(
-    `[MAS API] User email added for user_id:${userId}, response : ${JSON.stringify(response)} `
-  );
-  return;
-}
-
-export async function getUserEmail(userId: string, email: string): Promise<any> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
-
-  const response = await apiRequestContext.get(
-    `/api/admin/v1/user-emails?filter[user]=${userId}&filter[email]=${email}`,
-    {
+    const response = await this.apiContext.post('/api/admin/v1/users', {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+      data: createUserData,
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to create user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to create MAS user: ${response.status()} - ${errorText}`);
     }
-  );
 
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to set email for user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to set email for user: ${response.status()} - ${errorText}`);
-  }
-  const json = await response.json();
-  const user_email = json.data[0];
-  console.log(
-    `[MAS API] User email retrieved for userId:${userId}, user_email : ${JSON.stringify(user_email)} `
-  );
-  return user_email;
-}
+    const data = await response.json();
+    const masId = data.data.id;
 
-export async function deleteUserEmail(id: string): Promise<void> {
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
+    const responsePwd = await this.apiContext.post(`/api/admin/v1/users/${masId}/set-password`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        password: password,
+        skip_password_check: true,
+      },
+    });
 
-  const response = await apiRequestContext.delete(`/api/admin/v1/user-emails/${id}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-    },
-  });
+    if (!responsePwd.ok()) {
+      const errorText = await responsePwd.text();
+      console.error(
+        `[MAS API] Failed to set password for user: ${responsePwd.status()} - ${errorText}`
+      );
+      throw new Error(`Failed to set password for user: ${responsePwd.status()} - ${errorText}`);
+    }
 
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to set email for user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to set email for user: ${response.status()} - ${errorText}`);
-  }
-  console.log(
-    `[MAS API] User email deleted for user-emails:${id}, response : ${JSON.stringify(response)} `
-  );
-  return;
-}
+    const responseEmail = await this.apiContext.post(`/api/admin/v1/user-emails`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        user_id: masId,
+        email: email,
+      },
+    });
 
-/**
- * Reactivate a user from MAS
- */
-export async function reactivateMasUser(userId: string): Promise<void> {
-  console.log(`[MAS API] Deleting user with ID: ${userId}`);
-  const token = await getMasAdminToken();
-  const apiRequestContext = await getApiContext();
+    if (!responseEmail.ok()) {
+      const errorText = await responseEmail.text();
+      console.error(
+        `[MAS API] Failed to set email for user: ${responseEmail.status()} - ${errorText}`
+      );
+      throw new Error(`Failed to set email for user: ${responseEmail.status()} - ${errorText}`);
+    }
 
-  const response = await apiRequestContext.post(`/api/admin/v1/users/${userId}/reactivate`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok()) {
-    const errorText = await response.text();
-    console.error(`[MAS API] Failed to reactivate user: ${response.status()} - ${errorText}`);
-    throw new Error(`Failed to reactivate MAS user: ${response.status()} - ${errorText}`);
+    console.log(`[MAS API] User created successfully with ID: ${masId}`);
+    return masId;
   }
 
-  console.log(`[MAS API] User reactivated successfully`);
+  /**
+   * Delete a user from MAS
+   */
+  public async deactivateUser(userId: string): Promise<void> {
+    console.log(`[MAS API] Deleting user with ID: ${userId}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.post(`/api/admin/v1/users/${userId}/deactivate`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to deactivate user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to deactivate MAS user: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] User deactivated successfully`);
+  }
+
+  /**
+   * Reactivate a user from MAS
+   */
+  public async reactivateUser(userId: string): Promise<void> {
+    console.log(`[MAS API] Reactivating user with ID: ${userId}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.post(`/api/admin/v1/users/${userId}/reactivate`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to reactivate user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to reactivate MAS user: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] User reactivated successfully`);
+  }
+
+  /**
+   * Check if a oauth link exists by user ID
+   */
+  public async oauthLinkExistsByUserId(userId: string): Promise<boolean> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get(
+      `/api/admin/v1/upstream-oauth-links?filter[user]=${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to check oauth links: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to check oauth links: ${response.status()} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const links = data.data;
+    console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
+    return links.length === 1;
+  }
+
+  /**
+   * Check if a oauth link exists by subject
+   */
+  public async oauthLinkExistsBySubject(subject: string): Promise<boolean> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get(
+      `/api/admin/v1/upstream-oauth-links?filter[subject]=${subject}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to check oauth links: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to check oauth links: ${response.status()} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const links = data.data;
+    console.log(`[MAS API] Oauth links for subject ${subject} : ${JSON.stringify(links)}`);
+    return links.length === 1;
+  }
+
+  /**
+   * Get oauth links by user ID
+   */
+  public async getOauthLinksByUserId(userId: string): Promise<any> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get(
+      `/api/admin/v1/upstream-oauth-links?filter[user]=${userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to get oauth links: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to get oauth links: ${response.status()} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const links = data.data;
+    console.log(`[MAS API] Oauth links for user ${userId} : ${JSON.stringify(links)}`);
+    return links;
+  }
+
+  /**
+   * Get oauth links by subject
+   */
+  public async getOauthLinksBySubject(subject: string): Promise<any> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get(
+      `/api/admin/v1/upstream-oauth-links?filter[subject]=${subject}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to get oauth links: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to get oauth links: ${response.status()} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    const links = data.data;
+    console.log(`[MAS API] Oauth links for subject ${subject} : ${JSON.stringify(links)}`);
+    return links;
+  }
+
+  /**
+   * Delete an oauth link
+   */
+  public async deleteOauthLink(id: string): Promise<void> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.delete(`/api/admin/v1/upstream-oauth-links/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to delete oauth link: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to delete oauth link: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] Oauth link deleted for id:${id}`);
+  }
+
+  /**
+   * Add an email to a user
+   */
+  public async addUserEmail(userId: string, email: string): Promise<void> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.post(`/api/admin/v1/user-emails`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        user_id: userId,
+        email: email,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to add email for user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to add email for user: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] User email added for user_id:${userId}`);
+  }
+
+  /**
+   * Get user email by user ID and email
+   */
+  public async getUserEmail(userId: string, email: string): Promise<any> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get(
+      `/api/admin/v1/user-emails?filter[user]=${userId}&filter[email]=${email}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to get email for user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to get email for user: ${response.status()} - ${errorText}`);
+    }
+
+    const json = await response.json();
+    const user_email = json.data[0];
+    console.log(
+      `[MAS API] User email retrieved for userId:${userId}, user_email : ${JSON.stringify(user_email)}`
+    );
+    return user_email;
+  }
+
+  /**
+   * Delete a user email
+   */
+  public async deleteUserEmail(id: string): Promise<void> {
+    const token = await this.getToken();
+
+    const response = await this.apiContext.delete(`/api/admin/v1/user-emails/${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(
+        `[MAS API] Failed to delete email for user: ${response.status()} - ${errorText}`
+      );
+      throw new Error(`Failed to delete email for user: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] User email deleted for user-emails:${id}`);
+  }
 }
+
+// Export the MasAdminClient class for direct use
+export { MasAdminClient };

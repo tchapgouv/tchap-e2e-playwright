@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../../utils/mas-admin';
-import { createPrivateEncryptedRoom, createPrivateUnencryptedRoom, expectErrorWhenSendStateEvent, loginWithFederatedNewUser, loginWithNewUser } from './room-utils';
+import { MasAdminClient } from '../../../../utils/mas-admin';
+import { expectErrorWhenSendStateEvent, loginWithNewUser, standardUserOptions } from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
-import { cpSync } from 'fs';
 
 export async function createDirectRoom(
   matrix: MatrixApi,
@@ -28,12 +27,14 @@ test.describe('API - Direct Room', () => {
   let matrix: MatrixApi;
   let mxId: string;
   let masId: string;
+  let masAdmin: MasAdminClient;
 
   test.beforeAll(async () => {
-    const user = await loginWithNewUser();
+    masAdmin = await MasAdminClient.createDefaultMAS();
+    const user = await loginWithNewUser(masAdmin, standardUserOptions());
     mxId = user.mxId;
     matrix = user.matrix;
-    masId = user.masId
+    masId = user.masId;
   });
 
   test('Should create direct room with correct properties', async () => {
@@ -82,6 +83,6 @@ test.describe('API - Direct Room', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId);
+    masAdmin.deactivateUser(masId);
   });
 });

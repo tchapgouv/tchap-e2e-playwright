@@ -1,6 +1,6 @@
 import { type BrowserContext, expect, type Page } from '@playwright/test';
 import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
-import { waitForMasUser, createMasUserWithPassword, deactivateMasUser } from './mas-admin';
+import type { MasAdminClient } from './mas-admin';
 import {
   ELEMENT_URL,
   KEYCLOAK_URL,
@@ -177,26 +177,47 @@ export async function performOidcLoginFromTchap(
 /**
  * Verify that a user was created in MAS after OIDC authentication
  */
-export async function verifyUserInMas(user: TestUser): Promise<void> {
-  const masUser = await waitForMasUser(user.email);
+export async function verifyUserInMas(
+  user: TestUser,
+  masAdminClient: MasAdminClient
+): Promise<void> {
+  const masUser = await masAdminClient.waitForUser(user.email);
   user.masId = masUser.id;
 }
 
 /**
  * Create a test user directly in MAS with password
  */
-export async function createMasTestUser(domain: string, baseUrl?: string, clientId?: string, secret?: string,): Promise<TestUser> {
+export async function createMasTestUser(
+  domain: string,
+  masAdminClient: MasAdminClient
+): Promise<TestUser> {
   const user = generateTestUserData(domain);
-  const masId = await createMasUserWithPassword(user.username, user.email, user.password, user.displayName, baseUrl, clientId, secret);
+  const masId = await masAdminClient.createUserWithPassword(
+    user.username,
+    user.email,
+    user.password,
+    user.displayName
+  );
+  /*
+  const masId = await createMasUserWithPassword(
+    user.username,
+    user.email,
+    user.password,
+    user.displayName
+  );*/
   return { ...user, masId };
 }
 
 /**
  * Clean up a MAS test user
  */
-export async function cleanupMasTestUser(user: TestUser): Promise<void> {
+export async function cleanupMasTestUser(
+  user: TestUser,
+  masAdminClient: MasAdminClient
+): Promise<void> {
   if (user.masId) {
-    await deactivateMasUser(user.masId);
+    await masAdminClient.deactivateUser(user.masId);
   }
 }
 
@@ -344,8 +365,18 @@ export function generateTestUserData(domain: string): TestUser {
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
   const localpart = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}-${domain}`;
   const email = `${username}@${domain}`;
-  let domainDisplayName = domain.split('.').map(word => word.charAt(0).toUpperCase()+ word.slice(1)).join('');
-  const displayName = username.split('.').map(word => word.charAt(0).toUpperCase()+ word.slice(1)).join(' ') + ' [' + domainDisplayName + ']';
+  const domainDisplayName = domain
+    .split('.')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+  const displayName =
+    username
+      .split('.')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ') +
+    ' [' +
+    domainDisplayName +
+    ']';
 
   console.log('Using email: ', email);
 
@@ -354,7 +385,7 @@ export function generateTestUserData(domain: string): TestUser {
     email: email,
     password: TEST_USER_PASSWORD,
     domain: domain,
-    displayName: displayName
+    displayName: displayName,
   };
 }
 

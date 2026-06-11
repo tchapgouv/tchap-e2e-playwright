@@ -4,13 +4,7 @@ import {
   performOidcLogin,
   type TestUser,
 } from '../../../utils/auth-helpers';
-import {
-  createMasUserWithPassword,
-  getMasUserByEmail,
-  deactivateMasUser,
-  oauthLinkExistsByUserId,
-  oauthLinkExistsBySubject,
-} from '../../../utils/mas-admin';
+import { MasAdminClient } from '../../../utils/mas-admin';
 import { SCREENSHOTS_DIR, STANDARD_EMAIL_DOMAIN } from '../../../utils/config';
 
 test.describe('MAS Login OIDC', () => {
@@ -19,8 +13,12 @@ test.describe('MAS Login OIDC', () => {
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${oidcUser.email}`);
-
-    oidcUser.masId = await createMasUserWithPassword(oidcUser.username, oidcUser.email, 'any');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    oidcUser.masId = await masAdminClient.createUserWithPassword(
+      oidcUser.username,
+      oidcUser.email,
+      'any'
+    );
 
     try {
       // Perform the OIDC login flow
@@ -36,15 +34,14 @@ test.describe('MAS Login OIDC', () => {
       });
 
       // Verify the user in MAS is still the same (account was linked, not created new)
-      const userAfterLogin = await getMasUserByEmail(oidcUser.email);
+      const userAfterLogin = await masAdminClient.getUserByEmail(oidcUser.email);
       expect(userAfterLogin.id).toBe(oidcUser.masId);
-      //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
-      expect(await oauthLinkExistsBySubject(oidcUser.username)).toBe(true);
+      expect(await masAdminClient.oauthLinkExistsBySubject(oidcUser.username)).toBe(true);
 
       console.log(`Successfully verified account linking for user with email: ${oidcUser.email}`);
     } finally {
       // Clean up the MAS user
-      await deactivateMasUser(oidcUser.masId);
+      await masAdminClient.deactivateUser(oidcUser.masId);
       console.log(`Cleaned up MAS user: ${oidcUser.username}`);
     }
   });
@@ -55,13 +52,14 @@ test.describe('MAS Login OIDC', () => {
   }) => {
     // we use the fixture oidcExternalUserWitoutInvit because as long as the account is created,
     // there is no invitation pending in the identity server.
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     const screenshot_path = test.info().title.replace(' ', '_');
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${externalUser.email}`);
 
-    externalUser.masId = await createMasUserWithPassword(
+    externalUser.masId = await masAdminClient.createUserWithPassword(
       externalUser.username,
       externalUser.email,
       externalUser.password
@@ -81,17 +79,16 @@ test.describe('MAS Login OIDC', () => {
       });
 
       // Verify the user in MAS is still the same (account was linked, not created new)
-      const userAfterLogin = await getMasUserByEmail(externalUser.email);
+      const userAfterLogin = await masAdminClient.getUserByEmail(externalUser.email);
       expect(userAfterLogin.id).toBe(externalUser.masId);
-      //expect(await oauthLinkExistsByUserId(userLegacy.masId)).toBe(true);
-      expect(await oauthLinkExistsBySubject(externalUser.username)).toBe(true);
+      expect(await masAdminClient.oauthLinkExistsBySubject(externalUser.username)).toBe(true);
 
       console.log(
         `Successfully verified account linking for user with email: ${externalUser.email}`
       );
     } finally {
       // Clean up the MAS user
-      await deactivateMasUser(externalUser.masId);
+      await masAdminClient.deactivateUser(externalUser.masId);
       console.log(`Cleaned up MAS user: ${externalUser.username}`);
     }
   });
@@ -100,6 +97,8 @@ test.describe('MAS Login OIDC', () => {
     page,
     oidcUserWithFallbackRules: oidcUser,
   }) => {
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+
     const screenshot_path = test.info().title.replace(' ', '_');
 
     const old_email_domain = '@beta.gouv.fr';
@@ -110,7 +109,7 @@ test.describe('MAS Login OIDC', () => {
       `Creating MAS user with old email: ${old_email} whereas email in keycloak is : ${oidcUser.email}`
     );
 
-    oidcUser.masId = await createMasUserWithPassword(
+    oidcUser.masId = await masAdminClient.createUserWithPassword(
       `${oidcUser.username}different_from_email`,
       old_email,
       oidcUser.password
@@ -130,19 +129,21 @@ test.describe('MAS Login OIDC', () => {
       });
 
       // Verify the user in MAS is still the same (account was linked, not created new)
-      const userAfterLogin = await getMasUserByEmail(old_email);
+      const userAfterLogin = await masAdminClient.getUserByEmail(old_email);
       expect(userAfterLogin.id).toBe(oidcUser.masId);
-      expect(await oauthLinkExistsByUserId(oidcUser.masId)).toBe(true);
+      expect(await masAdminClient.oauthLinkExistsByUserId(oidcUser.masId)).toBe(true);
 
       console.log(`Successfully verified account linking for user with email: ${old_email}`);
     } finally {
       // Clean up the MAS user
-      await deactivateMasUser(oidcUser.masId);
+      await masAdminClient.deactivateUser(oidcUser.masId);
       console.log(`Cleaned up MAS user: ${oidcUser.username}`);
     }
   });
 
   test('match account by username throw error when email does not match', async ({ page }) => {
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+
     const screenshot_path = test.info().title.replace(' ', '_');
 
     //create a user in keycloak with an `email` that matches a `localpart` in MAS
@@ -165,7 +166,11 @@ test.describe('MAS Login OIDC', () => {
 
     const user = await createKeycloakTestUser(testUser);
 
-    user.masId = await createMasUserWithPassword(user.username, mas_user_email, user.password);
+    user.masId = await masAdminClient.createUserWithPassword(
+      user.username,
+      mas_user_email,
+      user.password
+    );
 
     try {
       // Perform the OIDC login flow
@@ -178,7 +183,7 @@ test.describe('MAS Login OIDC', () => {
       console.log(`Successfully verified account linking for user with email: ${user.email}`);
     } finally {
       // Clean up the MAS user
-      await deactivateMasUser(user.masId);
+      await masAdminClient.deactivateUser(user.masId);
       console.log(`Cleaned up MAS user: ${user.username}`);
     }
   });

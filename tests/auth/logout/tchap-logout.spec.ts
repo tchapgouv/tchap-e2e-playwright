@@ -1,10 +1,11 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
-import { createMasUserWithPassword } from '../../../utils/mas-admin';
+import { MasAdminClient } from '../../../utils/mas-admin';
 import { loginWithPassword } from '../../../utils/auth-helpers';
 
 test.describe('Tchap : logout', () => {
   test('tchap login-logout-login', async ({ page, userData, screenChecker }) => {
-    userData.masId = await createMasUserWithPassword(
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    userData.masId = await masAdminClient.createUserWithPassword(
       userData.username,
       userData.email,
       userData.password
@@ -41,7 +42,9 @@ test.describe('Tchap : logout', () => {
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     // Success - Confirm identity
-    await expect(page.getByRole('button').filter({hasText: 'Vérification impossible ?'})).toBeVisible({ timeout: 20000 });
+    await expect(
+      page.getByRole('button').filter({ hasText: 'Vérification impossible ?' })
+    ).toBeVisible({ timeout: 20000 });
     await screenChecker(page, `/`);
   });
 });

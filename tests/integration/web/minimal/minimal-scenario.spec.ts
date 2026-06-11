@@ -1,15 +1,21 @@
 import { test, expect } from '../../../../fixtures/auth-fixture';
 import {
+  createMasTestUser,
   generateRoomName,
   generateTestUserData,
   openResetPasswordEmail,
 } from '../../../../utils/auth-helpers';
-import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, OTHER_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, OTHER_MAS_URL, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET} from '../../../../utils/config';
+import {
+  ELEMENT_URL,
+  INVITED_EMAIL_DOMAIN,
+  OTHER_EMAIL_DOMAIN,
+  STANDARD_EMAIL_DOMAIN,
+} from '../../../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../../../utils/mailpit';
 import { TchapAppPage } from '../../../../utils/TchapAppPage';
-import { createMasTestUser } from '../../../../utils/auth-helpers';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 
 //this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
 
@@ -127,20 +133,27 @@ test.describe
 
     test('internal user', async ({ page, context, screenChecker }) => {
       // 1. Register user
-      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
-      const invitee1_search_name = user.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + user.displayName.split(' ')[1].toLocaleLowerCase();
+      const masAdminClient = await MasAdminClient.createDefaultMAS();
+      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
+      const invitee1_search_name =
+        user.displayName.split(' ')[0].toLocaleLowerCase() +
+        ' ' +
+        user.displayName.split(' ')[1].toLocaleLowerCase();
       const invitee1_display_name = user.displayName;
-  
+
       // Cannot create user2 in OTHER_EMAIL_DOMAIN with Admin API as binding in sydent is required to perform a search by email
       const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
       // Create a user on other homeserver
-      console.log(OTHER_MAS_URL)
-      const user3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, OTHER_MAS_URL, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET);
-      const invitee3_search_name = user3.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + user3.displayName.split(' ')[1].toLocaleLowerCase();
+      const federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
+
+      const user3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, federatedMasAdminClient);
+      const invitee3_search_name =
+        user3.displayName.split(' ')[0].toLocaleLowerCase() +
+        ' ' +
+        user3.displayName.split(' ')[1].toLocaleLowerCase();
       const invitee3_display_name = user3.displayName;
-      
 
       // Grant clipboard permissions to browser context
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -262,7 +275,7 @@ test.describe
       //envoyer fichier png
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../../sample-files/element.png'));
+        .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await page.getByRole('link', { name: 'element.png' }).click();
@@ -271,7 +284,7 @@ test.describe
       //envoyer fichier vérolé
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../../sample-files/eicar.com'));
+        .setInputFiles(path.join(__dirname, '../../../../sample-files/eicar.com'));
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
 

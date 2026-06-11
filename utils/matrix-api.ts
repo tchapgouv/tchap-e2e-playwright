@@ -15,21 +15,21 @@ export interface RoomCreationOptions {
   joinRule?: 'invite' | 'knock' | 'public' | 'private';
   preset: 'public_chat' | 'private_chat' | 'trusted_private_chat';
   is_direct?: boolean;
-  power_level_content_override?:any
-  creation_content?:any
-  room_version?:string;
+  power_level_content_override?: any;
+  creation_content?: any;
+  room_version?: string;
 }
 
 export class MatrixApi {
   private client: MatrixClient;
   private matrixUrl: string;
 
-  public constructor(matrixUrl: string, masUrl:string) {
+  public constructor(matrixUrl: string, masUrl: string) {
     this.matrixUrl = matrixUrl;
     // create client with MAS URL to ease local login on preprod server
     this.client = createClient({
       baseUrl: `${masUrl}`,
-    });   
+    });
   }
 
   /**
@@ -98,18 +98,20 @@ export class MatrixApi {
       is_direct: options.is_direct,
       power_level_content_override: options.power_level_content_override,
       creation_content: options.creation_content,
-      room_version: options.room_version
+      room_version: options.room_version,
     });
 
     return response.room_id;
   }
 
-  public async upgradeRoom(roomId: string,  newVersion: string): Promise<{
+  public async upgradeRoom(
+    roomId: string,
+    newVersion: string
+  ): Promise<{
     replacement_room: string;
-}> {
-     return await this.client.upgradeRoom(roomId, newVersion);
+  }> {
+    return await this.client.upgradeRoom(roomId, newVersion);
   }
-
 
   /**
    * Get room state
@@ -184,8 +186,7 @@ export class MatrixApi {
    * get authenticated Matrix client
    * @returns MatrixClient
    */
-  public getClient(){
+  public getClient() {
     return this.client;
   }
-
- }
+}

@@ -1,14 +1,15 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { performOidcLogin, verifyUserInMas } from '../../../utils/auth-helpers';
-import { checkMasUserExistsByEmail } from '../../../utils/mas-admin';
+import { MasAdminClient } from '../../../utils/mas-admin';
 import { SCREENSHOTS_DIR } from '../../../utils/config';
 
 test.describe('MAS register OIDC', () => {
   test('mas register oidc - with allowed account', async ({ page, oidcUser }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcUser.email);
+    const existsBeforeLogin = await masAdminClient.checkUserExistsByEmail(oidcUser.email);
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
@@ -22,10 +23,10 @@ test.describe('MAS register OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-authenticated.png` });
 
     // Verify the user was created in MAS
-    await verifyUserInMas(oidcUser);
+    await verifyUserInMas(oidcUser, masAdminClient);
 
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(oidcUser.email);
+    const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(oidcUser.email);
     expect(existsAfterLogin).toBe(true);
 
     console.log(
@@ -38,9 +39,12 @@ test.describe('MAS register OIDC', () => {
     oidcExternalUserWitoutInvit,
   }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcExternalUserWitoutInvit.email);
+    const existsBeforeLogin = await masAdminClient.checkUserExistsByEmail(
+      oidcExternalUserWitoutInvit.email
+    );
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
@@ -53,7 +57,9 @@ test.describe('MAS register OIDC', () => {
     await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-error-no-invit.png` });
 
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(oidcExternalUserWitoutInvit.email);
+    const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(
+      oidcExternalUserWitoutInvit.email
+    );
     expect(existsAfterLogin).toBe(false);
 
     console.log(
@@ -66,9 +72,12 @@ test.describe('MAS register OIDC', () => {
     oidcExternalUserWithInvit,
   }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcExternalUserWithInvit.email);
+    const existsBeforeLogin = await masAdminClient.checkUserExistsByEmail(
+      oidcExternalUserWithInvit.email
+    );
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
@@ -83,10 +92,12 @@ test.describe('MAS register OIDC', () => {
     });
 
     // Verify the user was created in MAS
-    await verifyUserInMas(oidcExternalUserWithInvit);
+    await verifyUserInMas(oidcExternalUserWithInvit, masAdminClient);
 
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(oidcExternalUserWithInvit.email);
+    const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(
+      oidcExternalUserWithInvit.email
+    );
     expect(existsAfterLogin).toBe(true);
 
     console.log(
@@ -96,9 +107,12 @@ test.describe('MAS register OIDC', () => {
 
   test('mas register oidc - on wrong homeserver', async ({ page, oidcUserOnWrongServer }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
-    const existsBeforeLogin = await checkMasUserExistsByEmail(oidcUserOnWrongServer.email);
+    const existsBeforeLogin = await masAdminClient.checkUserExistsByEmail(
+      oidcUserOnWrongServer.email
+    );
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
@@ -113,7 +127,9 @@ test.describe('MAS register OIDC', () => {
     });
 
     // Double-check with the API
-    const existsAfterLogin = await checkMasUserExistsByEmail(oidcUserOnWrongServer.email);
+    const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(
+      oidcUserOnWrongServer.email
+    );
     expect(existsAfterLogin).toBe(false);
 
     console.log(

@@ -7,12 +7,7 @@ import {
   populateLocalStorageWithCredentials,
 } from '../utils/auth-helpers';
 import { disposeApiContext as disposeKeycloakApiContext } from '../utils/keycloak-admin';
-import {
-  createMasUserWithPassword,
-  deactivateMasUser,
-  disposeApiContext as disposeMasApiContext,
-  waitForMasUser,
-} from '../utils/mas-admin';
+import { MasAdminClient } from '../utils/mas-admin';
 import { generateTestUserData } from '../utils/auth-helpers';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -62,7 +57,7 @@ function createKeycloakUserFixture(domain: string) {
       console.log(`Cleaned up test user: ${user.username}`);
     } finally {
       // Dispose API contexts
-      await Promise.all([disposeKeycloakApiContext(), disposeMasApiContext()]);
+      await Promise.all([disposeKeycloakApiContext()]);
       console.log('API contexts disposed');
     }
   };
@@ -133,11 +128,16 @@ async function authenticatedUserFixture(
   { page, userData: user, request }: { page: Page; userData: TestUser; request: any },
   use: (credentials: Credentials) => Promise<void>
 ) {
+  const masAdminClient = await MasAdminClient.createDefaultMAS();
   // 1. Register user
-  const userId = await createMasUserWithPassword(user.username, user.email, user.password);
+  const userId = await masAdminClient.createUserWithPassword(
+    user.username,
+    user.email,
+    user.password
+  );
   const csAPI = new ClientServerApi(MATRIX_URL, request);
 
-  await waitForMasUser(user.email);
+  await masAdminClient.waitForUser(user.email);
 
   const credentials = (await csAPI.loginUser(user.username, user.password)) as Credentials;
 
@@ -152,7 +152,7 @@ async function authenticatedUserFixture(
   await use(credentials);
 
   // Clean up, deactivate user
-  await deactivateMasUser(userId);
+  await masAdminClient.deactivateUser(userId);
   console.log(`Cleaned up MAS user: ${user.username}`);
 }
 

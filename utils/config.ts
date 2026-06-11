@@ -16,11 +16,10 @@ export const MAS_URL = process.env.MAS_URL || '';
 export const OTHER_MAS_URL = process.env.OTHER_MAS_URL || '';
 export const EXTERNAL_MAS_URL = process.env.EXTERNAL_MAS_URL || '';
 
-
 export const KEYCLOAK_URL = process.env.KEYCLOAK_URL || '';
 export const ELEMENT_URL = process.env.ELEMENT_URL || '';
 
-//SYNAPSE 
+//SYNAPSE
 export const MATRIX_URL = process.env.MATRIX_URL || '';
 export const OTHER_MATRIX_URL = process.env.OTHER_MATRIX_URL || '';
 export const EXTERNAL_MATRIX_URL = process.env.EXTERNAL_MATRIX_URL || '';
