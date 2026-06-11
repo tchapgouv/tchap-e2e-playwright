@@ -1,6 +1,6 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { createMasTestUser, generateTestUserData } from '../../../utils/auth-helpers';
-import { getMasUserByEmail } from '../../../utils/mas-admin';
+import { MasAdminClient } from '../../../utils/mas-admin';
 import {
   NOT_INVITED_EMAIL_DOMAIN,
   STANDARD_EMAIL_DOMAIN,
@@ -44,7 +44,8 @@ test.describe('Tchap : register with password', () => {
     await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({
       timeout: 20000,
     });
-    const created_user = await getMasUserByEmail(user.email);
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    const created_user = await masAdminClient.getUserByEmail(user.email);
 
     //check created username fields
     expect(created_user.attributes.username).toContain(user.username);
@@ -126,8 +127,10 @@ test.describe('Tchap : register with password', () => {
     screenChecker: screen,
     startTchapRegisterWithEmail,
   }) => {
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    //const created_user = await masAdminClient.createUserWithPassword();
     // Create a test user with a password in MAS with API
-    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
+    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
 
     // Create a test user with a password in MAS with web flow
     /*

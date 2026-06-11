@@ -1,13 +1,8 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
 import { MasAdminClient } from '../../../../utils/mas-admin';
-import {
-  expectErrorWhenSendStateEvent,
-  loginWithNewUser,
-  standardUserOptions,
-} from './room-utils';
+import { expectErrorWhenSendStateEvent, loginWithNewUser, standardUserOptions } from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
-
 
 export async function createDirectRoom(
   matrix: MatrixApi,

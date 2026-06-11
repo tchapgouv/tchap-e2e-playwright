@@ -17,7 +17,9 @@ test.describe('API - External restriction', () => {
   });
 
   test('External users can not create rooms', async () => {
-    await expect(createPrivateEncryptedRoom(externalUser.matrix)).rejects.toMatchObject({ httpStatus: 403 });
+    await expect(createPrivateEncryptedRoom(externalUser.matrix)).rejects.toMatchObject({
+      httpStatus: 403,
+    });
   });
 
   test('External users get empty results when searching user directory ', async () => {

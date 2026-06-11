@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import {MasAdminClient } from '../../../../utils/mas-admin';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPublicRoom,
   expectErrorWhenSendStateEvent,

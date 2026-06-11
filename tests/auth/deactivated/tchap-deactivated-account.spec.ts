@@ -1,14 +1,5 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
-import {
-  addUserEmail,
-  createMasUserWithPassword,
-  deactivateMasUser,
-  deleteOauthLink,
-  getMasUserByEmail,
-  getOauthLinkBySubject,
-  oauthLinkExistsBySubject,
-  reactivateMasUser,
-} from '../../../utils/mas-admin';
+import { MasAdminClient } from '../../../utils/mas-admin';
 import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../../utils/config';
 import { performOidcLogin } from '../../../utils/auth-helpers';
 import { getLatestVerificationCode } from '../../../utils/mailpit';
@@ -20,8 +11,9 @@ test.describe('Tchap : Login password', () => {
     userData,
     screenChecker,
   }) => {
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
     //create user
-    userData.masId = await createMasUserWithPassword(
+    userData.masId = await masAdminClient.createUserWithPassword(
       userData.username,
       userData.email,
       userData.password
@@ -40,7 +32,7 @@ test.describe('Tchap : Login password', () => {
     await page.locator('button[type="submit"]').click();
 
     //deactivate user
-    await deactivateMasUser(userData.masId);
+    await masAdminClient.deactivateUser(userData.masId);
 
     //login with another browser
     page = await (await browser.newContext()).newPage();
@@ -66,15 +58,17 @@ test.describe('Tchap : Login password', () => {
     screenChecker,
     startTchapRegisterWithEmail,
   }) => {
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+
     //create user
-    userData.masId = await createMasUserWithPassword(
+    userData.masId = await masAdminClient.createUserWithPassword(
       userData.username,
       userData.email,
       userData.password
     );
 
     //deactivate user
-    await deactivateMasUser(userData.masId);
+    await masAdminClient.deactivateUser(userData.masId);
 
     //register
     await startTchapRegisterWithEmail(page, userData.email);
@@ -96,7 +90,7 @@ test.describe('Tchap : Login password', () => {
     await page.waitForSelector('.mx_MatrixChat', { timeout: 20000 });
 
     //same user, but reactivated
-    const created_user = await getMasUserByEmail(userData.email);
+    const created_user = await masAdminClient.getUserByEmail(userData.email);
     console.log(created_user);
     expect(created_user.id).toBe(userData.masId);
     expect(created_user.attributes.deactivated_at).toBeNull();
@@ -107,15 +101,16 @@ test.describe('Tchap : Login password', () => {
     oidcUser,
   }) => {
     const screenshot_path = test.info().title.replace(' ', '_');
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${oidcUser.email}`);
-    const formerTchapAccountMasId = await createMasUserWithPassword(
+    const formerTchapAccountMasId = await masAdminClient.createUserWithPassword(
       oidcUser.username,
       oidcUser.email,
       oidcUser.password
     );
-    await deactivateMasUser(formerTchapAccountMasId);
+    await masAdminClient.deactivateUser(formerTchapAccountMasId);
 
     const newTchapAccountWithIndex = {
       username: `${oidcUser.username}2`,
@@ -124,7 +119,7 @@ test.describe('Tchap : Login password', () => {
       masId: '',
     };
     //create another user with same email but different username
-    newTchapAccountWithIndex.masId = await createMasUserWithPassword(
+    newTchapAccountWithIndex.masId = await masAdminClient.createUserWithPassword(
       newTchapAccountWithIndex.username,
       newTchapAccountWithIndex.email,
       newTchapAccountWithIndex.password
@@ -144,18 +139,18 @@ test.describe('Tchap : Login password', () => {
       });
 
       // Verify the user in MAS is linked to the indexed account
-      const userAfterLogin = await getMasUserByEmail(newTchapAccountWithIndex.email);
+      const userAfterLogin = await masAdminClient.getUserByEmail(newTchapAccountWithIndex.email);
       expect(userAfterLogin.id).toBe(newTchapAccountWithIndex.masId);
       expect(userAfterLogin.attributes.username).toBe(newTchapAccountWithIndex.username);
       await expect(page.locator(`text=${newTchapAccountWithIndex.username}`)).toBeVisible();
-      expect(await oauthLinkExistsBySubject(oidcUser.username)).toBe(true);
+      expect(await masAdminClient.oauthLinkExistsBySubject(oidcUser.username)).toBe(true);
 
       console.log(
         `Successfully verified account linking for user with email: ${newTchapAccountWithIndex.email}`
       );
     } finally {
       // Clean up the MAS user
-      await deactivateMasUser(newTchapAccountWithIndex.masId);
+      await masAdminClient.deactivateUser(newTchapAccountWithIndex.masId);
       console.log(`Cleaned up MAS user: ${newTchapAccountWithIndex.username}`);
     }
   });
@@ -167,11 +162,12 @@ test.describe('Tchap : Login password', () => {
     screenChecker,
   }) => {
     test.setTimeout(30000);
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     const screenshot_path = test.info().title.replace(' ', '_');
 
     //create user
-    oidcUser.masId = await createMasUserWithPassword(
+    oidcUser.masId = await masAdminClient.createUserWithPassword(
       oidcUser.username,
       oidcUser.email,
       oidcUser.password
@@ -181,10 +177,10 @@ test.describe('Tchap : Login password', () => {
     await performOidcLogin(page, oidcUser, screenshot_path);
 
     //deactivate, email is unset
-    await deactivateMasUser(oidcUser.masId);
+    await masAdminClient.deactivateUser(oidcUser.masId);
     try {
       //user has no email when deactivated
-      await getMasUserByEmail(oidcUser.email);
+      await masAdminClient.getUserByEmail(oidcUser.email);
     } catch (e) {
       expect(e).toBeDefined();
     }
@@ -198,13 +194,14 @@ test.describe('Tchap : Login password', () => {
     await expect(page.locator('text=Connecté')).toBeVisible();
 
     //mas user is reactivated and email is set
-    const created_user = await getMasUserByEmail(oidcUser.email);
+    const created_user = await masAdminClient.getUserByEmail(oidcUser.email);
     expect(created_user.id).toBe(oidcUser.masId);
     expect(created_user.attributes.deactivated_at).toBeNull();
   });
 
   //legacy
   //skip it
+  /*
   test.skip('match account by email when account was deactivated but is reactivated by support', async ({
     browser,
     page,
@@ -296,4 +293,5 @@ test.describe('Tchap : Login password', () => {
       console.log(`Cleaned up MAS user: ${oidcUser.username}`);
     }
   });
+  */
 });

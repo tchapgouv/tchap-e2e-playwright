@@ -4,7 +4,7 @@ import {
   loginWithPassword,
   openRenewAccountEmail,
 } from '../../../../utils/auth-helpers';
-import { getMasUserByEmail } from '../../../../utils/mas-admin';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 import { STANDARD_EMAIL_DOMAIN } from '../../../../utils/config';
 import { setAccountExpiration } from '../../../../utils/synapse-admin';
 
@@ -15,7 +15,8 @@ test.describe('Tchap : account expiration', () => {
     screenChecker: screen,
   }) => {
     // Create a new user with password authentication
-    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
     console.log(`Created test user: ${user.username} with email: ${user.email}`);
 
     // First, log in normally to verify the account works
@@ -26,7 +27,7 @@ test.describe('Tchap : account expiration', () => {
     console.log('User successfully logged in');
 
     // Get the user's Matrix ID
-    const masUser = await getMasUserByEmail(user.email);
+    const masUser = await masAdminClient.getUserByEmail(user.email);
     const matrixId = `@${masUser.attributes.username}:dev01.tchap.incubateur.net`;
     console.log(`User Matrix ID: ${matrixId}`);
 
@@ -54,6 +55,8 @@ test.describe('Tchap : account expiration', () => {
 
     // Clean up
     await page.close();
+
+    await masAdminClient.deactivateUser(user.masId);
   });
 
   test('should show expiration message inside app when account is expired', async ({
@@ -65,7 +68,8 @@ test.describe('Tchap : account expiration', () => {
     test.setTimeout(180_000);
 
     // Create a new user with password authentication
-    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
     console.log(`Created test user: ${user.username} with email: ${user.email}`);
 
     // First, log in normally to verify the account works
@@ -76,7 +80,7 @@ test.describe('Tchap : account expiration', () => {
     console.log('User successfully logged in');
 
     // Get the user's Matrix ID
-    const masUser = await getMasUserByEmail(user.email);
+    const masUser = await masAdminClient.getUserByEmail(user.email);
     const matrixId = `@${masUser.attributes.username}:dev01.tchap.incubateur.net`;
     console.log(`User Matrix ID: ${matrixId}`);
 
@@ -113,5 +117,7 @@ test.describe('Tchap : account expiration', () => {
 
     await page.waitForSelector('.mx_MatrixChat', { timeout: 20000 });
     await expect(page.getByRole('heading', { name: 'Votre compte Tchap a été' })).not.toBeVisible();
+
+    await masAdminClient.deactivateUser(user.masId);
   });
 });

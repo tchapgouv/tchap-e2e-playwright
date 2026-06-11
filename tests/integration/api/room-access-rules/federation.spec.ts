@@ -1,13 +1,12 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import {MasAdminClient } from '../../../../utils/mas-admin';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPrivateUnencryptedRoom,
   federatedUserOptions,
   loginWithNewUser,
   standardUserOptions,
 } from './room-utils';
-
 
 test.describe('API - Federation', () => {
   let matrix: MatrixApi;

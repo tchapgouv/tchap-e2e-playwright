@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   addModeratorToRoom,
   createPrivateEncryptedRoom,
@@ -103,6 +103,6 @@ test.describe('API - Private Encrypted Room', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId);
+    await masAdminClient.deactivateUser(masId);
   });
 });

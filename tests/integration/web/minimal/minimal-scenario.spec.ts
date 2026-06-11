@@ -1,5 +1,6 @@
 import { test, expect } from '../../../../fixtures/auth-fixture';
 import {
+  createMasTestUser,
   generateRoomName,
   generateTestUserData,
   openResetPasswordEmail,
@@ -9,15 +10,12 @@ import {
   INVITED_EMAIL_DOMAIN,
   OTHER_EMAIL_DOMAIN,
   STANDARD_EMAIL_DOMAIN,
-  OTHER_MAS_URL,
-  OTHER_MAS_ADMIN_CLIENT_ID,
-  OTHER_MAS_ADMIN_SECRET,
 } from '../../../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../../../utils/mailpit';
 import { TchapAppPage } from '../../../../utils/TchapAppPage';
-import { createMasTestUser } from '../../../../utils/auth-helpers';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 
 //this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
 
@@ -135,7 +133,8 @@ test.describe
 
     test('internal user', async ({ page, context, screenChecker }) => {
       // 1. Register user
-      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
+      const masAdminClient = await MasAdminClient.createDefaultMAS();
+      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
       const invitee1_search_name =
         user.displayName.split(' ')[0].toLocaleLowerCase() +
         ' ' +
@@ -147,13 +146,9 @@ test.describe
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
       // Create a user on other homeserver
-      console.log(OTHER_MAS_URL);
-      const user3 = await createMasTestUser(
-        OTHER_EMAIL_DOMAIN,
-        OTHER_MAS_URL,
-        OTHER_MAS_ADMIN_CLIENT_ID,
-        OTHER_MAS_ADMIN_SECRET
-      );
+      const federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
+
+      const user3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, federatedMasAdminClient);
       const invitee3_search_name =
         user3.displayName.split(' ')[0].toLocaleLowerCase() +
         ' ' +
