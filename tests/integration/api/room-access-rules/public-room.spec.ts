@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import {MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPublicRoom,
   expectErrorWhenSendStateEvent,
@@ -53,6 +53,6 @@ test.describe('API - Public Room', () => {
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId);
+    masAdminClient.deactivateUser(masId);
   });
 });

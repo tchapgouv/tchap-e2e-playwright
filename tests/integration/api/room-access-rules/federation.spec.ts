@@ -1,21 +1,13 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import {MasAdminClient } from '../../../../utils/mas-admin';
 import {
-  createPrivateEncryptedRoom,
   createPrivateUnencryptedRoom,
-  expectErrorWhenSendStateEvent,
   federatedUserOptions,
   loginWithNewUser,
   standardUserOptions,
 } from './room-utils';
-import { EventType, JoinRule } from 'matrix-js-sdk';
-import { cpSync } from 'fs';
-import {
-  MAS_ADMIN_CLIENT_ID,
-  MAS_ADMIN_CLIENT_SECRET,
-  MAS_ADMIN_URL,
-} from '../../../../utils/config';
+
 
 test.describe('API - Federation', () => {
   let matrix: MatrixApi;

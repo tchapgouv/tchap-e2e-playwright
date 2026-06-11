@@ -11,18 +11,10 @@ import {
   standardUserOptions,
   externalUserOptions,
 } from '../room-access-rules/room-utils';
-import {
-  EXTERNAL_MAS_ADMIN_URL,
-  EXTERNAL_MAS_URL,
-  MAS_ADMIN_CLIENT_ID,
-  MAS_ADMIN_CLIENT_SECRET,
-  MAS_ADMIN_URL,
-} from '../../../../utils/config';
 import { EventType } from 'matrix-js-sdk';
 
 test.describe('API - Manage Last Admin', () => {
   let matrix: MatrixApi;
-  let mxId: string;
   let masId: string;
   let masAdminClient: MasAdminClient;
   let externalMasClient: MasAdminClient;
@@ -31,7 +23,6 @@ test.describe('API - Manage Last Admin', () => {
     masAdminClient = await MasAdminClient.createDefaultMAS();
     externalMasClient = await MasAdminClient.createExternalMAS();
     const user = await loginWithNewUser(masAdminClient, standardUserOptions());
-    mxId = user.mxId;
     matrix = user.matrix;
     masId = user.masId;
   });
@@ -78,7 +69,7 @@ test.describe('API - Manage Last Admin', () => {
     // Check that admin2 remains admin
     expect(finalPowerLevels.users[admin2.mxId]).toBe(100);
 
-    await deactivateMasUser(admin2.masId);
+    masAdminClient.deactivateUser(admin2.masId);
   });
 
   test('Scenario 3: Last admin leaves - moderator promoted to admin', async () => {

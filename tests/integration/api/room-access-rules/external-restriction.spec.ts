@@ -1,28 +1,23 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../../utils/matrix-api';
 import {
   createPrivateEncryptedRoom,
   externalUserOptions,
   loginWithNewUser,
   standardUserOptions,
 } from './room-utils';
-import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
-import { EXTERNAL_MAS_URL, TEST_USER_PREFIX } from '../../../../utils/config';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 
 test.describe('API - External restriction', () => {
-  let matrix: MatrixApi;
-  let masId: string;
-  let masAdmin: MasAdminClient;
+  let externalUser: any;
+  let externalMasAdmin: MasAdminClient;
 
   test.beforeAll(async () => {
-    masAdmin = await MasAdminClient.createExternalMAS();
-    const externalUser = await loginWithNewUser(masAdmin, externalUserOptions());
-    matrix = externalUser.matrix;
-    masId = externalUser.masId;
+    externalMasAdmin = await MasAdminClient.createExternalMAS();
+    externalUser = await loginWithNewUser(externalMasAdmin, externalUserOptions());
   });
 
   test('External users can not create rooms', async () => {
-    await expect(createPrivateEncryptedRoom(matrix)).rejects.toMatchObject({ httpStatus: 403 });
+    await expect(createPrivateEncryptedRoom(externalUser.matrix)).rejects.toMatchObject({ httpStatus: 403 });
   });
 
   test('External users get empty results when searching user directory ', async () => {
@@ -31,13 +26,13 @@ test.describe('API - External restriction', () => {
     const user = await loginWithNewUser(masAdmin, standardUserOptions());
 
     await expect(
-      matrix.getClient().searchUserDirectory({ term: user.username })
+      externalUser.matrix.getClient().searchUserDirectory({ term: user.username })
     ).resolves.toMatchObject({ results: [] });
 
-    await deactivateMasUser(user.masId);
+    await masAdmin.deactivateUser(user.masId);
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId, EXTERNAL_MAS_URL);
+    await externalMasAdmin.deactivateUser(externalUser.masId);
   });
 });

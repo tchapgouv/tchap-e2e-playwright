@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPrivateEncryptedRoom,
   createPublicRoom,
@@ -8,7 +8,6 @@ import {
   loginWithNewUser,
   standardUserOptions,
 } from './room-utils';
-import { defaultClientOpts } from 'matrix-js-sdk/lib/sync';
 
 test.describe('API - Room', () => {
   let matrix: MatrixApi;

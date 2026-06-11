@@ -3,24 +3,17 @@ import { MatrixApi } from '../../../../utils/matrix-api';
 import {
   MATRIX_URL,
   EXTERNAL_MATRIX_URL,
-  EXTERNAL_MAS_ADMIN_CLIENT_ID,
-  EXTERNAL_MAS_ADMIN_SECRET,
   EXTERNAL_MAS_URL,
   INVITED_EMAIL_DOMAIN,
   MAS_URL,
   OTHER_MATRIX_URL,
   OTHER_EMAIL_DOMAIN,
-  OTHER_MAS_ADMIN_CLIENT_ID,
-  OTHER_MAS_ADMIN_SECRET,
   OTHER_MAS_URL,
   STANDARD_EMAIL_DOMAIN,
   TEST_USER_PASSWORD,
   TEST_USER_PREFIX,
-  MAS_ADMIN_URL,
-  MAS_ADMIN_CLIENT_ID,
-  MAS_ADMIN_CLIENT_SECRET,
 } from '../../../../utils/config';
-import { createMasUserWithPassword, type MasAdminClient } from '../../../../utils/mas-admin';
+import type { MasAdminClient } from '../../../../utils/mas-admin';
 import { EventType } from 'matrix-js-sdk';
 
 /**
