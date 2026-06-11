@@ -573,6 +573,9 @@ class MasAdminClient {
   }
 }
 
+/**
+ * @deprecated Use MasAdminClient class instead.
+*/
 async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
   const cacheKey = baseUrl ?? MAS_ADMIN_URL;
 
@@ -587,6 +590,9 @@ async function getApiContext(baseUrl?: string): Promise<APIRequestContext> {
   return context;
 }
 
+/**
+ * @deprecated Use MasAdminClient class instead.
+*/
 function getMasAdminCredentials(
   baseUrl?: string,
   clientId?: string,
@@ -608,6 +614,7 @@ function getMasAdminCredentials(
 
 /**
  * Get an admin access token for MAS
+ * @deprecated Use MasAdminClient class instead.
  */
 async function getMasAdminToken(
   baseUrl?: string,
@@ -644,6 +651,7 @@ async function getMasAdminToken(
 
 /**
  * Get user details from MAS by email
+ * @deprecated Use MasAdminClient class instead.
  */
 export async function getMasUserByEmail(email: string, baseUrl?: string): Promise<any | null> {
   //console.log(`[MAS API] Getting user details for email: ${email}`);
@@ -707,6 +715,7 @@ export async function getMasUserByEmail(email: string, baseUrl?: string): Promis
 
 /**
  * Check if a user exists in MAS by email
+ * @deprecated Use MasAdminClient class instead.
  */
 export async function checkMasUserExistsByEmail(email: string): Promise<boolean> {
   console.log(`[MAS API] Checking if user exists with email: ${email}`);
@@ -725,6 +734,7 @@ export async function checkMasUserExistsByEmail(email: string): Promise<boolean>
  * Wait for a user to be created in MAS
  * This is useful after OIDC authentication, as there might be a slight delay
  * before the user is fully created in MAS
+ * @deprecated Use MasAdminClient class instead.
  */
 export async function waitForMasUser(
   email: string,
@@ -760,6 +770,7 @@ export async function waitForMasUser(
 
 /**
  * Create a user in MAS with a password
+ * @deprecated Use MasAdminClient class instead.
  */
 export async function createMasUserWithPassword(
   username: string,
@@ -842,6 +853,7 @@ export async function createMasUserWithPassword(
 
 /**
  * Delete a user from MAS
+ * @deprecated Use MasAdminClient class instead.
  */
 export async function deactivateMasUser(userId: string, baseUrl?: string): Promise<void> {
   console.log(`[MAS API] Deleting user with ID: ${userId}`);
