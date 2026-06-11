@@ -1,17 +1,22 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import {  deactivateMasUser } from '../../../../utils/mas-admin';
-import { createPublicRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
+import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import {
+  createPublicRoom,
+  expectErrorWhenSendStateEvent,
+  loginWithNewUser,
+  standardUserOptions,
+} from './room-utils';
 import { EventType } from 'matrix-js-sdk';
-
-
 
 test.describe('API - Public Room', () => {
   let masId: string;
   let matrix: MatrixApi;
+  let masAdminClient: MasAdminClient;
 
   test.beforeAll(async () => {
-    const userData = await loginWithNewUser();
+    masAdminClient = await MasAdminClient.createDefaultMAS();
+    const userData = await loginWithNewUser(masAdminClient, standardUserOptions());
     masId = userData.masId;
     matrix = userData.matrix;
   });

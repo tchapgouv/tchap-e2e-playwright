@@ -1,16 +1,22 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../../utils/mas-admin';
-import { createPrivateUnencryptedRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
+import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import {
+  createPrivateUnencryptedRoom,
+  expectErrorWhenSendStateEvent,
+  loginWithNewUser,
+  standardUserOptions,
+} from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
-
 
 test.describe('API - Private Unencrypted Room', () => {
   let matrix: MatrixApi;
   let masId: string;
+  let masAdminClient: MasAdminClient;
 
   test.beforeAll(async () => {
-    const userData = await loginWithNewUser();
+    masAdminClient = await MasAdminClient.createDefaultMAS();
+    const userData = await loginWithNewUser(masAdminClient, standardUserOptions());
     masId = userData.masId;
     matrix = userData.matrix;
   });
@@ -44,7 +50,10 @@ test.describe('API - Private Unencrypted Room', () => {
   test('Should change access rules from restricted to unrestricted', async () => {
     const roomId = await createPrivateUnencryptedRoom(matrix);
 
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', { rule: 'unrestricted', force_unencrypted_at_creation:true});
+    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+      rule: 'unrestricted',
+      force_unencrypted_at_creation: true,
+    });
 
     expect((await matrix.getAccessRules(roomId)).rule).toBe('unrestricted');
   });
@@ -52,7 +61,10 @@ test.describe('API - Private Unencrypted Room', () => {
   test('Should return 403 error when changing access rules back to restricted', async () => {
     const roomId = await createPrivateUnencryptedRoom(matrix);
 
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', { rule: 'unrestricted', force_unencrypted_at_creation:true});
+    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+      rule: 'unrestricted',
+      force_unencrypted_at_creation: true,
+    });
 
     await expectErrorWhenSendStateEvent(
       matrix,

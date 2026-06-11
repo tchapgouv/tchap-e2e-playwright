@@ -4,7 +4,15 @@ import {
   generateTestUserData,
   openResetPasswordEmail,
 } from '../../../../utils/auth-helpers';
-import { ELEMENT_URL, INVITED_EMAIL_DOMAIN, OTHER_EMAIL_DOMAIN, STANDARD_EMAIL_DOMAIN, OTHER_MAS_URL, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET} from '../../../../utils/config';
+import {
+  ELEMENT_URL,
+  INVITED_EMAIL_DOMAIN,
+  OTHER_EMAIL_DOMAIN,
+  STANDARD_EMAIL_DOMAIN,
+  OTHER_MAS_URL,
+  OTHER_MAS_ADMIN_CLIENT_ID,
+  OTHER_MAS_ADMIN_SECRET,
+} from '../../../../utils/config';
 import { getLatestVerificationCode, waitForMessage } from '../../../../utils/mailpit';
 import { TchapAppPage } from '../../../../utils/TchapAppPage';
 import { createMasTestUser } from '../../../../utils/auth-helpers';
@@ -128,19 +136,29 @@ test.describe
     test('internal user', async ({ page, context, screenChecker }) => {
       // 1. Register user
       const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN);
-      const invitee1_search_name = user.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + user.displayName.split(' ')[1].toLocaleLowerCase();
+      const invitee1_search_name =
+        user.displayName.split(' ')[0].toLocaleLowerCase() +
+        ' ' +
+        user.displayName.split(' ')[1].toLocaleLowerCase();
       const invitee1_display_name = user.displayName;
-  
+
       // Cannot create user2 in OTHER_EMAIL_DOMAIN with Admin API as binding in sydent is required to perform a search by email
       const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
       const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
 
       // Create a user on other homeserver
-      console.log(OTHER_MAS_URL)
-      const user3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, OTHER_MAS_URL, OTHER_MAS_ADMIN_CLIENT_ID, OTHER_MAS_ADMIN_SECRET);
-      const invitee3_search_name = user3.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + user3.displayName.split(' ')[1].toLocaleLowerCase();
+      console.log(OTHER_MAS_URL);
+      const user3 = await createMasTestUser(
+        OTHER_EMAIL_DOMAIN,
+        OTHER_MAS_URL,
+        OTHER_MAS_ADMIN_CLIENT_ID,
+        OTHER_MAS_ADMIN_SECRET
+      );
+      const invitee3_search_name =
+        user3.displayName.split(' ')[0].toLocaleLowerCase() +
+        ' ' +
+        user3.displayName.split(' ')[1].toLocaleLowerCase();
       const invitee3_display_name = user3.displayName;
-      
 
       // Grant clipboard permissions to browser context
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);

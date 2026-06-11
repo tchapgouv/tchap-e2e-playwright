@@ -1,14 +1,23 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../../utils/mas-admin';
-import { createPrivateEncryptedRoom, createPublicRoom, expectErrorWhenSendStateEvent, loginWithNewUser } from './room-utils';
+import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import {
+  createPrivateEncryptedRoom,
+  createPublicRoom,
+  expectErrorWhenSendStateEvent,
+  loginWithNewUser,
+  standardUserOptions,
+} from './room-utils';
+import { defaultClientOpts } from 'matrix-js-sdk/lib/sync';
 
 test.describe('API - Room', () => {
   let matrix: MatrixApi;
   let masId: string;
+  let masAdminClient: MasAdminClient;
 
   test.beforeAll(async () => {
-    const userData = await loginWithNewUser();
+    masAdminClient = await MasAdminClient.createDefaultMAS();
+    const userData = await loginWithNewUser(masAdminClient, standardUserOptions());
     masId = userData.masId;
     matrix = userData.matrix;
   });
@@ -70,7 +79,7 @@ test.describe('API - Room', () => {
 
   test('Should return 403 error when updating visibility from private to public', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
-    
+
     const accessRules = await matrix.getAccessRules(roomId);
     expect(accessRules.visibility).toBe('private');
     expect(accessRules.rule).toBe('restricted');
@@ -80,14 +89,14 @@ test.describe('API - Room', () => {
       matrix,
       roomId,
       'im.vector.room.access_rules',
-      { rule: 'restricted', visibility:'public' },
+      { rule: 'restricted', visibility: 'public' },
       403
     );
   });
 
   test('Should return 403 error when removing "public" visibility', async () => {
     const roomId = await createPublicRoom(matrix);
-    
+
     const accessRules = await matrix.getAccessRules(roomId);
     expect(accessRules.visibility).toBe('public');
     expect(accessRules.rule).toBe('restricted');
@@ -97,7 +106,7 @@ test.describe('API - Room', () => {
       matrix,
       roomId,
       'im.vector.room.access_rules',
-      { rule: 'restricted', visibility :undefined },
+      { rule: 'restricted', visibility: undefined },
       403
     );
   });
@@ -109,7 +118,7 @@ test.describe('API - Room', () => {
       preset: 'trusted_private_chat',
       is_direct: true,
     });
-  
+
     const accessRules = await matrix.getAccessRules(roomId);
     expect(accessRules.force_unencrypted_at_creation).toBe(undefined);
 
@@ -117,14 +126,14 @@ test.describe('API - Room', () => {
       matrix,
       roomId,
       'im.vector.room.access_rules',
-      { rule: 'restricted', force_unencrypted_at_creation:true },
+      { rule: 'restricted', force_unencrypted_at_creation: true },
       403
     );
   });
 
   test('Should keep access rules when upgrading room from v1 to V9', async () => {
     const roomId = await matrix.createRoom({
-      name: "name",
+      name: 'name',
       joinRule: 'invite',
       preset: 'private_chat',
       visibility: 'private',
@@ -134,27 +143,26 @@ test.describe('API - Room', () => {
         force_unencrypted_at_creation: true,
         visibility: 'private',
       },
-      room_version:"1"
+      room_version: '1',
     });
-  
+
     const accessRules = await matrix.getAccessRules(roomId);
     expect(accessRules.rule).toBe('unrestricted');
     expect(accessRules.force_unencrypted_at_creation).toBe(true);
     expect(accessRules.visibility).toBe('private');
 
-    const upgradeResponse = await matrix.upgradeRoom(roomId, "9");
+    const upgradeResponse = await matrix.upgradeRoom(roomId, '9');
 
     //check that access rule exists in the upgraded room with correct value
     const replacementRoomId = upgradeResponse.replacement_room;
-    console.log("Ugraded room id", replacementRoomId)
+    console.log('Ugraded room id', replacementRoomId);
     const upgradedAccessRules = await matrix.getAccessRules(replacementRoomId);
     expect(upgradedAccessRules.rule).toBe('unrestricted');
     expect(upgradedAccessRules.force_unencrypted_at_creation).toBe(true);
     expect(upgradedAccessRules.visibility).toBe('private');
-    
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId);
+    masAdminClient.deactivateUser(masId);
   });
 });

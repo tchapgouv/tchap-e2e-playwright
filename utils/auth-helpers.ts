@@ -185,9 +185,22 @@ export async function verifyUserInMas(user: TestUser): Promise<void> {
 /**
  * Create a test user directly in MAS with password
  */
-export async function createMasTestUser(domain: string, baseUrl?: string, clientId?: string, secret?: string,): Promise<TestUser> {
+export async function createMasTestUser(
+  domain: string,
+  baseUrl?: string,
+  clientId?: string,
+  secret?: string
+): Promise<TestUser> {
   const user = generateTestUserData(domain);
-  const masId = await createMasUserWithPassword(user.username, user.email, user.password, user.displayName, baseUrl, clientId, secret);
+  const masId = await createMasUserWithPassword(
+    user.username,
+    user.email,
+    user.password,
+    user.displayName,
+    baseUrl,
+    clientId,
+    secret
+  );
   return { ...user, masId };
 }
 
@@ -344,8 +357,18 @@ export function generateTestUserData(domain: string): TestUser {
   const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
   const localpart = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}-${domain}`;
   const email = `${username}@${domain}`;
-  let domainDisplayName = domain.split('.').map(word => word.charAt(0).toUpperCase()+ word.slice(1)).join('');
-  const displayName = username.split('.').map(word => word.charAt(0).toUpperCase()+ word.slice(1)).join(' ') + ' [' + domainDisplayName + ']';
+  const domainDisplayName = domain
+    .split('.')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+  const displayName =
+    username
+      .split('.')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ') +
+    ' [' +
+    domainDisplayName +
+    ']';
 
   console.log('Using email: ', email);
 
@@ -354,7 +377,7 @@ export function generateTestUserData(domain: string): TestUser {
     email: email,
     password: TEST_USER_PASSWORD,
     domain: domain,
-    displayName: displayName
+    displayName: displayName,
   };
 }
 

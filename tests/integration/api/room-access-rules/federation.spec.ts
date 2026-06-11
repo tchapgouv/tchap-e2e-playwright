@@ -1,29 +1,41 @@
 import { test, expect } from '@playwright/test';
 import type { MatrixApi } from '../../../../utils/matrix-api';
-import { deactivateMasUser } from '../../../../utils/mas-admin';
-import { createPrivateEncryptedRoom, createPrivateUnencryptedRoom, expectErrorWhenSendStateEvent, loginWithFederatedNewUser, loginWithNewUser } from './room-utils';
+import { deactivateMasUser, MasAdminClient } from '../../../../utils/mas-admin';
+import {
+  createPrivateEncryptedRoom,
+  createPrivateUnencryptedRoom,
+  expectErrorWhenSendStateEvent,
+  federatedUserOptions,
+  loginWithNewUser,
+  standardUserOptions,
+} from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
 import { cpSync } from 'fs';
-
+import {
+  MAS_ADMIN_CLIENT_ID,
+  MAS_ADMIN_CLIENT_SECRET,
+  MAS_ADMIN_URL,
+} from '../../../../utils/config';
 
 test.describe('API - Federation', () => {
   let matrix: MatrixApi;
   let mxId: string;
   let masId: string;
+  let masAdmin: MasAdminClient;
 
   test.beforeAll(async () => {
-    const user = await loginWithNewUser();
-    mxId = user.mxId;
+    masAdmin = await MasAdminClient.createDefaultMAS();
+    const user = await loginWithNewUser(masAdmin, standardUserOptions());
     matrix = user.matrix;
-    masId = user.masId
+    masId = user.masId;
   });
 
   test('Should create room on federated server', async () => {
-
     const roomId = await createPrivateUnencryptedRoom(matrix);
     const accessRules = await matrix.getAccessRules(roomId);
 
-    const federatedUser = await loginWithFederatedNewUser();
+    const federatedMas = await MasAdminClient.createFederatedMAS();
+    const federatedUser = await loginWithNewUser(federatedMas, federatedUserOptions());
 
     // Invite federatedUser into the room
     await matrix.getClient().invite(roomId, federatedUser.mxId);
@@ -39,7 +51,9 @@ test.describe('API - Federation', () => {
     expect(federatedAccessRules).toEqual(accessRules);
 
     // User sends a message to the room
-    const messageEventId = await matrix.getClient().sendTextMessage(roomId, 'Hello from original user');
+    const messageEventId = await matrix
+      .getClient()
+      .sendTextMessage(roomId, 'Hello from original user');
     expect(messageEventId).toBeDefined();
 
     // Get the room and verify it has events
@@ -48,9 +62,10 @@ test.describe('API - Federation', () => {
     const events = await room?.getLiveTimeline().getEvents();
     expect(events && events.length).toBeGreaterThan(0);
 
+    federatedMas.deactivateUser(federatedUser.masId);
   });
 
   test.afterAll(async () => {
-    await deactivateMasUser(masId);
+    masAdmin.deactivateUser(masId);
   });
 });

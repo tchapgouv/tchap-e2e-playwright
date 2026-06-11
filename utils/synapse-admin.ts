@@ -18,17 +18,20 @@ export async function setAccountExpiration(
 ): Promise<any> {
   console.log(`[Synapse API] Setting expiration for user: ${userId} to timestamp: ${expirationTs}`);
 
-  const response = await request.post(`${MATRIX_URL}/_synapse/client/email_account_validity/admin`, {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${SYNAPSE_ADMIN_TOKEN}`,
-    },
-    data: {
-      user_id: userId,
-      expiration_ts: expirationTs,
-      enable_renewal_emails: enableRenewalEmails,
-    },
-  });
+  const response = await request.post(
+    `${MATRIX_URL}/_synapse/client/email_account_validity/admin`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${SYNAPSE_ADMIN_TOKEN}`,
+      },
+      data: {
+        user_id: userId,
+        expiration_ts: expirationTs,
+        enable_renewal_emails: enableRenewalEmails,
+      },
+    }
+  );
 
   if (!response.ok()) {
     const errorText = await response.text();
