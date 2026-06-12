@@ -22,11 +22,19 @@ test.describe('API - Federation', () => {
   });
 
   test('Should create room on federated server', async () => {
+    test.setTimeout(15000);
+    
     const roomId = await createPrivateUnencryptedRoom(matrix);
     const accessRules = await matrix.getAccessRules(roomId);
 
     const federatedMas = await MasAdminClient.createFederatedMAS();
     const federatedUser = await loginWithNewUser(federatedMas, federatedUserOptions());
+
+    //start sync
+    //await matrix.getClient().startClient(); //no need
+
+    // Start the federatedUser client sync to read messages
+    await federatedUser.matrix.getClient().startClient();
 
     // Invite federatedUser into the room
     await matrix.getClient().invite(roomId, federatedUser.mxId);
@@ -34,10 +42,7 @@ test.describe('API - Federation', () => {
     // federatedUser joins the room
     await federatedUser.matrix.getClient().joinRoom(roomId);
 
-    // Start the client sync
-    await federatedUser.matrix.getClient().startClient();
-
-    // Verify the federated user can access the room state
+    // Verify the federated room has the same accessRules
     const federatedAccessRules = await federatedUser.matrix.getAccessRules(roomId);
     expect(federatedAccessRules).toEqual(accessRules);
 
@@ -47,11 +52,24 @@ test.describe('API - Federation', () => {
       .sendTextMessage(roomId, 'Hello from original user');
     expect(messageEventId).toBeDefined();
 
-    // Get the room and verify it has events
-    const room = await federatedUser.matrix.getClient().getRoom(roomId);
-    expect(room).toBeDefined();
-    const events = await room?.getLiveTimeline().getEvents();
-    expect(events && events.length).toBeGreaterThan(0);
+    //wait for message to be read in from federated user
+    await expect.poll(async () => {
+      const room = federatedUser.matrix.getClient().getRoom(roomId);
+      if (!room) return 0;
+      const allEvents = room.getLiveTimeline().getEvents();
+
+      // Filter for m.room.message events only
+      const messageEvents = allEvents.filter(event => {
+        return event.getType() === 'm.room.message';
+      });
+      console.log(`#all events received:${allEvents.length}, # m.room.message received: ${messageEvents.length}`);
+      return messageEvents.length;
+    }, {
+      message: 'Expected room to have events',
+      timeout: 10000, // 10 secondes total
+      intervals: [1000] // Vérifie toutes les 1000ms (1 seconde)
+    }).toBeGreaterThan(0);
+    
 
     federatedMas.deactivateUser(federatedUser.masId);
   });
