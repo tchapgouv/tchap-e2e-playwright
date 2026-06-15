@@ -8,6 +8,9 @@ console.log(`Loading environment configuration for: ${env}`);
 // Load environment variables from the appropriate .env file
 dotenv.config({ path: path.resolve(__dirname, `../.env.${env}`) });
 
+// Load environment variables from the appropriate .secrets file
+dotenv.config({ path: path.resolve(__dirname, `../.secrets.${env}`) });
+
 // Load environment variables from .env file
 //dotenv.config();
 

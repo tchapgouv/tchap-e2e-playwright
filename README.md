@@ -13,13 +13,37 @@ Ce projet contient differents tests :
 
 ## Configuration
 
-Les tests utilisent un fichier `.env.XXX` pour la configuration d'un environnement. Vous pouvez modifier ce fichier pour adapter les tests à votre environnement.
+Les tests utilisent deux types de fichiers pour la configuration d'un environnement :
 
-Requis pour dev01 et int01:
-`MAILPIT_PWD=` mailpit password
-`MAS_ADMIN_CLIENT_ID=` client admin du MAS
-`MAS_ADMIN_CLIENT_SECRET=` client admin du MAS
-`SYNAPSE_ADMIN_TOKEN=` token admin de synapse
+- `.env.XXX` - Fichier de configuration principal (non sensible)
+- `.secrets.XXX` - Fichier de secrets (sensible, exclu de github)
+
+Vous pouvez modifier le fichier `.env.XXX` pour adapter les tests à votre environnement. Les variables sensibles doivent être placées dans le fichier `.secrets.XXX` correspondant.
+
+### Variables de configuration
+
+Les variables suivantes sont requises pour dev01 et int01 et doivent être placées dans les fichiers `.secrets.XXX` :
+
+- `MAILPIT_PWD=` mot de passe mailpit
+- `MAS_ADMIN_CLIENT_ID=` identifiant client admin du MAS
+- `MAS_ADMIN_CLIENT_SECRET=` secret client admin du MAS
+- `SYNAPSE_ADMIN_TOKEN=` token admin de synapse
+- `OTHER_MAS_ADMIN_CLIENT_ID=` identifiant client admin du MAS secondaire
+- `OTHER_MAS_ADMIN_SECRET=` secret client admin du MAS secondaire
+- `EXTERNAL_MAS_ADMIN_CLIENT_ID=` identifiant client admin du MAS externe
+- `EXTERNAL_MAS_ADMIN_SECRET=` secret client admin du MAS externe
+
+### Fichiers d'exemple
+
+Un fichier `.secrets.sample` est fourni avec des commentaires en anglais expliquant chaque variable. Vous pouvez copier ce fichier pour créer vos propres fichiers de secrets :
+
+```bash
+cp .secrets.sample .secrets.dev01
+cp .secrets.sample .secrets.int01
+# etc...
+```
+
+Les fichiers `.secrets.*` sont automatiquement exclus du contrôle de version par le fichier `.gitignore`. Ne commitez jamais de fichiers de secrets contenant des informations sensibles.
 
 ## Executer les tests
 
