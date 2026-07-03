@@ -1,4 +1,4 @@
-import { createClient, type StateEvents, type MatrixClient } from 'matrix-js-sdk';
+import { createClient, type StateEvents, type MatrixClient, EventType } from 'matrix-js-sdk';
 
 export interface AccessRules {
   rule: 'restricted' | 'direct' | 'unrestricted';
@@ -19,6 +19,8 @@ export interface RoomCreationOptions {
   creation_content?: any;
   room_version?: string;
 }
+
+export const AccessRulesEventType = 'im.vector.room.access_rules';
 
 export class MatrixApi {
   private client: MatrixClient;
@@ -63,7 +65,7 @@ export class MatrixApi {
     // Add join_rule
     if (options.joinRule) {
       initialState.push({
-        type: 'm.room.join_rules',
+        type: EventType.RoomJoinRules,
         state_key: '',
         content: { join_rule: options.joinRule },
       });
@@ -83,7 +85,7 @@ export class MatrixApi {
       }
 
       initialState.push({
-        type: 'im.vector.room.access_rules',
+        type: AccessRulesEventType,
         state_key: '',
         content: content,
       });
@@ -113,54 +115,52 @@ export class MatrixApi {
     return await this.client.upgradeRoom(roomId, newVersion);
   }
 
-  /**
-   * Get room state
-   */
-  public async getRoomState(roomId: string): Promise<Record<string, any>> {
-    const state: Record<string, any> = {};
-
-    const eventTypes = [
-      'm.room.encryption',
-      'm.room.join_rules',
-      'im.vector.room.access_rules',
-      'm.room.create',
-      'm.room.name',
-    ];
-
-    for (const eventType of eventTypes) {
-      try {
-        const event = await this.client.getStateEvent(roomId, eventType, '');
-        state[eventType] = event;
-      } catch (e) {
-        console.log('event not found', eventType);
-      }
-    }
-
-    return state;
-  }
 
   /**
    * Check if room is encrypted
    */
   public async isRoomEncrypted(roomId: string): Promise<boolean> {
-    const state = await this.getRoomState(roomId);
-    return 'm.room.encryption' in state;
+    try {
+      return await this.client.getStateEvent(roomId, EventType.RoomEncryption, '') !== null;
+    } catch (e) {
+      return false;
+    }
   }
 
   /**
    * Get join rule
    */
-  public async getJoinRule(roomId: string): Promise<any> {
-    const state = await this.getRoomState(roomId);
-    return state['m.room.join_rules']?.join_rule || null;
+  public async getJoinRule(roomId: string): Promise<string | null> {
+    try {
+      return (await this.client.getStateEvent(roomId, EventType.RoomJoinRules, ''))?.join_rule || null;
+    } catch (e) {
+      console.log('event join rules not found');
+      return null;
+    }
   }
 
   /**
    * Get access rules
    */
-  public async getAccessRules(roomId: string): Promise<any> {
-    const state = await this.getRoomState(roomId);
-    return state['im.vector.room.access_rules'] || null;
+  public async getAccessRulesEvent(roomId: string): Promise<Record<string, any> | null> {
+    try {
+      return await this.client.getStateEvent(roomId, AccessRulesEventType, '');
+    } catch (e) {
+      console.log('event access rules not found');
+      return null;
+    }
+  }
+
+  /**
+   * Get room retention
+   */
+  public async getRoomRetentionEvent(roomId: string): Promise<Record<string, any> | null> {
+    try {
+      return await this.client.getStateEvent(roomId, 'm.room.retention', '');
+    } catch (e) {
+      console.log('event room retention not found');
+      return null;
+    }
   }
 
   /**

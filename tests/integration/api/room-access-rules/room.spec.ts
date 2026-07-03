@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../../utils/matrix-api';
+import { AccessRulesEventType, type MatrixApi } from '../../../../utils/matrix-api';
 import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPrivateEncryptedRoom,
@@ -30,7 +30,7 @@ test.describe('API - Room', () => {
     });
     expect(roomId).toBeDefined();
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules).toBeDefined();
     expect(accessRules.rule).toBe('restricted');
     expect(accessRules.visibility).toBe('private');
@@ -48,7 +48,7 @@ test.describe('API - Room', () => {
     });
     expect(roomId).toBeDefined();
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules).toBeDefined();
     expect(accessRules.rule).toBe('restricted');
     expect(accessRules.visibility).toBe('public');
@@ -67,7 +67,7 @@ test.describe('API - Room', () => {
     });
     expect(roomId).toBeDefined();
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules).toBeDefined();
     expect(accessRules.rule).toBe('direct');
     expect(accessRules.visibility).toBe('private');
@@ -79,7 +79,7 @@ test.describe('API - Room', () => {
   test('Should return 403 error when updating visibility from private to public', async () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules.visibility).toBe('private');
     expect(accessRules.rule).toBe('restricted');
 
@@ -87,7 +87,7 @@ test.describe('API - Room', () => {
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
-      'im.vector.room.access_rules',
+      AccessRulesEventType,
       { rule: 'restricted', visibility: 'public' },
       403
     );
@@ -96,7 +96,7 @@ test.describe('API - Room', () => {
   test('Should return 403 error when removing "public" visibility', async () => {
     const roomId = await createPublicRoom(matrix);
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules.visibility).toBe('public');
     expect(accessRules.rule).toBe('restricted');
 
@@ -104,7 +104,7 @@ test.describe('API - Room', () => {
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
-      'im.vector.room.access_rules',
+      AccessRulesEventType,
       { rule: 'restricted', visibility: undefined },
       403
     );
@@ -118,13 +118,13 @@ test.describe('API - Room', () => {
       is_direct: true,
     });
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules.force_unencrypted_at_creation).toBe(undefined);
 
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
-      'im.vector.room.access_rules',
+      AccessRulesEventType,
       { rule: 'restricted', force_unencrypted_at_creation: true },
       403
     );
@@ -145,7 +145,7 @@ test.describe('API - Room', () => {
       room_version: '1',
     });
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules.rule).toBe('unrestricted');
     expect(accessRules.force_unencrypted_at_creation).toBe(true);
     expect(accessRules.visibility).toBe('private');
@@ -155,7 +155,7 @@ test.describe('API - Room', () => {
     //check that access rule exists in the upgraded room with correct value
     const replacementRoomId = upgradeResponse.replacement_room;
     console.log('Ugraded room id', replacementRoomId);
-    const upgradedAccessRules = await matrix.getAccessRules(replacementRoomId);
+    const upgradedAccessRules = await matrix.getAccessRulesEvent(replacementRoomId);
     expect(upgradedAccessRules.rule).toBe('unrestricted');
     expect(upgradedAccessRules.force_unencrypted_at_creation).toBe(true);
     expect(upgradedAccessRules.visibility).toBe('private');

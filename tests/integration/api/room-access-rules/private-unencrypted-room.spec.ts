@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../../utils/matrix-api';
+import { AccessRulesEventType, type MatrixApi } from '../../../../utils/matrix-api';
 import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPrivateUnencryptedRoom,
@@ -25,7 +25,7 @@ test.describe('API - Private Unencrypted Room', () => {
     const roomId = await createPrivateUnencryptedRoom(matrix);
     expect(roomId).toBeDefined();
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules).toBeDefined();
     expect(accessRules.rule).toBe('restricted');
     expect(accessRules.force_unencrypted_at_creation).toBe(true);
@@ -50,18 +50,18 @@ test.describe('API - Private Unencrypted Room', () => {
   test('Should change access rules from restricted to unrestricted', async () => {
     const roomId = await createPrivateUnencryptedRoom(matrix);
 
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+    await matrix.sendStateEvent(roomId, AccessRulesEventType, {
       rule: 'unrestricted',
       force_unencrypted_at_creation: true,
     });
 
-    expect((await matrix.getAccessRules(roomId)).rule).toBe('unrestricted');
+    expect((await matrix.getAccessRulesEvent(roomId)).rule).toBe('unrestricted');
   });
 
   test('Should return 403 error when changing access rules back to restricted', async () => {
     const roomId = await createPrivateUnencryptedRoom(matrix);
 
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+    await matrix.sendStateEvent(roomId, AccessRulesEventType, {
       rule: 'unrestricted',
       force_unencrypted_at_creation: true,
     });
@@ -69,7 +69,7 @@ test.describe('API - Private Unencrypted Room', () => {
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
-      'im.vector.room.access_rules',
+      AccessRulesEventType,
       { rule: 'restricted' },
       403
     );
