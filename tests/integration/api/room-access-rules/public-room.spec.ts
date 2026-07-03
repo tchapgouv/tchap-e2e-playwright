@@ -52,6 +52,41 @@ test.describe('API - Public Room', () => {
     await expectErrorWhenSendStateEvent(matrix, roomId, EventType.RoomEncryption, {}, 403);
   });
 
+  test('Should create public room with default retention of 3 months', async () => {
+    const roomId = await createPublicRoom(matrix);
+    expect(roomId).toBeDefined();
+
+    const roomRetention = await matrix.getRoomRetentionEvent(roomId)
+    expect(roomRetention).toBeDefined();
+    expect(roomRetention.max_lifetime).toBe(3 * 30 * 24 * 60 * 60 * 1000);
+  });
+
+  test('Should fail to create public room with custom retention superior to 3 months', async () => {
+    await expect(createPublicRoom(matrix, 'Public Room', 4 * 30 * 24 * 60 * 60 * 1000)).rejects.toThrow()
+  });
+
+  test('Should fail to set retention to a value superior to 3 months or to unset it', async () => {
+    const roomId = await createPublicRoom(matrix);
+    expect(roomId).toBeDefined();
+
+    await expect(matrix.sendStateEvent(roomId, "m.room.retention", { max_lifetime: 4 * 30 * 24 * 60 * 60 * 1000 }))
+      .rejects
+      .toThrow();
+
+    await expect(matrix.sendStateEvent(roomId, "m.room.retention", { }))
+      .rejects
+      .toThrow();
+  });
+
+  test('Should allow to set retention to a value inferior to 3 months', async () => {
+    const roomId = await createPublicRoom(matrix);
+    expect(roomId).toBeDefined();
+
+    await expect(matrix.sendStateEvent(roomId, "m.room.retention", { max_lifetime: 2 * 30 * 24 * 60 * 60 * 1000 }))
+      .resolves
+      .toBeDefined();
+  });
+
   test.afterAll(async () => {
     masAdminClient.deactivateUser(masId);
   });

@@ -18,6 +18,7 @@ export interface RoomCreationOptions {
   power_level_content_override?: any;
   creation_content?: any;
   room_version?: string;
+  retention_max_lifetime?: number;
 }
 
 export const AccessRulesEventType = 'im.vector.room.access_rules';
@@ -88,6 +89,14 @@ export class MatrixApi {
         type: AccessRulesEventType,
         state_key: '',
         content: content,
+      });
+    }
+
+    if (options.retention_max_lifetime) {
+      initialState.push({
+        type: 'm.room.retention',
+        state_key: '',
+        content: { max_lifetime: options.retention_max_lifetime },
       });
     }
 
