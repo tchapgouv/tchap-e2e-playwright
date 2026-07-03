@@ -52,6 +52,19 @@ test.describe('API - Public Room', () => {
     await expectErrorWhenSendStateEvent(matrix, roomId, EventType.RoomEncryption, {}, 403);
   });
 
+  test('Should create room with public preset correctly sets the visibility to public', async () => {
+    const roomId = await matrix.createRoom({
+      name: "Public Room",
+      joinRule: 'public',
+      preset: 'public_chat',
+    });
+    expect(roomId).toBeDefined();
+
+    const accessRulesEvent = await matrix.getAccessRulesEvent(roomId);
+    expect(accessRulesEvent).toBeDefined();
+    expect(accessRulesEvent.visibility).toBe('public');
+  });
+
   test('Should create public room with default retention of 3 months', async () => {
     const roomId = await createPublicRoom(matrix);
     expect(roomId).toBeDefined();
