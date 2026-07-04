@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../../utils/matrix-api';
+import { AccessRulesEventType, type MatrixApi } from '../../../../utils/matrix-api';
 import { MasAdminClient } from '../../../../utils/mas-admin';
 import {
   createPrivateUnencryptedRoom,
@@ -169,7 +169,7 @@ test.describe('API - Manage Last Admin', () => {
     const roomId = await createPrivateUnencryptedRoom(matrix);
 
     // Change the state of the room to invite an external
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+    await matrix.sendStateEvent(roomId, AccessRulesEventType, {
       rule: 'unrestricted',
       visibility: 'private',
       force_unencrypted_at_creation: true,
@@ -188,7 +188,7 @@ test.describe('API - Manage Last Admin', () => {
     const roomId = await createPrivateEncryptedRoom(matrix);
 
     // Change the state of the room to invite an external
-    await matrix.sendStateEvent(roomId, 'im.vector.room.access_rules', {
+    await matrix.sendStateEvent(roomId, AccessRulesEventType, {
       rule: 'unrestricted',
       visibility: 'private',
     });

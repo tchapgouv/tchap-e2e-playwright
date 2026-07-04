@@ -25,7 +25,7 @@ test.describe('API - Federation', () => {
     test.setTimeout(15000);
     
     const roomId = await createPrivateUnencryptedRoom(matrix);
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
 
     const federatedMas = await MasAdminClient.createFederatedMAS();
     const federatedUser = await loginWithNewUser(federatedMas, federatedUserOptions());
@@ -43,7 +43,7 @@ test.describe('API - Federation', () => {
     await federatedUser.matrix.getClient().joinRoom(roomId);
 
     // Verify the federated room has the same accessRules
-    const federatedAccessRules = await federatedUser.matrix.getAccessRules(roomId);
+    const federatedAccessRules = await federatedUser.matrix.getAccessRulesEvent(roomId);
     expect(federatedAccessRules).toEqual(accessRules);
 
     // User sends a message to the room

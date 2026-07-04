@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import type { MatrixApi } from '../../../../utils/matrix-api';
+import { AccessRulesEventType, type MatrixApi } from '../../../../utils/matrix-api';
 import { MasAdminClient } from '../../../../utils/mas-admin';
 import { expectErrorWhenSendStateEvent, loginWithNewUser, standardUserOptions } from './room-utils';
 import { EventType, JoinRule } from 'matrix-js-sdk';
@@ -41,7 +41,7 @@ test.describe('API - Direct Room', () => {
     const roomId = await createDirectRoom(matrix);
     expect(roomId).toBeDefined();
 
-    const accessRules = await matrix.getAccessRules(roomId);
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
     expect(accessRules).toBeDefined();
     expect(accessRules.rule).toBe('direct');
     expect(accessRules.force_unencrypted_at_creation).toBe(false);
@@ -68,7 +68,7 @@ test.describe('API - Direct Room', () => {
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
-      'im.vector.room.access_rules',
+      AccessRulesEventType,
       { rule: 'unrestricted' },
       403
     );
@@ -76,7 +76,7 @@ test.describe('API - Direct Room', () => {
     await expectErrorWhenSendStateEvent(
       matrix,
       roomId,
-      'im.vector.room.access_rules',
+      AccessRulesEventType,
       { rule: 'restricted' },
       403
     );
