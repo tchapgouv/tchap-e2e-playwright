@@ -144,7 +144,8 @@ export async function createPrivateUnencryptedRoom(
 
 export async function createPublicRoom(
   matrix: MatrixApi,
-  name: string = 'Public Room'
+  name: string = 'Public Room',
+  retention_max_lifetime?: number,
 ): Promise<string> {
   return matrix.createRoom({
     name,
@@ -169,6 +170,7 @@ export async function createPublicRoom(
         'org.matrix.msc3401.call.member': 0,
       },
     },
+    retention_max_lifetime: retention_max_lifetime,
   });
 }
 
