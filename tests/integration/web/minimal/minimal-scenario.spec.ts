@@ -305,10 +305,10 @@ test.describe
 
       //disconnect
       await page.getByRole('button', { name: 'Avatar' }).click();
-      await page.getByRole('button', { name: 'Se déconnecter' }).click();
+      await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
       await page
         .locator('#mx_Dialog_Container')
-        .getByRole('button', { name: 'Se déconnecter' })
+        .getByRole('button', { name: 'Supprimer cet appareil' })
         .click();
       //reset passsword
       await page.getByRole('link', { name: 'Se connecter' }).click();
