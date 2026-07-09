@@ -9,7 +9,6 @@ import {
   TEST_USER_PASSWORD,
   TEST_USER_PREFIX,
 } from './config';
-import type { Credentials } from './api';
 import type { ScreenCheckerFixture } from '../fixtures/auth-fixture';
 import {
   getExpirationAccountLink as getRenewAccountLink,
@@ -391,6 +390,7 @@ export function generateTestUserData(domain: string): TestUser {
 
 // Taken from element-mmodules
 /** Adds an initScript to the given page which will populate localStorage appropriately so that Element will use the given credentials. */
+//TODO: Tchap : it misses identity server which blocks inviting by email 
 export async function populateLocalStorageWithCredentials(page: Page, credentials: Credentials) {
   await page.addInitScript(
     ({ credentials }) => {
@@ -414,4 +414,23 @@ export async function populateLocalStorageWithCredentials(page: Page, credential
     },
     { credentials }
   );
+}
+
+
+/**
+ * Credentials for a user.
+ */
+export interface Credentials {
+  /** The base URL of the homeserver's CS API. */
+  homeserverBaseUrl: string;
+
+  accessToken: string;
+  userId: string;
+  deviceId: string;
+
+  /** The domain part of the user's matrix ID. */
+  homeServer: string;
+
+  password: string | null; // null for password-less users
+  username: string; // the localpart of the userId
 }

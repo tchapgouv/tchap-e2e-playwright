@@ -6,6 +6,7 @@ Please see LICENSE files in the repository root for full details.
 */
 
 import type { APIRequestContext } from '@playwright/test';
+import { Credentials } from './auth-helpers';
 
 export type Verb = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -77,23 +78,7 @@ export class Api {
   }
 }
 
-/**
- * Credentials for a user.
- */
-export interface Credentials {
-  /** The base URL of the homeserver's CS API. */
-  homeserverBaseUrl: string;
 
-  accessToken: string;
-  userId: string;
-  deviceId: string;
-
-  /** The domain part of the user's matrix ID. */
-  homeServer: string;
-
-  password: string | null; // null for password-less users
-  username: string; // the localpart of the userId
-}
 
 /**
  * A client-server API for interacting with a Matrix homeserver.

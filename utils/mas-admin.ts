@@ -241,6 +241,7 @@ class MasAdminClient {
 
   /**
    * Create a user in MAS with a password
+   * @returns masId
    */
   public async createUserWithPassword(
     username: string,
