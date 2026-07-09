@@ -74,12 +74,8 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
   // Write in the unencrypted private room
   await expect(page.locator('button').filter({ hasText: 'Non chiffré' })).toBeVisible();
   await expect(page.getByText('Le chiffrement de bout en bout n')).toBeVisible();
-  //await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
-  //await page.getByRole('button', { name: 'Envoyer le message' }).click();
-  await page.locator('.mx_BasicMessageComposer').click();
-  await page.getByRole('textbox', { name: 'Envoyer un message chiffré…' }).fill('test message chiffré');
+  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
   await page.getByRole('button', { name: 'Envoyer le message' }).click();
-
   await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
 
   // Verify parameters
@@ -274,7 +270,7 @@ test.describe
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
-      await expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
+      expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
 
 
       //envoyer fichier vérolé
