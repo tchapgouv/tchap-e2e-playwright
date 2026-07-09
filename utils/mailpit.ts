@@ -118,7 +118,7 @@ export async function waitForMessage(
 
   const startTime = Date.now();
   let retryCount = 0;
-  const retryDelay = 1000; // 1 second delay
+  let retryDelay = 1000; // 1 second delay
 
   while (Date.now() - startTime < maxWaitTimeMs) {
     try {
@@ -152,6 +152,7 @@ export async function waitForMessage(
       console.log(
         `[Mailpit] Waiting for emails found for ${toEmail} with subject ${subject} , retrying... (${retryCount})`
       );
+      retryDelay += retryDelay;
       await new Promise((resolve) => setTimeout(resolve, retryDelay));
     } catch (error) {
       // Error occurred, retry
