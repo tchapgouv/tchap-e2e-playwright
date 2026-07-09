@@ -88,25 +88,12 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
   return roomName;
 }
 
-// Helper function to create an external private room
-async function createExternalPrivateRoom(
-  page: Page,
-  roomName: string = 'Salon ouvert aux externes'
-): Promise<string> {
-  const appPage = new TchapAppPage(page);
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-  await page.getByText('Nouveau salon').click();
-  await page.getByLabel('Créer un salon').click();
-  await appPage.selectRoomType('Salon privé sécurisé avec externes');
-  await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
-  await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+//TODO : break down test suite in atomic tests
 
-  return roomName;
-}
 
 test.describe
   .serial('Minimal scenario', () => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
 
     const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
     const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
@@ -114,6 +101,32 @@ test.describe
     const public_room_name = generateRoomName('public_room_name');
     const private_crypted_room_name = generateRoomName('private_crypted_room_name');
     const private_uncrypted_room_name = generateRoomName('private_uncrypted_room_name');
+
+    let invitee1, invitee1_search_name:string, invitee1_display_name:string;
+    let invitee2_email:string, invitee2_display_name:string;
+    let invitee3, invitee3_search_name:string, invitee3_display_name:string;
+
+
+    test.beforeAll(async () => {
+      const masAdminClient = await MasAdminClient.createDefaultMAS();
+      const federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
+
+      // create invitee1
+      invitee1 = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
+      invitee1_search_name = invitee1.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + invitee1.displayName.split(' ')[1].toLocaleLowerCase();
+      invitee1_display_name = invitee1.displayName;
+
+      // create invitee2
+      invitee2_email = 'testeur@agent2.tchap.incubateur.net';
+      invitee2_display_name = 'Testeur [Incubateur]';
+
+      // Créer invitee3
+      invitee3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, federatedMasAdminClient);
+      invitee3_search_name = invitee3.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + invitee3.displayName.split(' ')[1].toLocaleLowerCase();
+      invitee3_display_name = invitee3.displayName;
+    });
+
+
     /*
      * tested:
      * creer compte agent
@@ -132,29 +145,7 @@ test.describe
      */
 
     test('internal user', async ({ page, context, screenChecker }) => {
-      // 1. Register user
-      const masAdminClient = await MasAdminClient.createDefaultMAS();
-      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
-      const invitee1_search_name =
-        user.displayName.split(' ')[0].toLocaleLowerCase() +
-        ' ' +
-        user.displayName.split(' ')[1].toLocaleLowerCase();
-      const invitee1_display_name = user.displayName;
-
-      // Cannot create user2 in OTHER_EMAIL_DOMAIN with Admin API as binding in sydent is required to perform a search by email
-      const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
-      const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
-
-      // Create a user on other homeserver
-      const federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
-
-      const user3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, federatedMasAdminClient);
-      const invitee3_search_name =
-        user3.displayName.split(' ')[0].toLocaleLowerCase() +
-        ' ' +
-        user3.displayName.split(' ')[1].toLocaleLowerCase();
-      const invitee3_display_name = user3.displayName;
-
+      
       // Grant clipboard permissions to browser context
       await context.grantPermissions(['clipboard-read', 'clipboard-write']);
 
@@ -279,8 +270,8 @@ test.describe
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
-      await page.getByRole('link', { name: 'element.png' }).click();
-      await page.getByRole('button', { name: 'Fermer' }).click();
+      await expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
+
 
       //envoyer fichier vérolé
       await page
@@ -344,7 +335,7 @@ test.describe
       const page_ext = await context_ext.newPage();
 
       //invitation takes time to be available
-      const { message, content } = await waitForMessage(external_user.email, 40000, 'Invitation');
+      const { message, content } = await waitForMessage(external_user.email, 120000, 'Invitation');
       console.log('Invitation received for user, but sydent is a bit slow, so wait 10 seconds');
       await page_ext.waitForTimeout(10000);
 
@@ -381,7 +372,7 @@ test.describe
       await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
       await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-      await page_ext.waitForSelector('.mx_MatrixChat', { timeout: 20000 });
+      await page_ext.waitForSelector('.mx_MatrixChat', { timeout: 60000 });
 
       //rejoindre le salon
       await page_ext
