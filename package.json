@@ -29,8 +29,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "matrix-js-sdk": "^41.5.0",
-    "playwright": "^1.61.1"
+    "matrix-js-sdk": "^41.5.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.11",
