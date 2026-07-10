@@ -1,0 +1,436 @@
+import { type BrowserContext, expect, type Page } from '@playwright/test';
+import { createKeycloakUser, deleteKeycloakUser } from './keycloak-admin';
+import type { MasAdminClient } from './mas-admin';
+import {
+  ELEMENT_URL,
+  KEYCLOAK_URL,
+  MAS_URL,
+  SCREENSHOTS_DIR,
+  TEST_USER_PASSWORD,
+  TEST_USER_PREFIX,
+} from './config';
+import type { ScreenCheckerFixture } from '../fixtures/auth-fixture';
+import {
+  getExpirationAccountLink as getRenewAccountLink,
+  getPasswordResetLink,
+} from './mailpit.js';
+/**
+ * Test user type
+ */
+export interface TestUser {
+  username: string; //username in tchap in form generated from email
+  email: string;
+  password: string;
+  keycloakId?: string;
+  masId?: string;
+  displayName: string;
+  domain: string;
+}
+
+/**
+ * Different type of user can be used
+ */
+export enum TypeUser {
+  MAS_PASSWORD_USER,
+  MAS_OIDC_USER,
+  INVITED_USER,
+  OIDC_USER,
+}
+
+/**
+ * Create a test user in Keycloak
+ */
+export async function createKeycloakTestUser(user: TestUser): Promise<TestUser> {
+  const keycloakId = await createKeycloakUser(user.username, user.email, user.password);
+  return { ...user, keycloakId };
+}
+
+/**
+ * Clean up a test user
+ */
+export async function cleanupKeycloakTestUser(user: TestUser): Promise<void> {
+  if (user.keycloakId) {
+    await deleteKeycloakUser(user.keycloakId);
+  }
+}
+
+/**
+ * Perform OIDC login via Keycloak
+ * This function handles the entire authentication flow:
+ * 1. Navigate to MAS login page
+ * 2. Click on the OIDC provider button
+ * 3. Fill in credentials on the Keycloak login page
+ * 4. Wait for successful authentication and redirect back to MAS
+ */
+export async function performOidcLogin(
+  page: Page,
+  user: TestUser,
+  screenshot_path: string
+): Promise<void> {
+  // Navigate to the login page
+  await page.goto('/login');
+
+  // Take a screenshot of the login page
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-login-page.png`,
+    fullPage: true,
+  });
+
+  // Find and click the OIDC provider button (adjust the selector as needed)
+  // This is based on the login.html template which shows provider buttons
+  //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  //catch proconnect button with class proconnect-button
+  const oidcButton = page.locator('button.proconnect-button');
+  await oidcButton.click();
+
+  // Wait for navigation to Keycloak
+  await page.waitForURL((url) => url.toString().includes(KEYCLOAK_URL));
+
+  // Take a screenshot of the Keycloak login page
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-keycloak-login.png`,
+    fullPage: true,
+  });
+
+  // Fill in the username and password
+  await page.locator('#username').fill(user.username);
+  await page.locator('#password').fill(user.password);
+
+  // Click the login button
+  await page.locator('button[type="submit"]').click();
+
+  // Wait for redirect back to MAS
+  await page.waitForURL((url) => url.toString().includes(MAS_URL));
+
+  // Take a screenshot after successful login
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-after-keycloak-login.png`,
+    fullPage: true,
+  });
+}
+
+/**
+ * Perform OIDC login starting from Element client
+ */
+export async function performOidcLoginFromTchap(
+  page: Page,
+  user: TestUser,
+  screenshot_path: string
+): Promise<void> {
+  //we go to the welcome and then to the login page because sometimes the email field disapears
+  await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png`,
+    fullPage: true,
+  });
+
+  await page.getByRole('link').filter({ hasText: 'Se connecter' }).click();
+
+  await page.locator('input').fill(user.email);
+
+  // Click on "Continuer" button
+  await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+  // Wait for navigation to MAS
+  await page.waitForURL((url) => url.toString().includes(MAS_URL));
+
+  // Take a screenshot of the MAS login page
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-mas-login-page.png`,
+    fullPage: true,
+  });
+
+  // Find and click the OIDC provider button
+  //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
+  const oidcButton = page.locator('button.proconnect-button');
+
+  await oidcButton.click();
+
+  // Wait for navigation to Keycloak
+  await page.waitForURL((url) => url.toString().includes(KEYCLOAK_URL));
+
+  // Take a screenshot of the Keycloak login page
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-keycloak-login.png`,
+    fullPage: true,
+  });
+
+  // Fill in the username and password
+  await page.locator('#username').fill(user.username);
+  await page.locator('#password').fill(user.password);
+
+  // Click the login button
+  await page.locator('button[type="submit"]').click();
+
+  // Wait for redirect back to MAS
+  await page.waitForURL((url) => url.toString().includes(MAS_URL));
+
+  // Take a screenshot after successful login
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-after-login.png`,
+    fullPage: true,
+  });
+}
+
+/**
+ * Verify that a user was created in MAS after OIDC authentication
+ */
+export async function verifyUserInMas(
+  user: TestUser,
+  masAdminClient: MasAdminClient
+): Promise<void> {
+  const masUser = await masAdminClient.waitForUser(user.email);
+  user.masId = masUser.id;
+}
+
+/**
+ * Create a test user directly in MAS with password
+ */
+export async function createMasTestUser(
+  domain: string,
+  masAdminClient: MasAdminClient
+): Promise<TestUser> {
+  const user = generateTestUserData(domain);
+  const masId = await masAdminClient.createUserWithPassword(
+    user.username,
+    user.email,
+    user.password,
+    user.displayName
+  );
+  /*
+  const masId = await createMasUserWithPassword(
+    user.username,
+    user.email,
+    user.password,
+    user.displayName
+  );*/
+  return { ...user, masId };
+}
+
+/**
+ * Clean up a MAS test user
+ */
+export async function cleanupMasTestUser(
+  user: TestUser,
+  masAdminClient: MasAdminClient
+): Promise<void> {
+  if (user.masId) {
+    await masAdminClient.deactivateUser(user.masId);
+  }
+}
+
+/**
+ * Perform password login to MAS
+ * This function handles the direct authentication flow:
+ * 1. Navigate to MAS login page
+ * 2. Fill in username and password
+ * 3. Submit the form
+ * 4. Wait for successful authentication
+ */
+export async function performPasswordLogin(
+  page: Page,
+  user: TestUser,
+  screenshot_path: string
+): Promise<void> {
+  console.log(`[Auth] Performing password login for user: ${user.username}`);
+
+  // Navigate to the login page
+  await page.goto('/login');
+
+  // Take a screenshot of the login page
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-password-login-page.png`,
+  });
+
+  // Fill in the username and password
+  await page.locator('input[name="username"]').fill(user.username);
+  await page.locator('input[name="password"]').fill(user.password);
+
+  // Take a screenshot before submitting
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-password-login-filled.png`,
+  });
+
+  // Click the login button (submit the form)
+  await page.locator('button[type="submit"]').click();
+
+  // Wait for successful login (redirect to dashboard or home page)
+  await page.waitForURL((url) => !url.toString().includes('/login'));
+
+  // Take a screenshot after successful login
+  await page.screenshot({
+    path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-password-login-success.png`,
+  });
+
+  console.log(`[Auth] Password login successful for user: ${user.username}`);
+}
+
+// open reset password screen from email
+export async function openResetPasswordEmail(
+  context: BrowserContext,
+  screenChecker: ScreenCheckerFixture,
+  userEmail: string
+): Promise<Page> {
+  // Use Mailpit API to get password reset link instead of browser automation
+  const resetLink = await getPasswordResetLink(userEmail);
+
+  // Create a new page and navigate directly to the reset link
+  const resetPasswordPage = await context.newPage();
+  await resetPasswordPage.goto(resetLink);
+
+  await screenChecker(resetPasswordPage, 'account/password/recovery');
+
+  return resetPasswordPage;
+}
+
+// open reset password screen from email
+export async function openRenewAccountEmail(
+  context: BrowserContext,
+  screenChecker: ScreenCheckerFixture,
+  userEmail: string
+): Promise<Page> {
+  // Use Mailpit API to get password reset link instead of browser automation
+  const renewLink = await getRenewAccountLink(userEmail);
+
+  // Create a new page and navigate directly to the reset link
+  const resetPasswordPage = await context.newPage();
+  await resetPasswordPage.goto(renewLink);
+
+  await screenChecker(resetPasswordPage, 'email_account_validity');
+
+  return resetPasswordPage;
+}
+
+export async function loginWithPassword(
+  page: Page,
+  userData: { email: string; password: string },
+  screenChecker: Function
+) {
+  await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+
+  // Welcome page
+  await screenChecker(page, `#/welcome`);
+  await page.getByRole('link').filter({ hasText: 'Se connecter' }).click();
+
+  // Email precheck
+  await screenChecker(page, `#/email-precheck-sso`);
+  await page.locator('input').fill(userData.email);
+  await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+  // Login page
+  await screenChecker(page, `/login`);
+  await expect(page.locator('input[name="username"]')).toHaveValue(userData.email);
+  await page.locator('input[name="password"]').fill(userData.password);
+  await page.locator('button[type="submit"]').click();
+
+  // Consent page
+  await screenChecker(page, `/consent`);
+  await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+}
+
+/**
+ * Same as performPasswordLogin but without the screenshots
+ */
+export async function performSimplePasswordLogin(page: Page, user: TestUser): Promise<void> {
+  console.log(`[Auth] Performing password login for user: ${user.username}`);
+
+  // Navigate to the login page
+  await page.goto('/login');
+
+  // Fill in the username and password
+  await page.locator('input[name="username"]').fill(user.username);
+  await page.locator('input[name="password"]').fill(user.password);
+
+  // Click the login button (submit the form)
+  await page.locator('button[type="submit"]').click();
+
+  // Wait for successful login (redirect to dashboard or home page)
+  await page.waitForURL((url) => !url.toString().includes('/login'));
+
+  console.log(`[Auth] Password login successful for user: ${user.username}`);
+}
+
+export function generateRoomName(prefix: string) {
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  return `${prefix}_${timestamp}_${randomSuffix}`;
+}
+
+// Generate a unique username and email for testing
+export function generateTestUserData(domain: string): TestUser {
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  const username = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}`;
+  const localpart = `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}-${domain}`;
+  const email = `${username}@${domain}`;
+  const domainDisplayName = domain
+    .split('.')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('');
+  const displayName =
+    username
+      .split('.')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ') +
+    ' [' +
+    domainDisplayName +
+    ']';
+
+  console.log('Using email: ', email);
+
+  return {
+    username: localpart,
+    email: email,
+    password: TEST_USER_PASSWORD,
+    domain: domain,
+    displayName: displayName,
+  };
+}
+
+// Taken from element-mmodules
+/** Adds an initScript to the given page which will populate localStorage appropriately so that Element will use the given credentials. */
+//TODO: Tchap : it misses identity server which blocks inviting by email 
+export async function populateLocalStorageWithCredentials(page: Page, credentials: Credentials) {
+  await page.addInitScript(
+    ({ credentials }) => {
+      window.localStorage.setItem('mx_hs_url', credentials.homeserverBaseUrl);
+      window.localStorage.setItem('mx_user_id', credentials.userId);
+      window.localStorage.setItem('mx_access_token', credentials.accessToken);
+      window.localStorage.setItem('mx_device_id', credentials.deviceId);
+      window.localStorage.setItem('mx_is_guest', 'false');
+      window.localStorage.setItem('mx_has_pickle_key', 'false');
+      window.localStorage.setItem('mx_has_access_token', 'true');
+
+      window.localStorage.setItem(
+        'mx_local_settings',
+        JSON.stringify({
+          // Retain any other settings which may have already been set
+          ...JSON.parse(window.localStorage.getItem('mx_local_settings') ?? '{}'),
+          // Ensure the language is set to a consistent value
+          language: 'fr',
+        })
+      );
+    },
+    { credentials }
+  );
+}
+
+
+/**
+ * Credentials for a user.
+ */
+export interface Credentials {
+  /** The base URL of the homeserver's CS API. */
+  homeserverBaseUrl: string;
+
+  accessToken: string;
+  userId: string;
+  deviceId: string;
+
+  /** The domain part of the user's matrix ID. */
+  homeServer: string;
+
+  password: string | null; // null for password-less users
+  username: string; // the localpart of the userId
+}

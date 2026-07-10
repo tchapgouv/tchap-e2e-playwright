@@ -1,0 +1,108 @@
+import { test, expect } from '@playwright/test';
+import { AccessRulesEventType, type MatrixApi } from '../../../../utils/matrix-api';
+import { MasAdminClient } from '../../../../utils/mas-admin';
+import {
+  addModeratorToRoom,
+  createPrivateEncryptedRoom,
+  expectErrorWhenSendStateEvent,
+  loginWithNewUser,
+  setDefaultPowerLevel,
+  standardUserOptions,
+} from './room-utils';
+import { EventType, JoinRule } from 'matrix-js-sdk';
+
+test.describe('API - Private Encrypted Room', () => {
+  let matrix: MatrixApi;
+  let masId: string;
+  let masAdminClient: MasAdminClient;
+
+  test.beforeAll(async () => {
+    masAdminClient = await MasAdminClient.createDefaultMAS();
+    const userData = await loginWithNewUser(masAdminClient, standardUserOptions());
+    masId = userData.masId;
+    matrix = userData.matrix;
+  });
+
+  test('Should create private encrypted room with correct properties', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+    expect(roomId).toBeDefined();
+
+    const accessRules = await matrix.getAccessRulesEvent(roomId);
+    expect(accessRules).toBeDefined();
+    expect(accessRules.rule).toBe('restricted');
+    expect(accessRules.force_unencrypted_at_creation).toBe(false);
+    expect(accessRules.visibility).toBe('private');
+
+    expect(await matrix.isRoomEncrypted(roomId)).toBe(true);
+    expect(await matrix.getJoinRule(roomId)).toBe('invite');
+  });
+
+  test('Should modify joinRule between invite and public', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    await matrix.sendStateEvent(roomId, EventType.RoomJoinRules, { join_rule: JoinRule.Public });
+
+    expect(await matrix.getJoinRule(roomId)).toBe('public');
+
+    await matrix.sendStateEvent(roomId, EventType.RoomJoinRules, { join_rule: JoinRule.Invite });
+
+    expect(await matrix.getJoinRule(roomId)).toBe('invite');
+  });
+
+  test('Should change access rules from restricted to unrestricted', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    await matrix.sendStateEvent(roomId, AccessRulesEventType, { rule: 'unrestricted' });
+
+    expect((await matrix.getAccessRulesEvent(roomId)).rule).toBe('unrestricted');
+  });
+
+  test('Should return 403 error when changing access rules back to restricted', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    await matrix.sendStateEvent(roomId, AccessRulesEventType, { rule: 'unrestricted' });
+    expect((await matrix.getAccessRulesEvent(roomId)).rule).toBe('unrestricted');
+
+    await expectErrorWhenSendStateEvent(
+      matrix,
+      roomId,
+      AccessRulesEventType,
+      { rule: 'restricted' },
+      403
+    );
+  });
+
+  test('Should return 403 error when non admin send rules from restricted to unrestricted', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    const mod = await addModeratorToRoom(matrix, roomId, masAdminClient);
+
+    await expectErrorWhenSendStateEvent(
+      mod.matrix,
+      roomId,
+      AccessRulesEventType,
+      { rule: 'unrestricted' },
+      403
+    );
+  });
+
+  //TODO : fix this
+  test.skip('Should return 403 error when invite external with PL user defaults admin', async () => {
+    const roomId = await createPrivateEncryptedRoom(matrix);
+
+    //change users_default PL to 100
+    await setDefaultPowerLevel(matrix, roomId, 100);
+
+    await expectErrorWhenSendStateEvent(
+      matrix,
+      roomId,
+      AccessRulesEventType,
+      { rule: 'unrestricted' },
+      403
+    );
+  });
+
+  test.afterAll(async () => {
+    await masAdminClient.deactivateUser(masId);
+  });
+});
