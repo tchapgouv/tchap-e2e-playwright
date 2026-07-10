@@ -270,7 +270,7 @@ test.describe
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
-      expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
+      await      expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
 
 
       //envoyer fichier vérolé
