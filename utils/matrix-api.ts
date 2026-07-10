@@ -1,4 +1,5 @@
 import { createClient, type StateEvents, type MatrixClient, EventType } from 'matrix-js-sdk';
+import { Credentials } from './auth-helpers';
 
 export interface AccessRules {
   rule: 'restricted' | 'direct' | 'unrestricted';
@@ -39,7 +40,7 @@ export class MatrixApi {
    * Login a user
    * @
    */
-  public async login(username: string, password: string): Promise<string> {
+  public async login(username: string, password: string): Promise<Credentials> {
     const response = await this.client.loginRequest({
       type: 'm.login.password',
       user: username,
@@ -54,7 +55,15 @@ export class MatrixApi {
       deviceId: response.device_id,
     });
 
-    return response.user_id;
+    return {
+      homeserverBaseUrl: this.client.getHomeserverUrl(),
+      password,
+      accessToken: response.access_token,
+      userId: response.user_id,
+      deviceId: response.device_id,
+      homeServer: response.home_server || response.user_id.split(':').slice(1).join(':'),
+      username: username.slice(1).split(':')[0],
+    };
   }
 
   /**

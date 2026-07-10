@@ -100,34 +100,33 @@ class MasAdminClient {
   }
 
   /**
-   * Get the current access token, obtaining a new one if necessary
+   *  obtaining a new token each call to avoid token expired in long tests
    */
   private async getToken(): Promise<string> {
-    // Check if token is still valid (simple implementation - could be enhanced)
-    if (!this.token) {
-      const authHeader = Buffer.from(`${this.clientId}:${this.secret}`).toString('base64');
+    
+    const authHeader = Buffer.from(`${this.clientId}:${this.secret}`).toString('base64');
 
-      const response = await this.apiContext.post('/oauth2/token', {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${authHeader}`,
-        },
-        form: {
-          grant_type: 'client_credentials',
-          scope: 'urn:mas:admin',
-        },
-      });
+    const response = await this.apiContext.post('/oauth2/token', {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Authorization: `Basic ${authHeader}`,
+      },
+      form: {
+        grant_type: 'client_credentials',
+        scope: 'urn:mas:admin',
+      },
+    });
 
-      if (!response.ok()) {
-        const errorText = await response.text();
-        console.error(`[MAS API] Failed to get admin token: ${response.status()} - ${errorText}`);
-        throw new Error(`Failed to get MAS admin token: ${response.status()} - ${errorText}`);
-      }
-
-      const data = (await response.json()) as { access_token: string };
-      this.token = data.access_token;
-      console.log(`[MAS API] Successfully obtained admin token for ${this.baseUrl}`);
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to get admin token: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to get MAS admin token: ${response.status()} - ${errorText}`);
     }
+
+    const data = (await response.json()) as { access_token: string };
+    this.token = data.access_token;
+    console.log(`[MAS API] Successfully obtained admin token for ${this.baseUrl}`);
+    
     return this.token;
   }
 
@@ -241,6 +240,7 @@ class MasAdminClient {
 
   /**
    * Create a user in MAS with a password
+   * @returns masId
    */
   public async createUserWithPassword(
     username: string,

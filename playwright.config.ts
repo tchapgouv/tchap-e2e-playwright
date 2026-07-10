@@ -17,10 +17,10 @@ export default defineConfig({
 
   /* Define how many workers */
   // Limit the number of workers on CI, use default locally
-  workers: process.env.CI ? 2 : 1,
+  workers: process.env.CI ? 1 : 1,
 
   /* use retries to handle flaky tests */
-  retries: process.env.CI ? 5 : 2,
+  retries: process.env.CI ? 1 : 0,
 
   /* Reporter to use */
   reporter: 'html',
@@ -47,19 +47,29 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    /* e2e tests do not work well on firefox nor webkit (bit flaky)
-     {
+    /* e2e tests do not work well on firefox nor webkit (bit flaky) */
+    {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+      use: {
+        ...devices['Desktop Firefox'] },
+        },
+        /*
     {
       name: 'webkit',
-      use: { ...devices['Desktop Edge'] },
+      use: {
+        ...devices['Desktop Edge'] },
+        //NotAllowedError: Failed to execute 'readText' on 'Clipboard': Read permission denied.
     },
     */
+    
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { 
+        contextOptions: {
+          permissions: ['clipboard-read', 'clipboard-write'],
+        },
+        ...devices['Desktop Chrome'],
+      }
     },
   ],
 });

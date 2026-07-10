@@ -3,7 +3,9 @@ import {
   createMasTestUser,
   generateRoomName,
   generateTestUserData,
+  loginWithPassword,
   openResetPasswordEmail,
+  TestUser,
 } from '../../../../utils/auth-helpers';
 import {
   ELEMENT_URL,
@@ -88,25 +90,12 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
   return roomName;
 }
 
-// Helper function to create an external private room
-async function createExternalPrivateRoom(
-  page: Page,
-  roomName: string = 'Salon ouvert aux externes'
-): Promise<string> {
-  const appPage = new TchapAppPage(page);
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-  await page.getByText('Nouveau salon').click();
-  await page.getByLabel('Créer un salon').click();
-  await appPage.selectRoomType('Salon privé sécurisé avec externes');
-  await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
-  await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
+//TODO : break down test suite in atomic tests
 
-  return roomName;
-}
 
 test.describe
   .serial('Minimal scenario', () => {
-    test.setTimeout(120_000);
+    test.setTimeout(240_000);
 
     const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
     const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
@@ -114,13 +103,41 @@ test.describe
     const public_room_name = generateRoomName('public_room_name');
     const private_crypted_room_name = generateRoomName('private_crypted_room_name');
     const private_uncrypted_room_name = generateRoomName('private_uncrypted_room_name');
+
+    let invitee1, invitee1_search_name:string, invitee1_display_name:string;
+    let invitee2_email:string, invitee2_display_name:string;
+    let invitee3, invitee3_search_name:string, invitee3_display_name:string;
+    let masAdminClient:MasAdminClient ;
+    let federatedMasAdminClient:MasAdminClient;
+
+    test.beforeAll(async () => {
+      masAdminClient = await MasAdminClient.createDefaultMAS();
+      federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
+      
+
+      // create invitee1
+      invitee1 = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
+      invitee1_search_name = invitee1.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + invitee1.displayName.split(' ')[1].toLocaleLowerCase();
+      invitee1_display_name = invitee1.displayName;
+
+      // create invitee2
+      invitee2_email = 'testeur@agent2.tchap.incubateur.net';
+      invitee2_display_name = 'Testeur [Incubateur]';
+
+      // Créer invitee3
+      invitee3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, federatedMasAdminClient);
+      invitee3_search_name = invitee3.displayName.split(' ')[0].toLocaleLowerCase() + ' ' + invitee3.displayName.split(' ')[1].toLocaleLowerCase();
+      invitee3_display_name = invitee3.displayName;
+    });
+
+
     /*
      * tested:
      * creer compte agent
      * creer salon privé
      * creer salon privé non chiffré
      * creer salon public
-     * creer salon privé ouverts aux externes
+     * inviter par email,
      * inviter un externe
      * envoyer fichier, fichier vérolé
      * activer la sauvegarde
@@ -131,32 +148,50 @@ test.describe
      * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
      */
 
-    test('internal user', async ({ page, context, screenChecker }) => {
-      // 1. Register user
-      const masAdminClient = await MasAdminClient.createDefaultMAS();
-      const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
-      const invitee1_search_name =
-        user.displayName.split(' ')[0].toLocaleLowerCase() +
-        ' ' +
-        user.displayName.split(' ')[1].toLocaleLowerCase();
-      const invitee1_display_name = user.displayName;
+    test('test room creation', async ({ page, context, screenChecker, authenticatedUser }) => {
+            //creer salon public
+      await createPublicRoom(page, public_room_name);
 
-      // Cannot create user2 in OTHER_EMAIL_DOMAIN with Admin API as binding in sydent is required to perform a search by email
-      const invitee2_email = 'testeur@agent2.tchap.incubateur.net'; // TODO : ensure that invitee exists in the environment
-      const invitee2_display_name = 'Testeur [Incubateur]'; // TODO : ensure that invitee exists in the environment
+      //chercher salon public
+      await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
+      await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeVisible();
+      await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
 
-      // Create a user on other homeserver
-      const federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
+      //creer salon privé
+      await createEncryptedPrivateRoom(page, private_crypted_room_name);
 
-      const user3 = await createMasTestUser(OTHER_EMAIL_DOMAIN, federatedMasAdminClient);
-      const invitee3_search_name =
-        user3.displayName.split(' ')[0].toLocaleLowerCase() +
-        ' ' +
-        user3.displayName.split(' ')[1].toLocaleLowerCase();
-      const invitee3_display_name = user3.displayName;
+      //creer salon privé non chiffré
+      await createUnencryptedPrivateRoom(page, private_uncrypted_room_name);
 
-      // Grant clipboard permissions to browser context
-      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    })
+
+
+    test('send files', async ({ page, context, screenChecker, authenticatedUser }) => {
+      //creer salon privé
+      await createEncryptedPrivateRoom(page, private_crypted_room_name);
+
+       //envoyer fichier png
+      await page
+        .locator(".mx_MessageComposer_actions input[type='file']")
+        .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
+
+      await page.getByRole('button', { name: 'Envoyer' }).click();
+      await expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
+
+
+      //envoyer fichier vérolé
+      await page
+        .locator(".mx_MessageComposer_actions input[type='file']")
+        .setInputFiles(path.join(__dirname, '../../../../sample-files/eicar.com'));
+      await page.getByRole('button', { name: 'Envoyer' }).click();
+      await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
+
+    })
+
+    test('internal user setup account', async ({ page, context, screenChecker }) => {
+      
 
       //create account
       await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
@@ -228,7 +263,7 @@ test.describe
       if (await page.getByRole('button', { name: 'Ignorer' }).isVisible()) {
         await page.getByRole('button', { name: 'Ignorer' }).click();
       }
-
+      /*
       //creer salon public
       await createPublicRoom(page, public_room_name);
 
@@ -241,7 +276,8 @@ test.describe
 
       //creer salon privé
       await createEncryptedPrivateRoom(page, private_crypted_room_name);
-
+*/
+/*
       //creer salon privé non chiffré
       await createUnencryptedPrivateRoom(page, private_uncrypted_room_name);
 
@@ -273,22 +309,6 @@ test.describe
         page.getByTestId('virtuoso-item-list').getByText(invitee3_display_name)
       ).toBeVisible();
 
-      //envoyer fichier png
-      await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
-
-      await page.getByRole('button', { name: 'Envoyer' }).click();
-      await page.getByRole('link', { name: 'element.png' }).click();
-      await page.getByRole('button', { name: 'Fermer' }).click();
-
-      //envoyer fichier vérolé
-      await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
-        .setInputFiles(path.join(__dirname, '../../../../sample-files/eicar.com'));
-      await page.getByRole('button', { name: 'Envoyer' }).click();
-      await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
-      
       //creer salon privé
       await createEncryptedPrivateRoom(page, private_crypted_room_name);
 
@@ -302,14 +322,11 @@ test.describe
       await expect(
         page.getByRole('option', { name: external_user.email.split('@')[0] })
       ).toBeVisible(); //just the localpart of the emailawait page.getByRole('option', { name: 'user.local_1775742819448_6984' }).click();
-
+*/
       //disconnect
       await page.getByRole('button', { name: 'Avatar' }).click();
       await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
-      await page
-        .locator('#mx_Dialog_Container')
-        .getByRole('button', { name: 'Supprimer cet appareil' })
-        .click();
+
       //reset passsword
       await page.getByRole('link', { name: 'Se connecter' }).click();
       await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
@@ -339,12 +356,93 @@ test.describe
       ).toBeVisible();
     });
 
-    test('external user', async ({ screenChecker, browser }) => {
+    test('test invites', async ({ page, context, screenChecker }) => {
+      //we can't use authenticatedUser fixture as the identity server is not well setup in the profile
+      //this blocks invite by email
+            //inviter 
+      let inviter:TestUser;
+      inviter = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
+
+      //login with inviter
+      await loginWithPassword(page, {email:inviter.email, password:inviter.password}, screenChecker);
+
+       //creer salon privé non chiffré
+      await createUnencryptedPrivateRoom(page, private_uncrypted_room_name);
+
+      //inviter agents by name
+      await page.getByRole('button', { name: 'Personnes' }).click();
+      await page.getByRole('button', { name: 'Inviter', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(invitee1_search_name);
+      await page.getByText(invitee1_display_name).first().click();
+      await page.getByRole('button', { name: 'Inviter' }).click();
+      await expect(
+        page.getByTestId('virtuoso-item-list').getByText(invitee1_display_name)
+      ).toBeVisible();
+
+      //inviter agents by email
+      await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(invitee2_email);
+      await page.getByText(invitee2_display_name).first().click();
+      await page.getByRole('button', { name: 'Inviter' }).click();
+      await expect(
+        page.getByTestId('virtuoso-item-list').getByText(invitee2_display_name)
+      ).toBeVisible();
+
+      //inviter agents from other homeserver by name
+      await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(invitee3_search_name);
+      await page.getByText(invitee3_display_name).first().click();
+      await page.getByRole('button', { name: 'Inviter' }).click();
+      await expect(
+        page.getByTestId('virtuoso-item-list').getByText(invitee3_display_name)
+      ).toBeVisible();
+
+      //creer salon privé
+      await createEncryptedPrivateRoom(page, private_crypted_room_name);
+
+      //inviter agent externe
+      await page.getByRole('button', { name: 'Personnes' }).click();
+      await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(external_user.email);
+      await page.getByRole('button', { name: 'Inviter' }).click();
+      await page.getByRole('button', { name: 'OK' }).click();
+      //await expect(page.getByTestId('virtuoso-item-list').getByText(external_user.username)).toBeVisible();
+      await expect(
+        page.getByRole('option', { name: external_user.email.split('@')[0] })
+      ).toBeVisible(); //just the localpart of the email
+  
+    })
+
+
+    test('external user', async ({page, screenChecker, browser }) => {
+      //we can't use authenticatedUser fixture as the identity server is not well setup in the profile
+      //this blocks invite by email
+      let inviter:TestUser;
+      inviter = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
+
+      //login with inviter
+      await loginWithPassword(page, {email:inviter.email, password:inviter.password}, screenChecker);
+
+       //creer salon privé
+      await createEncryptedPrivateRoom(page, private_crypted_room_name);
+
+      //inviter agent externe
+      await page.getByRole('button', { name: 'Personnes' }).click();
+      await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(external_user.email);
+      await page.getByRole('button', { name: 'Inviter' }).click();
+      await page.getByRole('button', { name: 'OK' }).click();
+      //await expect(page.getByTestId('virtuoso-item-list').getByText(external_user.username)).toBeVisible();
+      await expect(
+        page.getByRole('option', { name: external_user.email.split('@')[0] })
+      ).toBeVisible(); //just the localpart of the email
+  
+
       const context_ext = await browser.newContext();
       const page_ext = await context_ext.newPage();
 
       //invitation takes time to be available
-      const { message, content } = await waitForMessage(external_user.email, 40000, 'Invitation');
+      const { message, content } = await waitForMessage(external_user.email, 120000, 'Invitation');
       console.log('Invitation received for user, but sydent is a bit slow, so wait 10 seconds');
       await page_ext.waitForTimeout(10000);
 
@@ -381,7 +479,7 @@ test.describe
       await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
       await page_ext.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-      await page_ext.waitForSelector('.mx_MatrixChat', { timeout: 20000 });
+      await page_ext.waitForSelector('.mx_MatrixChat', { timeout: 60000 });
 
       //rejoindre le salon
       await page_ext
@@ -390,7 +488,7 @@ test.describe
         .first()
         .click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
-      await expect(await page_ext.getByText('a créé ce salon. C’est le début de')).toBeVisible();
+      await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible();
 
       //ne peut pas créer de salon
       await page_ext.getByRole('button', { name: 'Ajouter', exact: true }).click();

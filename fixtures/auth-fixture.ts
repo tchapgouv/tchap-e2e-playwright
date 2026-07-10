@@ -5,6 +5,7 @@ import {
   type TestUser,
   TypeUser,
   populateLocalStorageWithCredentials,
+  Credentials,
 } from '../utils/auth-helpers';
 import { disposeApiContext as disposeKeycloakApiContext } from '../utils/keycloak-admin';
 import { MasAdminClient } from '../utils/mas-admin';
@@ -22,7 +23,7 @@ import {
   MATRIX_URL,
   ELEMENT_URL,
 } from '../utils/config';
-import { ClientServerApi, type Credentials } from '../utils/api';
+import { loginWithNewUser, standardUserOptions } from '../tests/integration/api/room-access-rules/room-utils';
 
 function generateUserDataFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
@@ -129,17 +130,12 @@ async function authenticatedUserFixture(
   use: (credentials: Credentials) => Promise<void>
 ) {
   const masAdminClient = await MasAdminClient.createDefaultMAS();
-  // 1. Register user
-  const userId = await masAdminClient.createUserWithPassword(
-    user.username,
-    user.email,
-    user.password
-  );
-  const csAPI = new ClientServerApi(MATRIX_URL, request);
+  
+  const matrixAPI = await loginWithNewUser(masAdminClient, standardUserOptions() )
 
-  await masAdminClient.waitForUser(user.email);
+  const credentials = matrixAPI.credentials;
 
-  const credentials = (await csAPI.loginUser(user.username, user.password)) as Credentials;
+  //console.log(credentials);
 
   // 2. Populate localStorage
   await populateLocalStorageWithCredentials(page, credentials);
@@ -152,7 +148,7 @@ async function authenticatedUserFixture(
   await use(credentials);
 
   // Clean up, deactivate user
-  await masAdminClient.deactivateUser(userId);
+  await masAdminClient.deactivateUser(matrixAPI.masId);
   console.log(`Cleaned up MAS user: ${user.username}`);
 }
 

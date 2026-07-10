@@ -15,6 +15,7 @@ import {
 } from '../../../../utils/config';
 import type { MasAdminClient } from '../../../../utils/mas-admin';
 import { EventType } from 'matrix-js-sdk';
+import { Credentials } from '../../../../utils/auth-helpers';
 
 /**
  * Options for loginWithNewUser function
@@ -76,6 +77,7 @@ export async function loginWithNewUser(
   username: string;
   matrix: MatrixApi;
   masId: string;
+  credentials:  Credentials;
 }> {
   const username = `${opts.username_prefix}${Date.now()}`;
 
@@ -87,9 +89,9 @@ export async function loginWithNewUser(
   );
 
   const matrix = new MatrixApi(opts.matrix_url, opts.mas_url);
-  const mxId = await matrix.login(username, opts.password);
+  const credentials = await matrix.login(username, opts.password);
 
-  return { mxId, username, matrix, masId };
+  return { mxId:credentials.userId, username, matrix, masId, credentials };
 }
 
 /**
