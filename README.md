@@ -32,6 +32,7 @@ Les variables suivantes sont requises pour dev01 et int01 et doivent être plac�
 - `OTHER_MAS_ADMIN_SECRET=` secret client admin du MAS secondaire
 - `EXTERNAL_MAS_ADMIN_CLIENT_ID=` identifiant client admin du MAS externe
 - `EXTERNAL_MAS_ADMIN_SECRET=` secret client admin du MAS externe
+- `TEST_USER_PASSWORD=` mot de passe par défaut des users créés
 
 ### Fichiers d'exemple
 
