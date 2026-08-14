@@ -48,12 +48,12 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     /* e2e tests do not work well on firefox nor webkit (bit flaky) */
+    /*
     {
       name: 'firefox',
       use: {
         ...devices['Desktop Firefox'] },
         },
-        /*
     {
       name: 'webkit',
       use: {
