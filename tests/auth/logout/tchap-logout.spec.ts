@@ -20,7 +20,7 @@ test.describe('Tchap : logout', () => {
     //logout
     await page.getByLabel('Avatar').click();
     //await screenChecker(page, `/`)
-    await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
     await screenChecker(page, `/welcome`);
 
     // Second login

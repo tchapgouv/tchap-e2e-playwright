@@ -437,6 +437,8 @@ test.describe
         page.getByRole('option', { name: external_user.email.split('@')[0] })
       ).toBeVisible(); //just the localpart of the email
   
+      //close ressource
+      //await page.close();
 
       const context_ext = await browser.newContext();
       const page_ext = await context_ext.newPage();
@@ -482,11 +484,7 @@ test.describe
       await page_ext.waitForSelector('.mx_MatrixChat', { timeout: 60000 });
 
       //rejoindre le salon
-      await page_ext
-        .locator('div')
-        .filter({ hasText: /^Salon vide$/ })
-        .first()
-        .click();
+      await page_ext.getByText('private_crypted_room_name_', { exact: false }).click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
       await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible();
 

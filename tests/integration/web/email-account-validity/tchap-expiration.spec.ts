@@ -40,7 +40,7 @@ test.describe('Tchap : account expiration', () => {
 
     await page.getByLabel('Avatar').click();
     //await screenChecker(page, `/`)
-    await page.getByRole('button', { name: 'Se déconnecter' }).click();
+    await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
 
     // Wait a moment for the expiration to take effect
     await new Promise((resolve) => setTimeout(resolve, 2000));

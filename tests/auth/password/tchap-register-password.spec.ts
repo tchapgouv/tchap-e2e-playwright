@@ -118,7 +118,7 @@ test.describe('Tchap : register with password', () => {
     await expect(
       page
         .locator('div.cpd-form-message.cpd-form-error-message')
-        .filter({ hasText: 'Votre adresse mail est associée à un autre serveur' })
+        .filter({ hasText: 'Refusé par la politique du serveur : Votre adresse mail ' })
     ).toBeVisible();
   });
 
