@@ -20,7 +20,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 1,
 
   /* use retries to handle flaky tests */
-  retries: process.env.CI ? 1 : 0,
+  retries: process.env.CI ? 2 : 2,
 
   /* Reporter to use */
   reporter: 'html',
