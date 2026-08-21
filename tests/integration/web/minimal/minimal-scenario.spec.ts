@@ -19,7 +19,8 @@ import path from 'node:path';
 import type { Page } from '@playwright/test';
 import { MasAdminClient } from '../../../../utils/mas-admin';
 
-//this scenario is one big test to cover all the scenario on a not MAS synapse (dev02 - a) and one MAS synapse (ext01 - e)
+// those tests cover use case of the minimal testing scenario 
+// it requires a homeserver, a feredated homeserver (dev02 - a) and one external homeserver (ext01 - e)
 
 // Helper function to create a public room
 async function createPublicRoom(page: Page, roomName: string): Promise<string> {
@@ -36,6 +37,13 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
   await page.getByRole('button', { name: 'Envoyer le message' }).click();
   await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+  //chercher salon public
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Rechercher' }).fill(roomName);
+  await expect(page.getByLabel('Suggestions').getByText(roomName)).toBeVisible();
+  await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
 
   return roomName;
 }
@@ -96,9 +104,9 @@ test.describe('Minimal scenario', () => {
     const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
     const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
 
-    const public_room_name = generateRoomName('public_room_name');
-    const private_crypted_room_name = generateRoomName('private_crypted_room_name');
-    const private_uncrypted_room_name = generateRoomName('private_uncrypted_room_name');
+    //const public_room_name = generateRoomName('public_room_name');
+    //const private_crypted_room_name = generateRoomName('private_crypted_room_name');
+    //const private_uncrypted_room_name = generateRoomName('private_uncrypted_room_name');
 
     let invitee1, invitee1_search_name:string, invitee1_display_name:string;
     let invitee2_email:string, invitee2_display_name:string;
@@ -143,29 +151,24 @@ test.describe('Minimal scenario', () => {
      * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
      */
 
-    test('test room creation', async ({ page, context, screenChecker, authenticatedUser }) => {
+    test('test room creation', async ({ page, authenticatedUser }) => {
+      console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
       //creer salon public
+      const public_room_name = generateRoomName('public_room_name');
       await createPublicRoom(page, public_room_name);
-
-      //chercher salon public
-      await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-      await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
-      await page.getByRole('textbox', { name: 'Rechercher' }).fill(public_room_name);
-      await expect(page.getByLabel('Suggestions').getByText(public_room_name)).toBeVisible();
-      await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
-
       //creer salon privé
-      await createEncryptedPrivateRoom(page, private_crypted_room_name);
+      await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
 
       //creer salon privé non chiffré
-      await createUnencryptedPrivateRoom(page, private_uncrypted_room_name);
+      await createUnencryptedPrivateRoom(page, generateRoomName('private_uncrypted_room_name'));
 
-    })
+    });
 
 
-    test('send files', async ({ page, context, screenChecker, authenticatedUser }) => {
+    test('send png file', async ({ page, authenticatedUser }) => {
+      console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
       //creer salon privé
-      await createEncryptedPrivateRoom(page, private_crypted_room_name);
+      await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
 
        //envoyer fichier png
       await page
@@ -174,16 +177,20 @@ test.describe('Minimal scenario', () => {
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
+    });
 
+    test('send virus file', async ({ page, authenticatedUser }) => {
+      console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
+      await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
 
       //envoyer fichier vérolé
       await page
         .locator(".mx_MessageComposer_actions input[type='file']")
         .setInputFiles(path.join(__dirname, '../../../../sample-files/eicar.com'));
       await page.getByRole('button', { name: 'Envoyer' }).click();
-      await page.getByRole('listitem').filter({ hasText: /^Contenu bloqué$/ });
+      await expect(page.getByText('Contenu bloqué')).toBeVisible();
 
-    })
+    });
 
     test('internal user setup account', async ({ page, context, screenChecker }) => {
       //create account
@@ -300,7 +307,7 @@ test.describe('Minimal scenario', () => {
       await loginWithPassword(page, {email:inviter.email, password:inviter.password}, screenChecker);
 
        //creer salon privé non chiffré
-      await createUnencryptedPrivateRoom(page, private_uncrypted_room_name);
+      await createUnencryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
 
       //inviter agents by name
       await page.getByRole('button', { name: 'Personnes' }).click();
@@ -330,20 +337,6 @@ test.describe('Minimal scenario', () => {
         page.getByTestId('virtuoso-item-list').getByText(invitee3_display_name)
       ).toBeVisible();
 
-      //creer salon privé
-      await createEncryptedPrivateRoom(page, private_crypted_room_name);
-
-      //inviter agent externe
-      await page.getByRole('button', { name: 'Personnes' }).click();
-      await page.getByRole('button', { name: 'Inviter dans ce salon' }).click();
-      await page.getByRole('textbox', { name: 'Rechercher' }).fill(external_user.email);
-      await page.getByRole('button', { name: 'Inviter' }).click();
-      await page.getByRole('button', { name: 'OK' }).click();
-      //await expect(page.getByTestId('virtuoso-item-list').getByText(external_user.username)).toBeVisible();
-      await expect(
-        page.getByRole('option', { name: external_user.email.split('@')[0] })
-      ).toBeVisible(); //just the localpart of the email
-  
     })
 
 
@@ -357,7 +350,7 @@ test.describe('Minimal scenario', () => {
       await loginWithPassword(page, {email:inviter.email, password:inviter.password}, screenChecker);
 
        //creer salon privé
-      await createEncryptedPrivateRoom(page, private_crypted_room_name);
+      await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
 
       //inviter agent externe
       await page.getByRole('button', { name: 'Personnes' }).click();
@@ -417,7 +410,7 @@ test.describe('Minimal scenario', () => {
       await page_ext.waitForSelector('.mx_MatrixChat', { timeout: 60000 });
 
       //rejoindre le salon
-      await page_ext.getByText(/private_crypted_room_name_/).first().click();
+      await page_ext.getByText(/private_crypted_room_name_|Salon vide/).first().click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
       await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible();
 

@@ -24,6 +24,7 @@ import {
   ELEMENT_URL,
 } from '../utils/config';
 import { loginWithNewUser, standardUserOptions } from '../tests/integration/api/room-access-rules/room-utils';
+import { MatrixApi } from '../utils/matrix-api';
 
 function generateUserDataFixture(domain: string) {
   return async ({}, use: (user: TestUser) => Promise<void>) => {
@@ -125,6 +126,49 @@ async function startTchapRegisterWithEmailFixture(
   await use(start);
 }
 
+
+export type WorkerUser = {
+  credentials: Credentials;
+  masId: string;
+  matrix: MatrixApi;
+};
+
+/**
+ * worker-scoped : crée UN utilisateur MAS et se logue UNE fois par worker.
+ * Les credentials (token + device) sont réutilisés par tous les tests du worker.
+ */
+async function workerUserFixture({}, use: (u: WorkerUser) => Promise<void>) {
+  const masAdminClient = await MasAdminClient.createDefaultMAS();
+  const { credentials, masId, matrix } = await loginWithNewUser(
+    masAdminClient,
+    standardUserOptions()
+  );
+  console.log(`[Auth] Worker user logged in: ${credentials.userId} (device ${credentials.deviceId})`);
+
+  try {
+    await use({ credentials, masId, matrix });
+  } finally {
+    await masAdminClient.deactivateUser(masId);
+    await masAdminClient.dispose();
+    console.log(`[Auth] Cleaned up worker MAS user: ${credentials.userId}`);
+  }
+}
+
+/**
+ * test-scoped : aucun appel réseau d'authentification.
+ * On réinjecte les credentials du worker et on charge Element.
+ */
+async function authenticatedUserFixture(
+  { page, workerUser }: { page: Page; workerUser: WorkerUser },
+  use: (credentials: Credentials) => Promise<void>
+) {
+  await populateLocalStorageWithCredentials(page, workerUser.credentials);
+  await page.goto(ELEMENT_URL);
+  await page.waitForSelector('.mx_MatrixChat', { timeout: 20000 });
+
+  await use(workerUser.credentials);
+}
+/* 
 async function authenticatedUserFixture(
   { page, userData: user, request }: { page: Page; userData: TestUser; request: any },
   use: (credentials: Credentials) => Promise<void>
@@ -150,7 +194,7 @@ async function authenticatedUserFixture(
   // Clean up, deactivate user
   await masAdminClient.deactivateUser(matrixAPI.masId);
   console.log(`Cleaned up MAS user: ${user.username}`);
-}
+} */
 
 /**
  * Extend the basic test fixtures with our authentication fixtures
@@ -166,7 +210,7 @@ export const test = base.extend<{
   typeUser: TypeUser;
   screenChecker: ScreenCheckerFixture;
   startTchapRegisterWithEmail: StartTchapRegisterWithEmailFixture;
-}>({
+}, { workerUser: WorkerUser }>({
   /**
    * Create a test user in Keycloak before the test and clean it up after
    */
@@ -176,6 +220,7 @@ export const test = base.extend<{
   oidcExternalUserWitoutInvit: createKeycloakUserFixture(NOT_INVITED_EMAIL_DOMAIN),
   oidcUserOnWrongServer: createKeycloakUserFixture(WRONG_SERVER_EMAIL_DOMAIN),
   oidcUserWithFallbackRules: createKeycloakUserFixture(NUMERIQUE_EMAIL_DOMAIN),
+  workerUser: [workerUserFixture, { scope: 'worker' }],
   authenticatedUser: authenticatedUserFixture,
   typeUser: TypeUser.MAS_PASSWORD_USER,
   screenChecker: screenCheckerFixture,
