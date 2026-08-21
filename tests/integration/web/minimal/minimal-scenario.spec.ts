@@ -33,17 +33,6 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
   await expect(page.locator('button').filter({ hasText: roomName })).toBeVisible();
 
-  // Write in the public room
-  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
-  await page.getByRole('button', { name: 'Envoyer le message' }).click();
-  await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
-
-  //chercher salon public
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
-  await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
-  await page.getByRole('textbox', { name: 'Rechercher' }).fill(roomName);
-  await expect(page.getByLabel('Suggestions').getByText(roomName)).toBeVisible();
-  await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
 
   return roomName;
 }
@@ -56,19 +45,6 @@ async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
   await appPage.selectRoomType('Salon privé sécurisé');
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
-
-  // Write in the encrypted private room
-  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message chiffré');
-  await page.getByRole('button', { name: 'Envoyer le message' }).click();
-  await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
-
-  // Verify parameters
-  await page.locator('button').filter({ hasText: roomName }).click();
-  await page.getByRole('menuitem', { name: 'Paramètres' }).click();
-  await page.getByText('Vie privée').click();
-  await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
-  await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
-
   return roomName;
 }
 
@@ -80,20 +56,6 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
   await appPage.selectRoomType('Salon privé');
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
-
-  // Write in the unencrypted private room
-  await expect(page.locator('button').filter({ hasText: 'Non chiffré' })).toBeVisible();
-  await expect(page.getByText('Le chiffrement de bout en bout n')).toBeVisible();
-  await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
-  await page.getByRole('button', { name: 'Envoyer le message' }).click();
-  await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
-
-  // Verify parameters
-  await page.locator('button').filter({ hasText: roomName }).click();
-  await page.getByRole('menuitem', { name: 'Paramètres' }).click();
-  await page.getByText('Vie privée').click();
-  await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
-  await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
 
   return roomName;
 }
@@ -151,24 +113,87 @@ test.describe('Minimal scenario', () => {
      * TODO : A. expirer le compte, vérifier que les clients affichent un truc cohérent,
      */
 
-    test('test room creation', async ({ page, authenticatedUser }) => {
+    test('create public room, send message, check public directory', async ({ page, authenticatedUser }) => {
       console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
       //creer salon public
-      const public_room_name = generateRoomName('public_room_name');
-      await createPublicRoom(page, public_room_name);
-      //creer salon privé
-      await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
+      const roomName = await createPublicRoom(page, generateRoomName('public_room_name'));
 
-      //creer salon privé non chiffré
-      await createUnencryptedPrivateRoom(page, generateRoomName('private_uncrypted_room_name'));
+      // Write in the public room
+      await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
+      await page.getByRole('button', { name: 'Envoyer le message' }).click();
+      await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+      //chercher salon public
+      await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+      await page.getByRole('menuitem', { name: 'Rejoindre un salon public', exact: true }).click();
+      await page.getByRole('textbox', { name: 'Rechercher' }).fill(roomName);
+      await expect(page.getByLabel('Suggestions').getByText(roomName)).toBeVisible();
+      await page.getByRole('textbox', { name: 'Rechercher' }).press('Escape');
+    });
+
+    test('create encrypted private room, send message', async ({ page, authenticatedUser }) => {
+      console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
+
+      //creer salon privé
+      const roomName = await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
+
+
+      // Write in the encrypted private room
+      await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message chiffré');
+      await page.getByRole('button', { name: 'Envoyer le message' }).click();
+      await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+      // Verify parameters
+      await page.locator('button').filter({ hasText: roomName }).click();
+      await page.getByRole('menuitem', { name: 'Paramètres' }).click();
+      await page.getByText('Vie privée').click();
+      await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
+      await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
+
 
     });
 
+    test('create unencrypted private room, send message', async ({ page, authenticatedUser }) => {
+      console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
 
-    test('send png file', async ({ page, authenticatedUser }) => {
+      //creer salon privé non chiffré
+      const roomName = await createUnencryptedPrivateRoom(page, generateRoomName('private_uncrypted_room_name'));
+
+
+      // Write in the unencrypted private room
+      await expect(page.locator('button').filter({ hasText: 'Non chiffré' })).toBeVisible();
+      await expect(page.getByText('Le chiffrement de bout en bout n')).toBeVisible();
+      await page.locator('.mx_BasicMessageComposer').getByRole('textbox').fill('message non chiffré');
+      await page.getByRole('button', { name: 'Envoyer le message' }).click();
+      await expect(page.getByRole('status', { name: 'Votre message a été envoyé' })).toBeVisible();
+
+      // Verify parameters
+      await page.locator('button').filter({ hasText: roomName }).click();
+      await page.getByRole('menuitem', { name: 'Paramètres' }).click();
+      await page.getByText('Vie privée').click();
+      await expect(page.getByRole('radio', { name: 'salon privé' })).toBeChecked();
+      await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
+
+    });
+
+    test('send png file in encrypted room', async ({ page, authenticatedUser }) => {
       console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
       //creer salon privé
       await createEncryptedPrivateRoom(page, generateRoomName('private_crypted_room_name'));
+
+       //envoyer fichier png
+      await page
+        .locator(".mx_MessageComposer_actions input[type='file']")
+        .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
+
+      await page.getByRole('button', { name: 'Envoyer' }).click();
+      await expect( page.getByRole('link', { name: 'element.png' })).toBeVisible();
+    });
+
+    test('send png file in unencrypted room', async ({ page, authenticatedUser }) => {
+      console.log(`Using authenticatedUser : ${authenticatedUser.userId}`)
+      //creer salon privé
+      await createUnencryptedPrivateRoom(page, generateRoomName('private_uncrypted_room_name'));
 
        //envoyer fichier png
       await page
