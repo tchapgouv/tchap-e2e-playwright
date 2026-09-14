@@ -1,17 +1,10 @@
 import { MasAdminClient } from '../../../utils/mas-admin';
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { ELEMENT_URL } from '../../../utils/config';
-import { openResetPasswordEmail } from '../../../utils/auth-helpers';
+import { openResetPasswordEmail, makeWrongServerEmail } from '../../../utils/auth-helpers';
 
 test.describe('Tchap : reset password', () => {
   test('tchap reset password', async ({ page, userData, screenChecker }) => {
-    /*
-    userData.masId = await createMasUserWithPassword(
-      userData.username,
-      userData.email,
-      userData.password
-    );
-    */
     const masAdminClient = await MasAdminClient.createDefaultMAS();
     const masId = await masAdminClient.createUserWithPassword(
       userData.username,
@@ -67,5 +60,64 @@ test.describe('Tchap : reset password', () => {
     masAdminClient.deactivateUser(masId);
   });
 
-  //TODO add reset password when user is connected -> show an error
+  test('tchap password reset with wrong server email shows error', async ({
+    page,
+    userData,
+    screenChecker,
+  }) => {
+    const wrongServerEmail = makeWrongServerEmail();
+
+    // Start from Element Web welcome page with a standard-domain email
+    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+    await screenChecker(page, '#/welcome');
+
+    await page.getByRole('link').filter({ hasText: 'Se connecter' }).click();
+
+    await screenChecker(page, '#/email-precheck-sso');
+    await page.locator('input').fill(userData.email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screenChecker(page, '/login');
+    await page.getByRole('link').filter({ hasText: 'Mot de passe oublié' }).click();
+
+    await screenChecker(page, '/recover');
+
+    // Fill the wrong-server email and submit
+    await page.locator('input[name="email"]').fill(wrongServerEmail);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screenChecker(page, '/recover');
+    await expect(page.getByText('hors vous êtes sur le serveur')).toBeVisible();
+  });
+
+  test('tchap password reset with authenticated account', async ({
+    page,
+    userData,
+    screenChecker,
+  }) => {
+    const wrongServerEmail = makeWrongServerEmail();
+
+    // Start from Element Web welcome page with a standard-domain email
+    await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
+    await screenChecker(page, '#/welcome');
+
+    await page.getByRole('link').filter({ hasText: 'Se connecter' }).click();
+
+    await screenChecker(page, '#/email-precheck-sso');
+    await page.locator('input').fill(userData.email);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screenChecker(page, '/login');
+    await page.getByRole('link').filter({ hasText: 'Mot de passe oublié' }).click();
+
+    await screenChecker(page, '/recover');
+
+    // Fill the wrong-server email and submit
+    await page.locator('input[name="email"]').fill(wrongServerEmail);
+    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screenChecker(page, '/recover');
+    await expect(page.getByText('hors vous êtes sur le serveur')).toBeVisible();
+  });
+
 });
