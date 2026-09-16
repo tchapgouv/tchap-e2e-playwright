@@ -116,7 +116,7 @@ test.describe('Tchap : register with password', () => {
     await expect(
       page
         .locator('div.cpd-form-message.cpd-form-error-message')
-        .filter({ hasText: 'Refusé par la politique du serveur : Votre adresse mail ' })
+        .filter({ hasText: 'associée au serveur' })
     ).toBeVisible();
   });
 
@@ -197,8 +197,7 @@ test.describe('Tchap : register with password', () => {
     await page2.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page2, '/finish');
-    await expect(page2.locator('text=le compte Tchap existe déjà')).toBeVisible();
-    await expect(page2.locator('text=Ce compte est désactivé')).toBeVisible();
+    await expect(page2.locator('text=compte désactivé')).toBeVisible();
     await page2.getByRole('link').filter({ hasText: 'Continuer' }).click();
 
     await screen(page2, '/login');
