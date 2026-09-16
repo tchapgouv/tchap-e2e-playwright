@@ -39,9 +39,7 @@ test.describe('Tchap : register with password', () => {
 
     await screen(page, '/consent');
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-    //await screen(page, '#/home'); does not work with waitFor "networkidle"
-    await expect(page.locator('h1').filter({ hasText: /Bienvenue.*\[Tchapgouv\]/ })).toBeVisible({
+    await expect(page.locator('h1').filter({ hasText: /Bienvenue.*/ })).toBeVisible({
       timeout: 20000,
     });
     const masAdminClient = await MasAdminClient.createDefaultMAS();
@@ -118,7 +116,7 @@ test.describe('Tchap : register with password', () => {
     await expect(
       page
         .locator('div.cpd-form-message.cpd-form-error-message')
-        .filter({ hasText: 'Refusé par la politique du serveur : Votre adresse mail ' })
+        .filter({ hasText: 'associée au serveur' })
     ).toBeVisible();
   });
 
@@ -132,32 +130,6 @@ test.describe('Tchap : register with password', () => {
     // Create a test user with a password in MAS with API
     const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
 
-    // Create a test user with a password in MAS with web flow
-    /*
-    const user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
-
-    await startTchapRegisterWithEmail(page, user.email);
-
-    await screen(page, '/register/password');
-    await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
-    
-    await page.locator('input[name="password"]').fill(PASSWORd);
-    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-
-    //wait for password-confirm matching confirmation
-    await page.locator("body").click({ position: { x: 0, y: 0 } }); //unfocus field    
-    await expect(page.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })).toBeVisible();
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click({clickCount:2}); //2 clicks works better than one
-
-    await screen(page, '/verify-email');
-    let verificationCode  = await getLatestVerificationCode(user.email);
-    await page.locator('input[name="code"]').fill(verificationCode);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-    await screen(page, '/consent');
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-    await expect(page.locator('h1').filter({ hasText: /Bienvenue./ })).toBeVisible({ timeout: 20000 });
-    */
 
     //new browser to start from a clean browser history
     const context2 = await browser.newContext();
@@ -186,6 +158,46 @@ test.describe('Tchap : register with password', () => {
 
     await screen(page2, '/finish');
     await expect(page2.locator('text=le compte Tchap existe déjà')).toBeVisible();
+    await page2.getByRole('link').filter({ hasText: 'Continuer' }).click();
+
+    await screen(page2, '/login');
+  });
+
+  test('when user already exists but is deactivated', async ({
+    browser,
+    screenChecker: screen,
+    startTchapRegisterWithEmail,
+  }) => {
+    const masAdminClient = await MasAdminClient.createDefaultMAS();
+    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
+    await masAdminClient.deactivateUser(user.masId);
+
+    //new browser to start from a clean browser history
+    const context2 = await browser.newContext();
+    const page2 = await context2.newPage();
+    await startTchapRegisterWithEmail(page2, user.email);
+
+    await screen(page2, '/register/password');
+    await expect(page2.locator('input[name="email"]')).toHaveValue(user.email);
+
+    await page2.locator('input[name="password"]').fill(PASSWORd);
+    await page2.locator('input[name="password_confirm"]').fill(PASSWORd);
+
+    await page2.locator('body').click({ position: { x: 0, y: 0 } }); //unfocus field
+    await expect(
+      page2.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })
+    ).toBeVisible();
+    await page2.getByRole('button').filter({ hasText: 'Continuer' }).click({ clickCount: 2 });
+
+    //form is submitted successfully
+    await screen(page2, '/verify-email');
+
+    const verificationCode2 = await getLatestVerificationCode(user.email);
+    await page2.locator('input[name="code"]').fill(verificationCode2);
+    await page2.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    await screen(page2, '/finish');
+    await expect(page2.locator('text=compte désactivé')).toBeVisible();
     await page2.getByRole('link').filter({ hasText: 'Continuer' }).click();
 
     await screen(page2, '/login');

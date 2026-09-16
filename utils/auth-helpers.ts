@@ -8,6 +8,7 @@ import {
   SCREENSHOTS_DIR,
   TEST_USER_PASSWORD,
   TEST_USER_PREFIX,
+  WRONG_SERVER_EMAIL_DOMAIN,
 } from './config';
 import type { ScreenCheckerFixture } from '../fixtures/auth-fixture';
 import {
@@ -52,6 +53,12 @@ export async function cleanupKeycloakTestUser(user: TestUser): Promise<void> {
   if (user.keycloakId) {
     await deleteKeycloakUser(user.keycloakId);
   }
+}
+
+export function makeWrongServerEmail(): string {
+  const timestamp = Date.now();
+  const randomSuffix = Math.floor(Math.random() * 10000);
+  return `${TEST_USER_PREFIX}_${timestamp}_${randomSuffix}@${WRONG_SERVER_EMAIL_DOMAIN}`;
 }
 
 /**
