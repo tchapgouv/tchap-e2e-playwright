@@ -1,5 +1,5 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
-import { createMasTestUser, generateTestUserData } from '../../../utils/auth-helpers';
+import { createMasTestUser, generateTestUserData, TestUser } from '../../../utils/auth-helpers';
 import { MasAdminClient } from '../../../utils/mas-admin';
 import {
   NOT_INVITED_EMAIL_DOMAIN,
@@ -39,6 +39,8 @@ test.describe('Tchap : register with password', () => {
 
     await screen(page, '/consent');
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
+
+    //await screen(page, '#/home'); does not work with waitFor "networkidle"
     await expect(page.locator('h1').filter({ hasText: /Bienvenue.*/ })).toBeVisible({
       timeout: 20000,
     });
@@ -126,10 +128,9 @@ test.describe('Tchap : register with password', () => {
     startTchapRegisterWithEmail,
   }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
-    //const created_user = await masAdminClient.createUserWithPassword();
+
     // Create a test user with a password in MAS with API
     const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
-
 
     //new browser to start from a clean browser history
     const context2 = await browser.newContext();
@@ -163,41 +164,67 @@ test.describe('Tchap : register with password', () => {
     await screen(page2, '/login');
   });
 
-  test('when user already exists but is deactivated', async ({
+  test('when user already exists with a colliding email', async ({
     browser,
     screenChecker: screen,
     startTchapRegisterWithEmail,
   }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
-    const user = await createMasTestUser(STANDARD_EMAIL_DOMAIN, masAdminClient);
-    await masAdminClient.deactivateUser(user.masId);
+
+    const randomSuffix = Math.floor(Math.random() * 1000000000);
+
+    const user_1:TestUser = {
+      username: `olivier-${randomSuffix}-${STANDARD_EMAIL_DOMAIN}`,
+      email: `olivier-${randomSuffix}@${STANDARD_EMAIL_DOMAIN}`,
+      password : "any",
+      displayName : "any",
+      domain: `${STANDARD_EMAIL_DOMAIN}`,
+    }
+
+    const user_2:TestUser = {
+      username: `olivier-${randomSuffix}-${STANDARD_EMAIL_DOMAIN}`,
+      email: `olivier@${randomSuffix}-${STANDARD_EMAIL_DOMAIN}`,
+      //email: `olivier@${WRONG_SERVER_EMAIL_DOMAIN}`,
+      password : "any",
+      displayName : "any",
+      domain: `${STANDARD_EMAIL_DOMAIN}`,
+    }
+
+    const user_1_mas_id = await masAdminClient.createUserWithPassword(
+      user_1.username,
+      user_1.email,
+      user_1.password,
+      user_1.displayName
+    );
 
     //new browser to start from a clean browser history
     const context2 = await browser.newContext();
     const page2 = await context2.newPage();
-    await startTchapRegisterWithEmail(page2, user.email);
+    await startTchapRegisterWithEmail(page2, user_2.email);
 
     await screen(page2, '/register/password');
-    await expect(page2.locator('input[name="email"]')).toHaveValue(user.email);
+    await expect(page2.locator('input[name="email"]')).toHaveValue(user_2.email);
 
     await page2.locator('input[name="password"]').fill(PASSWORd);
     await page2.locator('input[name="password_confirm"]').fill(PASSWORd);
 
+    //wait for password-confirm matching confirmation
     await page2.locator('body').click({ position: { x: 0, y: 0 } }); //unfocus field
     await expect(
       page2.locator('span').filter({ hasText: 'Les mots de passe correspondent.' })
     ).toBeVisible();
     await page2.getByRole('button').filter({ hasText: 'Continuer' }).click({ clickCount: 2 });
 
+
     //form is submitted successfully
     await screen(page2, '/verify-email');
 
-    const verificationCode2 = await getLatestVerificationCode(user.email);
+    const verificationCode2 = await getLatestVerificationCode(user_2.email);
     await page2.locator('input[name="code"]').fill(verificationCode2);
     await page2.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
     await screen(page2, '/finish');
-    await expect(page2.locator('text=compte désactivé')).toBeVisible();
+    await expect(page2.locator('text=le compte Tchap existe déjà')).toBeVisible();
     await page2.getByRole('link').filter({ hasText: 'Continuer' }).click();
 
     await screen(page2, '/login');

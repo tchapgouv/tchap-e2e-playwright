@@ -1,12 +1,10 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { MasAdminClient } from '../../../utils/mas-admin';
-import { SCREENSHOTS_DIR, ELEMENT_URL } from '../../../utils/config';
+import { ELEMENT_URL } from '../../../utils/config';
 import { makeWrongServerEmail } from '../../../utils/auth-helpers';
 
 test.describe('Tchap : Login password', () => {
   test('tchap login with password and login_hint', async ({ page, userData, screenChecker }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
-
     const masAdminClient = await MasAdminClient.createDefaultMAS();
     userData.masId = await masAdminClient.createUserWithPassword(
       userData.username,
@@ -35,7 +33,7 @@ test.describe('Tchap : Login password', () => {
 
     //tchap
     await expect(page.locator('text=Bienvenue')).toBeVisible({ timeout: 20000 });
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/05-auth-success.png` });
+    await screenChecker(page, '/');
 
     // Double-check with the API
     const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(userData.email);
@@ -46,7 +44,7 @@ test.describe('Tchap : Login password', () => {
     );
   });
 
-   test('tchap login with wrong server email shows error', async ({
+  test('tchap login with wrong server email shows error', async ({
     page,
     userData,
     screenChecker,

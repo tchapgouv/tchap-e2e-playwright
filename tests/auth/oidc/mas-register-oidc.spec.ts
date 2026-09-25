@@ -1,11 +1,9 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { performOidcLogin, verifyUserInMas } from '../../../utils/auth-helpers';
 import { MasAdminClient } from '../../../utils/mas-admin';
-import { SCREENSHOTS_DIR } from '../../../utils/config';
 
 test.describe('MAS register OIDC', () => {
-  test('mas register oidc - with allowed account', async ({ page, oidcUser }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
+  test('mas register oidc - with allowed account', async ({ page, oidcUser, screenChecker }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
@@ -13,14 +11,14 @@ test.describe('MAS register OIDC', () => {
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
-    await performOidcLogin(page, oidcUser, screenshot_path);
+    await performOidcLogin(page, oidcUser, screenChecker);
 
     // Verify we're successfully logged in
     // This could be checking for a specific element that's only visible when logged in
     await expect(page.locator('text=Connecté')).toBeVisible();
 
     // Take a screenshot of the authenticated state
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-authenticated.png` });
+    await screenChecker(page, '/');
 
     // Verify the user was created in MAS
     await verifyUserInMas(oidcUser, masAdminClient);
@@ -37,8 +35,8 @@ test.describe('MAS register OIDC', () => {
   test('mas register oidc - with extern without invit', async ({
     page,
     oidcExternalUserWitoutInvit,
+    screenChecker,
   }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
     const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
@@ -48,13 +46,13 @@ test.describe('MAS register OIDC', () => {
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
-    await performOidcLogin(page, oidcExternalUserWitoutInvit, screenshot_path);
+    await performOidcLogin(page, oidcExternalUserWitoutInvit, screenChecker);
 
     // Get error
     await expect(page.locator('text=invitation_missing')).toBeVisible();
 
     // Take a screenshot of the authenticated state
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-error-no-invit.png` });
+    await screenChecker(page, '/');
 
     // Double-check with the API
     const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(
@@ -70,8 +68,8 @@ test.describe('MAS register OIDC', () => {
   test('mas register oidc - with extern with invit', async ({
     page,
     oidcExternalUserWithInvit,
+    screenChecker,
   }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
     const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
@@ -81,15 +79,13 @@ test.describe('MAS register OIDC', () => {
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
-    await performOidcLogin(page, oidcExternalUserWithInvit, screenshot_path);
+    await performOidcLogin(page, oidcExternalUserWithInvit, screenChecker);
 
     // Verify we're successfully logged in
     await expect(page.locator('text=Connecté')).toBeVisible();
 
     // Take a screenshot of the authenticated state
-    await page.screenshot({
-      path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-authenticated-external.png`,
-    });
+    await screenChecker(page, '/');
 
     // Verify the user was created in MAS
     await verifyUserInMas(oidcExternalUserWithInvit, masAdminClient);
@@ -105,8 +101,11 @@ test.describe('MAS register OIDC', () => {
     );
   });
 
-  test('mas register oidc - on wrong homeserver', async ({ page, oidcUserOnWrongServer }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
+  test('mas register oidc - on wrong homeserver', async ({
+    page,
+    oidcUserOnWrongServer,
+    screenChecker,
+  }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     // Verify the test user doesn't exist in MAS yet
@@ -116,15 +115,13 @@ test.describe('MAS register OIDC', () => {
     expect(existsBeforeLogin).toBe(false);
 
     // Perform the OIDC login flow
-    await performOidcLogin(page, oidcUserOnWrongServer, screenshot_path);
+    await performOidcLogin(page, oidcUserOnWrongServer, screenChecker);
 
     // Get error
     await expect(page.locator('text=wrong_server')).toBeVisible();
 
     // Take a screenshot of the authenticated state
-    await page.screenshot({
-      path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-error-wrong-server.png`,
-    });
+    await screenChecker(page, '/');
 
     // Double-check with the API
     const existsAfterLogin = await masAdminClient.checkUserExistsByEmail(

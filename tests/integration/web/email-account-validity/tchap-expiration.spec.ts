@@ -28,15 +28,13 @@ test.describe('Tchap : account expiration', () => {
 
     // Get the user's Matrix ID
     const masUser = await masAdminClient.getUserByEmail(user.email);
-    const matrixId = `@${masUser.attributes.username}:dev01.tchap.incubateur.net`;
-    console.log(`User Matrix ID: ${matrixId}`);
 
     // Set an expiration timestamp in the past to make the account expired
     const expirationTs = Math.floor(Date.now()) - 3600000; // 1 hour in the past
     console.log(`Setting expiration timestamp to: ${expirationTs} (1 hour in the past)`);
 
     // Call the Synapse API to set account expiration
-    await setAccountExpiration(request, matrixId, expirationTs, true);
+    await setAccountExpiration(request, masUser.attributes.username, expirationTs, true);
 
     await page.getByLabel('Avatar').click();
     //await screenChecker(page, `/`)
@@ -81,15 +79,14 @@ test.describe('Tchap : account expiration', () => {
 
     // Get the user's Matrix ID
     const masUser = await masAdminClient.getUserByEmail(user.email);
-    const matrixId = `@${masUser.attributes.username}:dev01.tchap.incubateur.net`;
-    console.log(`User Matrix ID: ${matrixId}`);
+
 
     // Set an expiration timestamp in the past to make the account expired
     const expirationTs = Math.floor(Date.now()) - 3600000; // 1 hour in the past
     console.log(`Setting expiration timestamp to: ${expirationTs} (1 hour in the past)`);
 
     // Call the Synapse API to set account expiration
-    await setAccountExpiration(request, matrixId, expirationTs, true);
+    await setAccountExpiration(request, masUser.attributes.username, expirationTs, true);
 
     //trigger the expiration panel by searching a forum
     await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
