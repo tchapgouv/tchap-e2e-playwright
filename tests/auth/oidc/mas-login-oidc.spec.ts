@@ -5,12 +5,10 @@ import {
   type TestUser,
 } from '../../../utils/auth-helpers';
 import { MasAdminClient } from '../../../utils/mas-admin';
-import { SCREENSHOTS_DIR, STANDARD_EMAIL_DOMAIN } from '../../../utils/config';
+import { STANDARD_EMAIL_DOMAIN } from '../../../utils/config';
 
 test.describe('MAS Login OIDC', () => {
-  test('match account by email', async ({ page, oidcUser }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
-
+  test('match account by email', async ({ page, oidcUser, screenChecker }) => {
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${oidcUser.email}`);
     const masAdminClient = await MasAdminClient.createDefaultMAS();
@@ -22,16 +20,14 @@ test.describe('MAS Login OIDC', () => {
 
     try {
       // Perform the OIDC login flow
-      await performOidcLogin(page, oidcUser, screenshot_path);
+      await performOidcLogin(page, oidcUser, screenChecker);
 
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Connecté')).toBeVisible();
 
       // Take a screenshot of the authenticated state
-      await page.screenshot({
-        path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png`,
-      });
+      await screenChecker(page, '/');
 
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await masAdminClient.getUserByEmail(oidcUser.email);
@@ -49,12 +45,11 @@ test.describe('MAS Login OIDC', () => {
   test('match external account by email', async ({
     page,
     oidcExternalUserWitoutInvit: externalUser,
+    screenChecker,
   }) => {
     // we use the fixture oidcExternalUserWitoutInvit because as long as the account is created,
     // there is no invitation pending in the identity server.
     const masAdminClient = await MasAdminClient.createDefaultMAS();
-
-    const screenshot_path = test.info().title.replace(' ', '_');
 
     // Create a user in MAS with the same email as the Keycloak user
     console.log(`Creating MAS user with same email as Keycloak user: ${externalUser.email}`);
@@ -67,16 +62,14 @@ test.describe('MAS Login OIDC', () => {
 
     try {
       // Perform the OIDC login flow
-      await performOidcLogin(page, externalUser, screenshot_path);
+      await performOidcLogin(page, externalUser, screenChecker);
 
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Connecté')).toBeVisible();
 
       // Take a screenshot of the authenticated state
-      await page.screenshot({
-        path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png`,
-      });
+      await screenChecker(page, '/');
 
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await masAdminClient.getUserByEmail(externalUser.email);
@@ -96,10 +89,9 @@ test.describe('MAS Login OIDC', () => {
   test('match account by email with fallback rules', async ({
     page,
     oidcUserWithFallbackRules: oidcUser,
+    screenChecker,
   }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
-
-    const screenshot_path = test.info().title.replace(' ', '_');
 
     const old_email_domain = '@beta.gouv.fr';
     const old_email = oidcUser.email.replace(/@.*/, old_email_domain);
@@ -117,16 +109,14 @@ test.describe('MAS Login OIDC', () => {
 
     try {
       // Perform the OIDC login flow
-      await performOidcLogin(page, oidcUser, screenshot_path);
+      await performOidcLogin(page, oidcUser, screenChecker);
 
       // Since the account already exists, we should be automatically logged in
       // Verify we're successfully logged in
       await expect(page.locator('text=Connecté')).toBeVisible();
 
       // Take a screenshot of the authenticated state
-      await page.screenshot({
-        path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-linked-account.png`,
-      });
+      await screenChecker(page, '/');
 
       // Verify the user in MAS is still the same (account was linked, not created new)
       const userAfterLogin = await masAdminClient.getUserByEmail(old_email);
@@ -141,10 +131,11 @@ test.describe('MAS Login OIDC', () => {
     }
   });
 
-  test('match account by username throw error when email does not match', async ({ page }) => {
+  test('match account by username throw error when email does not match', async ({
+    page,
+    screenChecker,
+  }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
-
-    const screenshot_path = test.info().title.replace(' ', '_');
 
     //create a user in keycloak with an `email` that matches a `localpart` in MAS
     //while the email in MAS is different
@@ -174,7 +165,7 @@ test.describe('MAS Login OIDC', () => {
 
     try {
       // Perform the OIDC login flow
-      await performOidcLogin(page, user, screenshot_path);
+      await performOidcLogin(page, user, screenChecker);
 
       // Get error
       //await expect(page.locator('text=unknown_error'));

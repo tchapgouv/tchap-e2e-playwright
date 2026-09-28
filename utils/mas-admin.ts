@@ -363,6 +363,79 @@ class MasAdminClient {
   }
 
   /**
+   * Get user details from MAS by user ID
+   */
+  public async getUser(userId: string): Promise<any> {
+    console.log(`[MAS API] Getting user details for ID: ${userId}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get(`/api/admin/v1/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to get user details: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to get MAS user details: ${response.status()} - ${errorText}`);
+    }
+
+    const userResult = await response.json();
+    const user = userResult.data;
+
+    console.log(
+      `[MAS API] User found : ID: ${user.id}, Username: ${user.attributes.username || 'N/A'}`
+    );
+
+    return user;
+  }
+
+  /**
+   * Lock a user from MAS
+   */
+  public async lockUser(userId: string): Promise<void> {
+    console.log(`[MAS API] Locking user with ID: ${userId}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.post(`/api/admin/v1/users/${userId}/lock`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to lock user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to lock MAS user: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] User locked successfully`);
+  }
+
+  /**
+   * Unlock a user from MAS
+   */
+  public async unlockUser(userId: string): Promise<void> {
+    console.log(`[MAS API] Unlocking user with ID: ${userId}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.post(`/api/admin/v1/users/${userId}/unlock`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to unlock user: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to unlock MAS user: ${response.status()} - ${errorText}`);
+    }
+
+    console.log(`[MAS API] User unlocked successfully`);
+  }
+
+  /**
    * Check if a oauth link exists by user ID
    */
   public async oauthLinkExistsByUserId(userId: string): Promise<boolean> {

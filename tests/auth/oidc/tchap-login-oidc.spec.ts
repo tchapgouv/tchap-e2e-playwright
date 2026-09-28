@@ -1,12 +1,11 @@
 import { test, expect } from '../../../fixtures/auth-fixture';
 import { verifyUserInMas, performOidcLoginFromTchap } from '../../../utils/auth-helpers';
 import { MasAdminClient } from '../../../utils/mas-admin';
-import { SCREENSHOTS_DIR } from '../../../utils/config';
+import { ELEMENT_URL } from '../../../utils/config';
 
 //flaky on await expect(page.locator('text=Configuration')).toBeVisible({timeout: 20000});
 test.describe('Tchap : Login via OIDC', () => {
-  test('tchap match account by email', async ({ page, oidcUser }) => {
-    const screenshot_path = test.info().title.replace(' ', '_');
+  test('tchap match account by email', async ({ page, oidcUser, screenChecker }) => {
     const masAdminClient = await MasAdminClient.createDefaultMAS();
 
     oidcUser.masId = await masAdminClient.createUserWithPassword(
@@ -20,10 +19,7 @@ test.describe('Tchap : Login via OIDC', () => {
     expect(existsBeforeLogin).toBe(true);
 
     // Perform the OIDC login flow
-    await performOidcLoginFromTchap(page, oidcUser, screenshot_path);
-
-    // Take a screenshot of the authenticated state
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/05-confirmation.png` });
+    await performOidcLoginFromTchap(page, oidcUser, screenChecker);
 
     await page.locator('button[type="submit"]').filter({ hasText: 'Continuer' }).click();
 
@@ -31,7 +27,7 @@ test.describe('Tchap : Login via OIDC', () => {
     await expect(page.locator('text=Bienvenue')).toBeVisible({ timeout: 20000 });
 
     // Take a screenshot of the authenticated state
-    await page.screenshot({ path: `${SCREENSHOTS_DIR}/${screenshot_path}/06-auth-success.png` });
+    await screenChecker(page, "/");
 
     // Verify the user was created in MAS
     await verifyUserInMas(oidcUser, masAdminClient);

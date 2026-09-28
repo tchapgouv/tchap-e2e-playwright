@@ -5,7 +5,6 @@ import {
   ELEMENT_URL,
   KEYCLOAK_URL,
   MAS_URL,
-  SCREENSHOTS_DIR,
   TEST_USER_PASSWORD,
   TEST_USER_PREFIX,
   WRONG_SERVER_EMAIL_DOMAIN,
@@ -72,16 +71,13 @@ export function makeWrongServerEmail(): string {
 export async function performOidcLogin(
   page: Page,
   user: TestUser,
-  screenshot_path: string
+  screenChecker: ScreenCheckerFixture
 ): Promise<void> {
   // Navigate to the login page
   await page.goto('/login');
 
   // Take a screenshot of the login page
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-login-page.png`,
-    fullPage: true,
-  });
+  await screenChecker(page, '/login');
 
   // Find and click the OIDC provider button (adjust the selector as needed)
   // This is based on the login.html template which shows provider buttons
@@ -90,14 +86,8 @@ export async function performOidcLogin(
   const oidcButton = page.locator('button.proconnect-button');
   await oidcButton.click();
 
-  // Wait for navigation to Keycloak
-  await page.waitForURL((url) => url.toString().includes(KEYCLOAK_URL));
-
-  // Take a screenshot of the Keycloak login page
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-keycloak-login.png`,
-    fullPage: true,
-  });
+  // Wait for navigation to Keycloak and take a screenshot of the login page
+  await screenChecker(page, KEYCLOAK_URL);
 
   // Fill in the username and password
   await page.locator('#username').fill(user.username);
@@ -106,14 +96,8 @@ export async function performOidcLogin(
   // Click the login button
   await page.locator('button[type="submit"]').click();
 
-  // Wait for redirect back to MAS
-  await page.waitForURL((url) => url.toString().includes(MAS_URL));
-
-  // Take a screenshot after successful login
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-after-keycloak-login.png`,
-    fullPage: true,
-  });
+  // Wait for redirect back to MAS and take a screenshot after successful login
+  await screenChecker(page, MAS_URL);
 }
 
 /**
@@ -122,15 +106,12 @@ export async function performOidcLogin(
 export async function performOidcLoginFromTchap(
   page: Page,
   user: TestUser,
-  screenshot_path: string
+  screenChecker: ScreenCheckerFixture
 ): Promise<void> {
   //we go to the welcome and then to the login page because sometimes the email field disapears
   await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
 
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-tchap-login-page.png`,
-    fullPage: true,
-  });
+  await screenChecker(page, '#/welcome');
 
   await page.getByRole('link').filter({ hasText: 'Se connecter' }).click();
 
@@ -139,14 +120,8 @@ export async function performOidcLoginFromTchap(
   // Click on "Continuer" button
   await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
-  // Wait for navigation to MAS
-  await page.waitForURL((url) => url.toString().includes(MAS_URL));
-
-  // Take a screenshot of the MAS login page
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-mas-login-page.png`,
-    fullPage: true,
-  });
+  // Wait for navigation to MAS and take a screenshot of the MAS login page
+  await screenChecker(page, MAS_URL);
 
   // Find and click the OIDC provider button
   //const oidcButton = page.locator('a.cpd-button[href*="/upstream/authorize/"]');
@@ -154,14 +129,8 @@ export async function performOidcLoginFromTchap(
 
   await oidcButton.click();
 
-  // Wait for navigation to Keycloak
-  await page.waitForURL((url) => url.toString().includes(KEYCLOAK_URL));
-
-  // Take a screenshot of the Keycloak login page
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-keycloak-login.png`,
-    fullPage: true,
-  });
+  // Wait for navigation to Keycloak and take a screenshot of the Keycloak login page
+  await screenChecker(page, KEYCLOAK_URL);
 
   // Fill in the username and password
   await page.locator('#username').fill(user.username);
@@ -170,14 +139,8 @@ export async function performOidcLoginFromTchap(
   // Click the login button
   await page.locator('button[type="submit"]').click();
 
-  // Wait for redirect back to MAS
-  await page.waitForURL((url) => url.toString().includes(MAS_URL));
-
-  // Take a screenshot after successful login
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/04-after-login.png`,
-    fullPage: true,
-  });
+  // Wait for redirect back to MAS and take a screenshot after successful login
+  await screenChecker(page, MAS_URL);
 }
 
 /**
@@ -238,7 +201,7 @@ export async function cleanupMasTestUser(
 export async function performPasswordLogin(
   page: Page,
   user: TestUser,
-  screenshot_path: string
+  screenChecker: ScreenCheckerFixture
 ): Promise<void> {
   console.log(`[Auth] Performing password login for user: ${user.username}`);
 
@@ -246,18 +209,14 @@ export async function performPasswordLogin(
   await page.goto('/login');
 
   // Take a screenshot of the login page
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/01-password-login-page.png`,
-  });
+  await screenChecker(page, '/login');
 
   // Fill in the username and password
   await page.locator('input[name="username"]').fill(user.username);
   await page.locator('input[name="password"]').fill(user.password);
 
   // Take a screenshot before submitting
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/02-password-login-filled.png`,
-  });
+  await screenChecker(page, '/login');
 
   // Click the login button (submit the form)
   await page.locator('button[type="submit"]').click();
@@ -266,9 +225,7 @@ export async function performPasswordLogin(
   await page.waitForURL((url) => !url.toString().includes('/login'));
 
   // Take a screenshot after successful login
-  await page.screenshot({
-    path: `${SCREENSHOTS_DIR}/${screenshot_path}/03-password-login-success.png`,
-  });
+  await screenChecker(page, '/');
 
   console.log(`[Auth] Password login successful for user: ${user.username}`);
 }
@@ -312,7 +269,7 @@ export async function openRenewAccountEmail(
 export async function loginWithPassword(
   page: Page,
   userData: { email: string; password: string },
-  screenChecker: Function
+  screenChecker: ScreenCheckerFixture
 ) {
   await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
 
@@ -397,7 +354,7 @@ export function generateTestUserData(domain: string): TestUser {
 
 // Taken from element-mmodules
 /** Adds an initScript to the given page which will populate localStorage appropriately so that Element will use the given credentials. */
-//TODO: Tchap : it misses identity server which blocks inviting by email 
+//TODO: Tchap : it misses identity server which blocks inviting by email
 export async function populateLocalStorageWithCredentials(page: Page, credentials: Credentials) {
   await page.addInitScript(
     ({ credentials }) => {
@@ -422,7 +379,6 @@ export async function populateLocalStorageWithCredentials(page: Page, credential
     { credentials }
   );
 }
-
 
 /**
  * Credentials for a user.
