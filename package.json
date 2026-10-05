@@ -9,6 +9,7 @@
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
     "test:auth:local": "ENV=local playwright test ./tests/auth",
+    "test:auth:local:oidc": "ENV=local playwright test ./tests/auth/oidc",
     "test:minimal:local": "ENV=localdev01 playwright test  ./tests/integration/web/minimal/",
     "test:minimal:dev01": "ENV=dev01 playwright test  ./tests/integration/web/minimal/",
     "test:minimal:int01": "ENV=int01 playwright test  ./tests/integration/web/minimal/",

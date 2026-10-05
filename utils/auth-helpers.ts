@@ -101,13 +101,21 @@ export async function performOidcLogin(
 }
 
 /**
- * Perform OIDC login starting from Element client
+ * Perform OIDC login starting from Element client.
+ *
+ * @param loginHintEmail  Optional email to type on the Element welcome page.
+ *   Defaults to `user.email`. When set to a different value, the login_hint
+ *   forwarded to the upstream OIDC provider will differ from the Keycloak
+ *   user's email, triggering the Tchap mismatch warning in MAS.
  */
 export async function performOidcLoginFromTchap(
   page: Page,
   user: TestUser,
-  screenChecker: ScreenCheckerFixture
+  screenChecker: ScreenCheckerFixture,
+  loginHintEmail?: string
 ): Promise<void> {
+  const hintEmail = loginHintEmail ?? user.email;
+
   //we go to the welcome and then to the login page because sometimes the email field disapears
   await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'networkidle' });
 
@@ -115,7 +123,7 @@ export async function performOidcLoginFromTchap(
 
   await page.getByRole('link').filter({ hasText: 'Se connecter' }).click();
 
-  await page.locator('input').fill(user.email);
+  await page.locator('input').fill(hintEmail);
 
   // Click on "Continuer" button
   await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
