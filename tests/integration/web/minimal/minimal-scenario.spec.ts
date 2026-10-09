@@ -25,7 +25,7 @@ import { MasAdminClient } from '../../../../utils/mas-admin';
 // Helper function to create a public room
 async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   const appPage = new TchapAppPage(page);
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByRole('button', { name: 'Nouveau', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Nouveau salon', exact: true }).click();
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
   await appPage.selectRoomType('Salon public');
@@ -40,10 +40,10 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
 // Helper function to create an encrypted private room
 async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
   const appPage = new TchapAppPage(page);
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByRole('button', { name: 'Nouveau', exact: true }).click();
   await page.getByText('Nouveau salon').click();
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
-  await appPage.selectRoomType('Salon privé sécurisé');
+  await appPage.selectRoomType('Salon privé sécurisé RECOMMANDÉ');
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
   return roomName;
 }
@@ -51,7 +51,7 @@ async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise
 // Helper function to create an unencrypted private room
 async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promise<string> {
   const appPage = new TchapAppPage(page);
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
+  await page.getByRole('button', { name: 'Nouveau', exact: true }).click();
   await page.getByText('Nouveau salon').click();
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
   await appPage.selectRoomType('Salon privé');
