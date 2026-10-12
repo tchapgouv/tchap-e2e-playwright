@@ -17,7 +17,7 @@ export default defineConfig({
 
   /* Define how many workers */
   // Limit the number of workers on CI, use default locally
-  workers: process.env.CI ? 1 : 1,
+  workers: process.env.CI ? 1 : 3,
 
   /* use retries to handle flaky tests */
   retries: process.env.CI ? 2 : 2,
