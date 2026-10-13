@@ -169,7 +169,7 @@ test.describe('MAS Login OIDC', () => {
 
       // Get error
       //await expect(page.locator('text=unknown_error'));
-      await expect(page.locator('text="Invalid Data"')).toBeVisible();
+      await expect(page.locator('text="invalid_data"')).toBeVisible();
 
       console.log(`Successfully verified account linking for user with email: ${user.email}`);
     } finally {

@@ -82,6 +82,39 @@ export async function getPasswordResetLink(toEmail: string): Promise<string> {
   }
 }
 
+export async function getDeactivatedAccountEmail(toEmail: string): Promise<string> {
+  const { content } = await waitForMessage(
+    toEmail,
+    40000,
+    'Votre compte Tchap est désactivé'
+  );
+
+  console.log('[Mailpit] Deactivated account email content preview:', content.substring(0, 300));
+
+  return content;
+}
+
+/**
+ * Check that no email matching the given subject filter is received within
+ * the given wait time.
+ */
+export async function assertNoEmail(
+  toEmail: string,
+  subject: string,
+  maxWaitTimeMs = 10000
+): Promise<void> {
+  try {
+    await waitForMessage(toEmail, maxWaitTimeMs, subject);
+    throw new Error(`Unexpected email found for ${toEmail} with subject "${subject}"`);
+  } catch (error) {
+    // Expected: the waitForMessage timeout means no email was found
+    if (error instanceof Error && error.message.includes('No emails found')) {
+      return;
+    }
+    throw error;
+  }
+}
+
 export async function getExpirationAccountLink(toEmail: string): Promise<string> {
   try {
     const { message, content } = await waitForMessage(
