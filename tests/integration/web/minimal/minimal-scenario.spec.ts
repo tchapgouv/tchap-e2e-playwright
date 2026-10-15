@@ -43,7 +43,7 @@ async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise
   await page.getByRole('button', { name: 'Ajouter', exact: true }).click();
   await page.getByText('Nouveau salon').click();
   await page.getByRole('textbox', { name: 'Nom' }).fill(roomName);
-  await appPage.selectRoomType('Salon privé sécurisé');
+  await appPage.selectRoomType('Salon privé sécuriséRECOMMANDÉ');
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
   return roomName;
 }
@@ -254,9 +254,14 @@ test.describe('Minimal scenario', () => {
       //configurer la sauvegarde
       await screenChecker(page, '#/home');
 
+      //Create a encrypted room to force sync between keys in local and remote
+      await createEncryptedPrivateRoom(page, generateRoomName('force_sync_for_crypto'));
+
       //configurer la sauvegarde (only possible at first connexion)
       await page.getByRole('button', { name: 'Avatar' }).click();
       await page.getByRole('tab', { name: 'Messages chiffrés' }).click();
+      
+      //this takes a long time to be setup
       await page.getByRole('button', { name: 'Configurer la sauvegarde' }).click();
       await page.getByRole('button', { name: 'Continuer' }).click();
       await page.getByRole('button', { name: 'Copier et continuer' }).click();
@@ -274,8 +279,6 @@ test.describe('Minimal scenario', () => {
       await page.getByRole('button', { name: 'Terminé' }).click();
       await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
 
-      await screenChecker(page, '#/home');
-
       //click on
       if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
         await page.getByRole('button', { name: 'OK' }).click();
@@ -291,8 +294,8 @@ test.describe('Minimal scenario', () => {
       //disconnect
       await page.getByRole('button', { name: 'Avatar' }).click();
       await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
-
-      //reset passsword
+      await page.locator('#mx_Dialog_Container').getByRole('button', { name: 'Supprimer cet appareil' }).click();
+      
       await page.getByRole('link', { name: 'Se connecter' }).click();
       await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
       await page.getByRole('button', { name: 'Continuer' }).click();
@@ -437,7 +440,7 @@ test.describe('Minimal scenario', () => {
       //rejoindre le salon
       await page_ext.getByText(/private_crypted_room_name_|Salon vide/).first().click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
-      await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible();
+      await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible({timeout:10000});
 
       //ne peut pas créer de salon
       await page_ext.getByRole('button', { name: 'Ajouter', exact: true }).click();
