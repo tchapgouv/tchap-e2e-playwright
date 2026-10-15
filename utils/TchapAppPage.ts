@@ -199,7 +199,7 @@ export class TchapAppPage {
   public async selectRoomType(
     roomType:
       | 'Salon privé'
-      | 'Salon privé sécurisé'
+      | 'Salon privé sécuriséRECOMMANDÉ'
       | 'Salon privé sécurisé avec externes'
       | 'Salon public'
   ): Promise<void> {
