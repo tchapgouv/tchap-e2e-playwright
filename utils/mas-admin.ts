@@ -103,7 +103,6 @@ class MasAdminClient {
    *  obtaining a new token each call to avoid token expired in long tests
    */
   private async getToken(): Promise<string> {
-    
     const authHeader = Buffer.from(`${this.clientId}:${this.secret}`).toString('base64');
 
     const response = await this.apiContext.post('/oauth2/token', {
@@ -126,7 +125,7 @@ class MasAdminClient {
     const data = (await response.json()) as { access_token: string };
     this.token = data.access_token;
     console.log(`[MAS API] Successfully obtained admin token for ${this.baseUrl}`);
-    
+
     return this.token;
   }
 
@@ -642,6 +641,64 @@ class MasAdminClient {
     }
 
     console.log(`[MAS API] User email deleted for user-emails:${id}`);
+  }
+
+  /**
+   * Get the latest policy data from MAS
+   * Returns null when no policy data has ever been set
+   */
+  public async getLatestPolicyData(): Promise<Record<string, unknown> | null> {
+    console.log(`[MAS API] Getting latest policy data on ${this.baseUrl}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.get('/api/admin/v1/policy-data/latest', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status() === 404) {
+      console.log('[MAS API] No policy data set');
+      return null;
+    }
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to get policy data: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to get MAS policy data: ${response.status()} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    const policyData = result.data.attributes.data;
+    console.log(`[MAS API] Latest policy data retrieved: ${JSON.stringify(policyData)}`);
+    return policyData;
+  }
+
+  /**
+   * Set the policy data on MAS
+   * This replaces the whole dynamic policy data
+   */
+  public async setPolicyData(data: Record<string, unknown>): Promise<void> {
+    console.log(`[MAS API] Setting policy data: ${JSON.stringify(data)}`);
+    const token = await this.getToken();
+
+    const response = await this.apiContext.post('/api/admin/v1/policy-data', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      data: {
+        data: data,
+      },
+    });
+
+    if (!response.ok()) {
+      const errorText = await response.text();
+      console.error(`[MAS API] Failed to set policy data: ${response.status()} - ${errorText}`);
+      throw new Error(`Failed to set MAS policy data: ${response.status()} - ${errorText}`);
+    }
+
+    console.log('[MAS API] Policy data set successfully');
   }
 }
 
