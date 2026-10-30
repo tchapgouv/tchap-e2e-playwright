@@ -272,7 +272,7 @@ test.describe('Minimal scenario', () => {
       await createEncryptedPrivateRoom(page, generateRoomName('force_sync_for_crypto'));
 
       //configurer la sauvegarde (only possible at first connexion)
-      await page.getByRole('button', { name: 'Avatar' }).click();
+      await page.getByRole('button', { name: 'Menu utilisateur' }).click();
       await page.getByRole('tab', { name: 'Messages chiffrés' }).click();
       
       //this takes a long time to be setup
@@ -306,7 +306,7 @@ test.describe('Minimal scenario', () => {
         await page.getByRole('button', { name: 'Ignorer' }).click();
       }
       //disconnect
-      await page.getByRole('button', { name: 'Avatar' }).click();
+      await page.getByRole('button', { name: 'Menu utilisateur' }).click();
       await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
       await page.locator('#mx_Dialog_Container').getByRole('button', { name: 'Supprimer cet appareil' }).click();
       
