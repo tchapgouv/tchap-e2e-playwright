@@ -478,7 +478,7 @@ test.describe('Minimal scenario', () => {
 
       //rejoindre le salon
       // The invite should be inside the invitees section
-      await page_ext.getByRole('button', { name: 'Afficher ou masquer la section Invites avec des salons non lues' }).click();
+      await page_ext.getByRole('button', { name: 'Afficher ou masquer la section Invitations avec des salons non lues' }).click();
       await page_ext.getByText(roomName).first().click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
       await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible({timeout:10000});
