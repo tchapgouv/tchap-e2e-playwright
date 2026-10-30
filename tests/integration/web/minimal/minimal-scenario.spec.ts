@@ -313,6 +313,11 @@ test.describe('Minimal scenario', () => {
       await page.getByRole('link', { name: 'Se connecter' }).click();
       await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
       await page.getByRole('button', { name: 'Continuer' }).click();
+      
+      //regression: logout in web does not logout users from MAS
+      //do it manually
+      await page.getByRole('button', { name: 'Se déconnecter' }).click();
+
       await page.getByRole('link', { name: 'Mot de passe oublié' }).click();
       await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
       await page.getByRole('button', { name: 'Continuer' }).click();
