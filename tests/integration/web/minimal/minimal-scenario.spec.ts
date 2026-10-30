@@ -73,7 +73,7 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
 }
 
 test.describe('Minimal scenario', () => {
-    test.setTimeout(240_000);
+    test.setTimeout(15_000);
 
     const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
     const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
@@ -232,6 +232,8 @@ test.describe('Minimal scenario', () => {
     });
 
     test('internal user setup account', async ({ page, context, screenChecker }) => {
+      test.setTimeout(60_000);
+
       //create account
       await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
       await screenChecker(page, '#/welcome');
@@ -344,6 +346,8 @@ test.describe('Minimal scenario', () => {
     });
 
     test('test invites', async ({ page, context, screenChecker }) => {
+      test.setTimeout(60_000);
+
       //we can't use authenticatedUser fixture as the identity server is not well setup in the profile
       //this blocks invite by email
       //inviter 
@@ -399,6 +403,8 @@ test.describe('Minimal scenario', () => {
 
 
     test('send external user invite to create account', async ({page, screenChecker, browser }) => {
+      test.setTimeout(120_000);
+
       //we can't use authenticatedUser fixture as the identity server is not well setup in the profile
       //this blocks invite by email
       let inviter:TestUser;
