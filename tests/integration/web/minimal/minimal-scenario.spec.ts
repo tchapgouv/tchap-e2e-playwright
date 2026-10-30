@@ -194,7 +194,8 @@ test.describe('Minimal scenario', () => {
 
        //envoyer fichier png
       await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
+        .locator('.mx_RoomView_body')
+        .getByTestId('room-upload-context-input')
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
@@ -208,7 +209,8 @@ test.describe('Minimal scenario', () => {
 
        //envoyer fichier png
       await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
+        .locator('.mx_RoomView_body')
+        .getByTestId('room-upload-context-input')
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
@@ -221,7 +223,8 @@ test.describe('Minimal scenario', () => {
 
       //envoyer fichier vérolé
       await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
+        .locator('.mx_RoomView_body')
+        .getByTestId('room-upload-context-input')
         .setInputFiles(path.join(__dirname, '../../../../sample-files/eicar.com'));
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await expect(page.getByText('Contenu bloqué')).toBeVisible();
