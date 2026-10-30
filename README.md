@@ -51,10 +51,10 @@ Les fichiers `.secrets.*` sont automatiquement exclus du contrôle de version pa
 ### avec docker 
 ```bash
 # specific test
-docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble bash -c 'ENV=dev01 npx playwright test ./tests/integration/api/room-access-rules --grep "Should create private encrypted room with correct properties"'
+docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.63.0-noble bash -c 'ENV=dev01 npx playwright test ./tests/integration/api/room-access-rules --grep "Should create private encrypted room with correct properties"'
 
 # tests suite
-docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.59.1-noble npm run test:api:dev01
+docker run -it --rm -v .:/app -w /app mcr.microsoft.com/playwright:v1.63.0-noble npm run test:api:dev01
 ```
 
 

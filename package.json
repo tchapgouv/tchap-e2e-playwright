@@ -32,7 +32,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "matrix-js-sdk": "^41.5.0",
+    "matrix-js-sdk": "^41.9.0",
     "playwright": "1.59.1"
   },
   "devDependencies": {
