@@ -19,7 +19,7 @@ test.describe('Tchap : register with password', () => {
   }) => {
     await startTchapRegisterWithEmail(page, user.email);
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     await page.locator('input[name="password"]').fill(PASSWORd);
@@ -61,7 +61,7 @@ test.describe('Tchap : register with password', () => {
 
     const not_invited_user = generateTestUserData(NOT_INVITED_EMAIL_DOMAIN);
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     //change email with not invited email
@@ -76,7 +76,7 @@ test.describe('Tchap : register with password', () => {
     ).toBeVisible();
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click({ clickCount: 2 });
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
     await expect(page.locator('input[name="email"]')).toHaveValue(not_invited_user.email);
 
     //check that error message is visible
@@ -97,7 +97,7 @@ test.describe('Tchap : register with password', () => {
 
     const wrong_server_user = generateTestUserData(WRONG_SERVER_EMAIL_DOMAIN);
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     //change email with not invited email
@@ -112,7 +112,7 @@ test.describe('Tchap : register with password', () => {
     ).toBeVisible();
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click({ clickCount: 2 });
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
 
     //check that error message is visible
     await expect(
@@ -137,7 +137,7 @@ test.describe('Tchap : register with password', () => {
     const page2 = await context2.newPage();
     await startTchapRegisterWithEmail(page2, user.email);
 
-    await screen(page2, '/register/password');
+    await screen(page2, '/register');
     await expect(page2.locator('input[name="email"]')).toHaveValue(user.email);
 
     await page2.locator('input[name="password"]').fill(PASSWORd);
