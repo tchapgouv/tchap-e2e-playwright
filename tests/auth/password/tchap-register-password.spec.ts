@@ -80,9 +80,11 @@ test.describe('Tchap : register with password', () => {
     await expect(page.locator('input[name="email"]')).toHaveValue(not_invited_user.email);
 
     //check that error message is visible
+    // (rendered by the register island as a compound-web span,
+    //  no longer as a Jinja-rendered div)
     await expect(
       page
-        .locator('div.cpd-form-message.cpd-form-error-message')
+        .locator('span')
         .filter({ hasText: "Vous avez besoin d'une invitation" })
     ).toBeVisible();
   });
@@ -117,7 +119,7 @@ test.describe('Tchap : register with password', () => {
     //check that error message is visible
     await expect(
       page
-        .locator('div.cpd-form-message.cpd-form-error-message')
+        .locator('span')
         .filter({ hasText: 'associée au serveur' })
     ).toBeVisible();
   });

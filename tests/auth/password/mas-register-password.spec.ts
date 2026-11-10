@@ -95,7 +95,7 @@ test.describe('MAS Register password', () => {
     //check that error message is visible
     await expect(
       page
-        .locator('div.cpd-form-message.cpd-form-error-message')
+        .locator('span')
         .filter({ hasText: 'associée au serveur' })
     ).toBeVisible();
   });
