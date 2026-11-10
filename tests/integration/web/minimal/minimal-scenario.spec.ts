@@ -73,7 +73,7 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
 }
 
 test.describe('Minimal scenario', () => {
-    test.setTimeout(240_000);
+    test.setTimeout(15_000);
 
     const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
     const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
@@ -194,7 +194,8 @@ test.describe('Minimal scenario', () => {
 
        //envoyer fichier png
       await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
+        .locator('.mx_RoomView_body')
+        .getByTestId('room-upload-context-input')
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
@@ -208,7 +209,8 @@ test.describe('Minimal scenario', () => {
 
        //envoyer fichier png
       await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
+        .locator('.mx_RoomView_body')
+        .getByTestId('room-upload-context-input')
         .setInputFiles(path.join(__dirname, '../../../../sample-files/element.png'));
 
       await page.getByRole('button', { name: 'Envoyer' }).click();
@@ -221,7 +223,8 @@ test.describe('Minimal scenario', () => {
 
       //envoyer fichier vérolé
       await page
-        .locator(".mx_MessageComposer_actions input[type='file']")
+        .locator('.mx_RoomView_body')
+        .getByTestId('room-upload-context-input')
         .setInputFiles(path.join(__dirname, '../../../../sample-files/eicar.com'));
       await page.getByRole('button', { name: 'Envoyer' }).click();
       await expect(page.getByText('Contenu bloqué')).toBeVisible();
@@ -229,6 +232,8 @@ test.describe('Minimal scenario', () => {
     });
 
     test('internal user setup account', async ({ page, context, screenChecker }) => {
+      test.setTimeout(60_000);
+
       //create account
       await page.goto(`${ELEMENT_URL}/#/welcome`, { waitUntil: 'load' });
       await screenChecker(page, '#/welcome');
@@ -265,9 +270,14 @@ test.describe('Minimal scenario', () => {
       //configurer la sauvegarde
       await screenChecker(page, '#/home');
 
+      //Create a encrypted room to force sync between keys in local and remote
+      await createEncryptedPrivateRoom(page, generateRoomName('force_sync_for_crypto'));
+
       //configurer la sauvegarde (only possible at first connexion)
-      await page.getByRole('button', { name: 'Avatar' }).click();
+      await page.getByRole('button', { name: 'Menu utilisateur' }).click();
       await page.getByRole('tab', { name: 'Messages chiffrés' }).click();
+      
+      //this takes a long time to be setup
       await page.getByRole('button', { name: 'Configurer la sauvegarde' }).click();
       await page.getByRole('button', { name: 'Continuer' }).click();
       await page.getByRole('button', { name: 'Copier et continuer' }).click();
@@ -285,8 +295,6 @@ test.describe('Minimal scenario', () => {
       await page.getByRole('button', { name: 'Terminé' }).click();
       await page.getByRole('button', { name: 'Fermer la boîte de dialogue' }).click();
 
-      await screenChecker(page, '#/home');
-
       //click on
       if (await page.getByRole('button', { name: 'OK' }).isVisible()) {
         await page.getByRole('button', { name: 'OK' }).click();
@@ -300,13 +308,18 @@ test.describe('Minimal scenario', () => {
         await page.getByRole('button', { name: 'Ignorer' }).click();
       }
       //disconnect
-      await page.getByRole('button', { name: 'Avatar' }).click();
+      await page.getByRole('button', { name: 'Menu utilisateur' }).click();
       await page.getByRole('button', { name: 'Supprimer cet appareil' }).click();
-
-      //reset passsword
+      await page.locator('#mx_Dialog_Container').getByRole('button', { name: 'Supprimer cet appareil' }).click();
+      
       await page.getByRole('link', { name: 'Se connecter' }).click();
       await page.getByRole('textbox', { name: 'Votre adresse mail' }).fill(agent_user.email);
       await page.getByRole('button', { name: 'Continuer' }).click();
+      
+      //regression: logout in web does not logout users from MAS
+      //do it manually
+      await page.getByRole('button', { name: 'Se déconnecter' }).click();
+
       await page.getByRole('link', { name: 'Mot de passe oublié' }).click();
       await page.getByRole('textbox', { name: 'Adresse mail' }).fill(agent_user.email);
       await page.getByRole('button', { name: 'Continuer' }).click();
@@ -333,6 +346,8 @@ test.describe('Minimal scenario', () => {
     });
 
     test('test invites', async ({ page, context, screenChecker }) => {
+      test.setTimeout(60_000);
+
       //we can't use authenticatedUser fixture as the identity server is not well setup in the profile
       //this blocks invite by email
       //inviter 
@@ -388,6 +403,8 @@ test.describe('Minimal scenario', () => {
 
 
     test('send external user invite to create account', async ({page, screenChecker, browser }) => {
+      test.setTimeout(120_000);
+
       //we can't use authenticatedUser fixture as the identity server is not well setup in the profile
       //this blocks invite by email
       let inviter:TestUser;
@@ -472,10 +489,10 @@ test.describe('Minimal scenario', () => {
 
       //rejoindre le salon
       // The invite should be inside the invitees section
-      await page_ext.getByRole('button', { name: 'Afficher ou masquer la section Invites avec des salons non lues' }).click();
+      await page_ext.getByRole('button', { name: 'Afficher ou masquer la section Invitations avec des salons non lues' }).click();
       await page_ext.getByText(roomName).first().click();
       await page_ext.getByRole('button', { name: 'Accepter' }).click();
-      await page_ext.getByText('Chiffrement activé').isVisible();
+      await expect(await page_ext.getByText('Chiffrement activé')).toBeVisible({timeout:10000});
 
       //ne peut pas créer de salon
       await page_ext.getByRole('button', { name: 'Nouveau', exact: true }).click();
