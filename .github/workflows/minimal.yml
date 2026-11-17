@@ -1,0 +1,98 @@
+# Runs the minimal e2e scenario on dev01 against tchap-web built at `web-ref`.
+# When called from another workflow, pass each secret below explicitly rather than `secrets: inherit`.
+name: E2E minimal
+on:
+    workflow_dispatch:
+        inputs:
+            web-ref:
+                description: "Branch, tag or SHA of tchapgouv/tchap-web-v4"
+                default: main
+    workflow_call:
+        inputs:
+            web-ref:
+                description: "Branch, tag or SHA of tchapgouv/tchap-web-v4"
+                type: string
+                required: true
+            e2e-ref:
+                description: "Branch of the e2e tests to use"
+                type: string
+                default: main
+        secrets:
+            MAILPIT_PWD: { required: true }
+            SYNAPSE_ADMIN_TOKEN: { required: true }
+            TEST_USER_PASSWORD: { required: true }
+            MAS_ADMIN_CLIENT_ID: { required: true }
+            MAS_ADMIN_CLIENT_SECRET: { required: true }
+            OTHER_MAS_ADMIN_CLIENT_ID: { required: true }
+            OTHER_MAS_ADMIN_SECRET: { required: true }
+            EXTERNAL_MAS_ADMIN_CLIENT_ID: { required: true }
+            EXTERNAL_MAS_ADMIN_SECRET: { required: true }
+permissions:
+    contents: read
+jobs:
+    minimal:
+        name: E2E minimal (dev01)
+        # Playwright 1.59 does not support ubuntu-26.04 (ubuntu-latest)
+        runs-on: ubuntu-24.04
+        environment:
+            name: dev01
+            deployment: false
+        steps:
+            - name: Checkout tests e2e
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  repository: tchapgouv/tchap-e2e-playwright
+                  ref: ${{ inputs.e2e-ref || github.ref }}
+                  path: e2e
+                  persist-credentials: false
+
+            - name: Checkout tchap-web (${{ inputs.web-ref }})
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  repository: tchapgouv/tchap-web-v4
+                  ref: ${{ inputs.web-ref }}
+                  path: tchap-web
+                  persist-credentials: false
+
+            # Same versions as tchap-web's CI
+            - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+              with:
+                  package_json_file: tchap-web/package.json
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+              with:
+                  node-version-file: tchap-web/.node-version
+                  cache: pnpm
+                  cache-dependency-path: tchap-web/pnpm-lock.yaml
+
+            - name: Build tchap-web
+              working-directory: tchap-web
+              env:
+                  CONFIG: dev
+              # Empty GITHUB_STEP_SUMMARY to disable the Nx build performance summary report
+              run: GITHUB_STEP_SUMMARY= apps/web/scripts/tchap/package-tchap.sh
+
+            # Background server, up before the tests start
+            - name: Serve tchap-web on :8088
+              run: python3 -m http.server 8088 --directory tchap-web/dist > /dev/null 2>&1 &
+
+            - name: Install e2e dependencies
+              working-directory: e2e
+              run: |
+                  npm ci
+                  npx playwright install --with-deps chromium
+
+            # Never upload playwright-report/ or test-results/: they contain secrets (public repo)
+            - name: Run minimal scenario
+              working-directory: e2e
+              env:
+                  ELEMENT_URL: http://localhost:8088
+                  MAILPIT_PWD: ${{ secrets.MAILPIT_PWD }}
+                  SYNAPSE_ADMIN_TOKEN: ${{ secrets.SYNAPSE_ADMIN_TOKEN }}
+                  TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+                  MAS_ADMIN_CLIENT_ID: ${{ secrets.MAS_ADMIN_CLIENT_ID }}
+                  MAS_ADMIN_CLIENT_SECRET: ${{ secrets.MAS_ADMIN_CLIENT_SECRET }}
+                  OTHER_MAS_ADMIN_CLIENT_ID: ${{ secrets.OTHER_MAS_ADMIN_CLIENT_ID }}
+                  OTHER_MAS_ADMIN_SECRET: ${{ secrets.OTHER_MAS_ADMIN_SECRET }}
+                  EXTERNAL_MAS_ADMIN_CLIENT_ID: ${{ secrets.EXTERNAL_MAS_ADMIN_CLIENT_ID }}
+                  EXTERNAL_MAS_ADMIN_SECRET: ${{ secrets.EXTERNAL_MAS_ADMIN_SECRET }}
+              run: npm run test:minimal:dev01

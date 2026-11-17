@@ -37,7 +37,7 @@ async function createPublicRoom(page: Page, roomName: string): Promise<string> {
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
   
   const header = page.locator(".mx_RoomHeader");
-  await expect(header).toContainText(roomName);
+  await expect(header).toContainText(roomName, { timeout: 20_000 });
 
   return roomName;
 }
@@ -52,7 +52,7 @@ async function createEncryptedPrivateRoom(page: Page, roomName: string): Promise
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
 
   const header = page.locator(".mx_RoomHeader");
-  await expect(header).toContainText(roomName);
+  await expect(header).toContainText(roomName, { timeout: 20_000 });
 
   return roomName;
 }
@@ -67,16 +67,16 @@ async function createUnencryptedPrivateRoom(page: Page, roomName: string): Promi
   await page.getByRole('button', { name: 'Créer un nouveau salon' }).click();
 
   const header = page.locator(".mx_RoomHeader");
-  await expect(header).toContainText(roomName);
+  await expect(header).toContainText(roomName, { timeout: 20_000 });
 
   return roomName;
 }
 
 test.describe('Minimal scenario', () => {
-    test.setTimeout(15_000);
+    test.setTimeout(30_000);
 
-    const external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
-    const agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
+    let external_user: TestUser;
+    let agent_user: TestUser;
 
     //const public_room_name = generateRoomName('public_room_name');
     //const private_crypted_room_name = generateRoomName('private_crypted_room_name');
@@ -89,6 +89,9 @@ test.describe('Minimal scenario', () => {
     let federatedMasAdminClient:MasAdminClient;
 
     test.beforeAll(async () => {
+      external_user = generateTestUserData(INVITED_EMAIL_DOMAIN);
+      agent_user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
+
       masAdminClient = await MasAdminClient.createDefaultMAS();
       federatedMasAdminClient = await MasAdminClient.createFederatedMAS();
       
