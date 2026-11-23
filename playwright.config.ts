@@ -23,7 +23,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 2,
 
   /* Reporter to use */
-  reporter: 'html',
+  // On CI (public logs), only print test titles and statuses
+  reporter: process.env.CI ? [['./reporters/ci-safe-reporter.ts']] : 'html',
   /* Shared settings for all the projects below */
   use: {
     /* Base URL to use in actions like `await page.goto('/')` */
@@ -33,13 +34,13 @@ export default defineConfig({
     locale: BROWSER_LOCALE,
 
     /* Collect trace when retrying the failed test */
-    trace: 'on-first-retry',
+    trace: process.env.CI ? 'off' : 'on-first-retry',
 
     /* Take screenshot on failure */
-    screenshot: 'only-on-failure',
+    screenshot: process.env.CI ? 'off' : 'only-on-failure',
 
     /* Record video on failure */
-    video: 'on-first-retry',
+    video: process.env.CI ? 'off' : 'on-first-retry',
 
     /* Ignore HTTPS errors */
     ignoreHTTPSErrors: true,
