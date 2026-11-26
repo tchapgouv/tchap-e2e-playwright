@@ -30,16 +30,10 @@ test.describe('MAS Register password', () => {
 
     await page.goto('/register');
 
-    // since MAS v1.28.0, the register page shows the email/password form
-    // directly; with JS disabled the <noscript> password fields are used
-    await screen(page, '/register');
-    await page.locator('input[name="email"]').fill(user.email);
-    await page.locator('input[name="password"]').fill(PASSWORd);
-    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-    //form is submitted successfully
-    await screen(page, '/verify-email');
+    // since MAS v1.28.0, javascript is mandatory to create account
+    await expect(
+      page.locator('p', {hasText:'JavaScript est nécessaire'})
+    ).toBeVisible();
   });
 
    test('when user already exists with a colliding email', async ({
@@ -80,6 +74,7 @@ test.describe('MAS Register password', () => {
     await page.goto('/register');
 
     await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
 
     await page.locator('input[name="email"]').fill(user_2.email);
     await page.locator('input[name="password"]').fill(PASSWORd);
