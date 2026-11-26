@@ -70,8 +70,9 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     // The ProConnect button is still offered
     await expect(page.locator('button.proconnect-button')).toBeVisible();
 
-   await expect(
-      page.getByText('Mot de passe', { exact: true })
+    // The "continue with email" button is hidden
+    await expect(
+      page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' })
     ).toBeHidden();
   });
 
@@ -92,7 +93,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await expect(page.locator('button.proconnect-button')).toBeVisible();
 
    await expect(
-      page.getByText('Mot de passe', { exact: true })
+      page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' })
     ).toBeHidden();
 
     await screen(page, '/register');
@@ -110,7 +111,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await startRegisterFlowWithEmail(page, user.email, screen);
 
     await expect(
-      page.getByText('Mot de passe', { exact: true })
+      page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' })
     ).toBeVisible();
   });
 
@@ -127,7 +128,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await page.goto('/register');
 
     await expect(
-      page.getByText('Mot de passe', { exact: true })
+      page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' })
     ).toBeVisible();
 
     await screen(page, '/register');
@@ -175,6 +176,8 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await startTchapRegisterWithEmail(page, user.email);
 
     await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
+
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
@@ -217,6 +220,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     const not_invited_user = generateTestUserData(NOT_INVITED_EMAIL_DOMAIN);
 
     await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     //change email with not invited email
@@ -253,6 +257,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     const wrong_server_user = generateTestUserData(WRONG_SERVER_EMAIL_DOMAIN);
 
     await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     //change email with not invited email
@@ -293,6 +298,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await startTchapRegisterWithEmail(page2, user.email);
 
     await screen(page2, '/register');
+    await page2.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     await expect(page2.locator('input[name="email"]')).toHaveValue(user.email);
 
     await page2.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
