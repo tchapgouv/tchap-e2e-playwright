@@ -277,9 +277,7 @@ test.describe('Minimal scenario', () => {
       await page.getByRole('button', { name: 'Menu utilisateur' }).click();
       await page.getByRole('tab', { name: 'Messages chiffrés' }).click();
       
-      //this takes a long time to be setup
-      await page.getByRole('button', { name: 'Configurer la sauvegarde' }).click();
-      await page.getByRole('button', { name: 'Continuer' }).click();
+      await page.getByRole('button', { name: 'Créer un code de vérification' }).click();
       await page.getByRole('button', { name: 'Copier et continuer' }).click();
 
       const handle = await page.evaluateHandle(() => navigator.clipboard.readText());
