@@ -12,10 +12,9 @@ test.describe('MAS Register password', () => {
     //the error page has been deactivated for the moment because the MAS unit tests must be fixed
 
     await page.goto('/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
 
     //form is not submitted because no oauth2_authorization_grant
-    await screen(page, '/register/password');
+    await screen(page, '/register');
     await expect(page.locator('h1', { hasText: 'Unexpected error' })).toBeVisible();
     await expect(
       page.locator('p', {
@@ -30,16 +29,11 @@ test.describe('MAS Register password', () => {
     const page = await ctx.newPage();
 
     await page.goto('/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
 
-    await screen(page, '/register/password');
-    await page.locator('input[name="email"]').fill(user.email);
-    await page.locator('input[name="password"]').fill(PASSWORd);
-    await page.locator('input[name="password_confirm"]').fill(PASSWORd);
-    await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
-
-    //form is submitted successfully
-    await screen(page, '/verify-email');
+    // since MAS v1.28.0, javascript is mandatory to create account
+    await expect(
+      page.locator('p', {hasText:'JavaScript est nécessaire'})
+    ).toBeVisible();
   });
 
    test('when user already exists with a colliding email', async ({
@@ -78,9 +72,9 @@ test.describe('MAS Register password', () => {
 
     //new browser to start from a clean browser history
     await page.goto('/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
 
     await page.locator('input[name="email"]').fill(user_2.email);
     await page.locator('input[name="password"]').fill(PASSWORd);
@@ -96,7 +90,7 @@ test.describe('MAS Register password', () => {
     //check that error message is visible
     await expect(
       page
-        .locator('div.cpd-form-message.cpd-form-error-message')
+        .locator('span')
         .filter({ hasText: 'associée au serveur' })
     ).toBeVisible();
   });

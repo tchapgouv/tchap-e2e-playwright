@@ -133,6 +133,9 @@ test.describe('Tchap : deactivated account', () => {
 
     //register
     await startTchapRegisterWithEmail(page, userData.email);
+
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
+
     await expect(page.locator('input[name="email"]')).toHaveValue(userData.email);
     await page.locator('input[name="password"]').fill(userData.password);
     await page.locator('input[name="password_confirm"]').fill(userData.password);

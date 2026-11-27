@@ -120,8 +120,10 @@ async function startTchapRegisterWithEmailFixture(
     await page.locator('input').fill(email);
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
+    // Since MAS v1.28.0, the register page shows the email/password form
+    // directly (single-page flow); the email field is prefilled from the
+    // login_hint sent by the client
     await screenChecker(page, '/register');
-    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
   };
   await use(start);
 }

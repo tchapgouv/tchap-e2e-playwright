@@ -244,8 +244,6 @@ test.describe('Minimal scenario', () => {
       await page.getByRole('button').filter({ hasText: 'Continuer' }).click();
 
       await screenChecker(page, '/register');
-      await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
-      await screenChecker(page, '/register/password');
       await expect(page.locator('input[name="email"]')).toHaveValue(agent_user.email);
 
       await page.locator('input[name="password"]').fill(agent_user.password);
@@ -461,12 +459,9 @@ test.describe('Minimal scenario', () => {
       await page_ext.getByRole('heading', { name: 'Êtes-vous un(e) invité(e)' })
       await page_ext.getByText('Continuer').click();
 
+      // since MAS v1.28.0, the register page shows the email/password form
+      // directly; the email field is prefilled from the login_hint
       await screenChecker(page_ext, '/register');
-      await page_ext
-        .getByRole('button')
-        .filter({ hasText: 'Continuer avec mon adresse mail' })
-        .click();
-
       await expect(page_ext.locator('input[name="email"]')).toHaveValue(external_user.email);
 
       await page_ext.locator('input[name="password"]').fill(external_user.password);

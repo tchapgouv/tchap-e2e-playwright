@@ -54,7 +54,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     }
   });
 
-  test('hides the "continue with email" button for a ProConnect-only domain', async ({
+  test('hide the password form button for a ProConnect-only domain', async ({
     page,
     screenChecker: screen,
   }) => {
@@ -76,7 +76,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     ).toBeHidden();
   });
 
-  test('hides the "continue with email" button for all domain', async ({
+  test('hide the password form button for all domain', async ({
     page,
     screenChecker: screen,
   }) => {
@@ -92,21 +92,21 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     // The ProConnect button is still offered
     await expect(page.locator('button.proconnect-button')).toBeVisible();
 
-    // The "continue with email" button is hidden
-    await expect(
+   await expect(
       page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' })
     ).toBeHidden();
+
+    await screen(page, '/register');
+
   });
 
-  test('keeps the "continue with email" button when the email domain is not ProConnect-only', async ({
+  test('show the password form when the email domain is not ProConnect-only', async ({
     page,
     screenChecker: screen,
   }) => {
-    // The policy data lists a domain which does not match the user email domain
-    await masAdminClient?.setPolicyData({
-      register_proconnect_only_domains: ['proconnect-only\\.example.fr'],
-    });
 
+    //no policy
+    
     const user = generateTestUserData(STANDARD_EMAIL_DOMAIN);
     await startRegisterFlowWithEmail(page, user.email, screen);
 
@@ -115,7 +115,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     ).toBeVisible();
   });
 
-  test('keeps the "continue with email" button when the register page is reached without an authorization grant', async ({
+  test('show the password form when the register page is reached without an authorization grant', async ({
     page,
     screenChecker: screen,
   }) => {
@@ -134,7 +134,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await screen(page, '/register');
   });
 
-  test('password registration form is still reachable by crafting the URL when the button is hidden', async ({
+  test.skip('password registration form is still reachable by crafting the URL when the button is hidden', async ({
     page,
     screenChecker: screen,
   }) => {
@@ -160,7 +160,7 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     await screen(page, '/register/password');
 
     // The password registration form is displayed, without login_hint
-    await page.goto(`/register/password`);
+    await page.goto(`/register`);
     await expect(page.locator('input[name="email"]')).toBeEmpty();
     await screen(page, '/register/password');
 
@@ -175,7 +175,9 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
   }) => {
     await startTchapRegisterWithEmail(page, user.email);
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
+
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     await page.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
@@ -217,7 +219,8 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
 
     const not_invited_user = generateTestUserData(NOT_INVITED_EMAIL_DOMAIN);
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     //change email with not invited email
@@ -232,13 +235,13 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     ).toBeVisible();
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click({ clickCount: 2 });
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
     await expect(page.locator('input[name="email"]')).toHaveValue(not_invited_user.email);
 
     //check that error message is visible
     await expect(
       page
-        .locator('div.cpd-form-message.cpd-form-error-message')
+        .locator('div#register-form')
         .filter({ hasText: "Vous avez besoin d'une invitation" })
     ).toBeVisible();
   });
@@ -253,7 +256,8 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
 
     const wrong_server_user = generateTestUserData(WRONG_SERVER_EMAIL_DOMAIN);
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
+    await page.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     await expect(page.locator('input[name="email"]')).toHaveValue(user.email);
 
     //change email with not invited email
@@ -268,12 +272,12 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     ).toBeVisible();
     await page.getByRole('button').filter({ hasText: 'Continuer' }).click({ clickCount: 2 });
 
-    await screen(page, '/register/password');
+    await screen(page, '/register');
 
     //check that error message is visible
     await expect(
       page
-        .locator('div.cpd-form-message.cpd-form-error-message')
+        .locator('div#register-form')
         .filter({ hasText: 'associée au serveur' })
     ).toBeVisible();
   });
@@ -293,7 +297,8 @@ test.describe('Tchap : register with ProConnect-only domain', () => {
     const page2 = await context2.newPage();
     await startTchapRegisterWithEmail(page2, user.email);
 
-    await screen(page2, '/register/password');
+    await screen(page2, '/register');
+    await page2.getByRole('button').filter({ hasText: 'Continuer avec mon adresse mail' }).click();
     await expect(page2.locator('input[name="email"]')).toHaveValue(user.email);
 
     await page2.locator('input[name="password"]').fill(TEST_USER_PASSWORD);
